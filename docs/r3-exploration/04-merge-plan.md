@@ -138,9 +138,58 @@ alone.
 
 ## 7. Corrected comparison table
 
-*(filled in when the merge gates are green — this section is the merge's output)*
+One harness, one rewriter, one `no_spec_phrase`. Deterministic paths only — no LLM tier, no network —
+so these are the offline numbers both roads ship by default. 95% bootstrap CI, 1,000 resamples.
 
-| Road | Clean | L2 | L3 | `no_spec_phrase` | Hit@10 clean | Hit@10 L3 | 95% CI |
-|---|---|---|---|---|---|---|---|
-| R1 | | | | | | | |
-| R2 | | | | | | | |
+| Road | Condition | Hit@10 | MRR | MTTC | Score | 95% CI |
+|---|---|---|---|---|---|---|
+| R1 | clean | 1.000 | 0.9692 | 2.55 | **0.9597** | 0.9529–0.9658 |
+| R1 | L1 scaffold | 0.870 | 0.6382 | 3.64 | 0.7737 | 0.7296–0.8155 |
+| R1 | **L2 full** | 0.890 | 0.6437 | 3.47 | **0.7887** | 0.7479–0.8278 |
+| R1 | **no_spec_phrase** | **0.995** | 0.8399 | 2.83 | **0.9128** | 0.8967–0.9261 |
+| R1 | no_popularity | 0.985 | 0.8699 | 2.67 | 0.9200 | 0.8988–0.9377 |
+| R2 | clean | 1.000 | 0.9746 | 2.08 | **0.9707** | 0.9630–0.9774 |
+| R2 | L1 scaffold | 0.865 | 0.8196 | 3.40 | 0.8305 | 0.7838–0.8764 |
+| R2 | **L2 full** | 0.835 | 0.7500 | 3.77 | **0.7872** | 0.7375–0.8364 |
+| R2 | **no_spec_phrase** | 0.890 | 0.7781 | 3.35 | **0.8315** | 0.7894–0.8735 |
+| R2 | no_popularity | 0.985 | 0.9103 | 2.69 | 0.9318 | 0.9126–0.9482 |
+
+### 7.1 What the correction changed
+
+**① R1's `no_spec_phrase` was overstated — but far less than R1 itself estimated.** 0.9260 → **0.9128**,
+a drop of 0.013. R1 defect 1 predicted *"roughly 0.09"*. R1 was wrong about its own weakness: even with
+exact matching **and** normalised-pair matching removed, its token-overlap matcher plus the popularity
+prior plus the category pool still reach **Hit@10 0.995**.
+
+**② ⭐ R1 without inversion beats R2 without inversion by 0.081** — 0.9128 against 0.8315, on Hit@10
+0.995 against 0.890, with the CIs barely touching. R2's handover concluded *"R2's paraphrase-proof
+insurance number is beaten by an ordinary non-inversion pipeline"* and pointed at a teammate's
+0.9044. **The better non-inversion pipeline was R1 all along**, and nobody could see it because the two
+roads' flags meant different things. R1 also edges that teammate baseline (0.9128 vs 0.9044).
+
+**③ Under real paraphrase the two roads are indistinguishable.** L2: R1 0.7887, R2 0.7872 — a gap of
+0.0015 inside CIs spanning 0.08. The published comparison (R1 "0.8594 at L2" against R2 "0.7961 heavy")
+was two different rewriter programs and said nothing whatsoever. R1's 0.7887 reproduces its own
+published *deterministic-only* L2 to four decimals, which is the evidence that the unified rewriter is
+faithful to R1's original.
+
+**④ The recall failure is caused by paraphrase, not by losing inversion.** This is the finding that
+matters for R3:
+
+| Condition | R1 Hit@10 | R2 Hit@10 | |
+|---|---|---|---|
+| inversion removed, wording intact | **0.995** | 0.890 | recall is fine |
+| wording changed (L2) | **0.890** | 0.835 | recall breaks |
+
+Removing the inversion signal costs R1 nothing in recall. **Changing the wording costs it 10 points.**
+That isolates the damage to the stages that read raw wording — and the earliest of those is category
+resolution, which [00-r3-spec.md](00-r3-spec.md) §2.3 identifies as lexical word-counting in both
+roads. The two-level belief (D10) is aimed at exactly this, and the gate moves accordingly: **R3-A3 is
+now L2 Hit@10 ≥ 0.95 against a current best of 0.890**, not the 0.890→0.90 the earlier draft asked for.
+
+⚠️ **L3 (model-written paraphrase) is not in this table** — it needs the LLM endpoint, and these are the
+offline defaults. It runs in P6 with pinned model IDs.
+
+⚠️ **R1's clean 0.9597 here is the deterministic path.** Its published 0.8594 at L2 came with the LLM
+extraction tier on, which is worth ~+0.07 under stress and 0.0000 on clean. Both are true; they answer
+different questions.

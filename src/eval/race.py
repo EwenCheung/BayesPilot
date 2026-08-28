@@ -18,35 +18,40 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from src.eval import harness  # noqa: E402
+from src.eval import ablations, harness  # noqa: E402
 from src.eval.stress import ParaphraseRewriter  # noqa: E402
 
 
-def _r1(**kwargs):
+def _r1(ablate: tuple[str, ...] = (), **kwargs):
     from src.r1.agent import Agent
-    return Agent(str(harness.CATALOG), **kwargs)
+    agent = Agent(str(harness.CATALOG), **kwargs)
+    if ablate:
+        agent.flags = ablations.r1_flags(*ablate)   # R1 reads flags from env at construction
+    return agent
 
 
-def _r2(**kwargs):
+def _r2(ablate: tuple[str, ...] = (), **kwargs):
     from src.r2.agent import Agent
-    return Agent(str(harness.CATALOG), **kwargs)
+    return Agent(str(harness.CATALOG), ablations=ablations.r2_ablations(*ablate), **kwargs)
 
 
 # name -> factory. A road is a name; nothing else about the runner knows which is which.
 ROADS = {"r1": _r1, "r2": _r2}
 
 
-def run_road(road: str, stress: int = 0, **kwargs) -> dict:
-    """Score one road at one paraphrase level through the official evaluator."""
+def run_road(road: str, stress: int = 0, ablate: str | tuple[str, ...] = (), **kwargs) -> dict:
+    """Score one road at one paraphrase level, under one shared ablation vocabulary."""
     assert road in ROADS, f"unknown road {road!r}; have {sorted(ROADS)}"
+    if isinstance(ablate, str):
+        ablate = (ablate,)
     rewriter = ParaphraseRewriter(stress) if stress else None
-    result = harness.run(ROADS[road](**kwargs), rewriter)
+    result = harness.run(ROADS[road](ablate=ablate, **kwargs), rewriter)
     assert harness.kit_is_pristine(), "kit drifted — this score is unverifiable"
     return result
 
 
-def score_road(road: str, stress: int = 0, **kwargs) -> float:
-    return harness.score(run_road(road, stress, **kwargs))
+def score_road(road: str, stress: int = 0, ablate: str | tuple[str, ...] = (), **kwargs) -> float:
+    return harness.score(run_road(road, stress, ablate, **kwargs))
 
 
 def main() -> None:

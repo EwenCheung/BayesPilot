@@ -13,14 +13,14 @@ and recorded in [03-decisions.md](03-decisions.md)).
 
 | ID | Criterion | Test | Status |
 |---|---|---|---|
-| M1 | R1's 59 pytest + R2's 38 unittest pass as one suite | `pytest tests/` | ⬜ |
-| M2 | Unified harness reproduces starter `0.106710` and seed `0.9607` **exactly** | `tests/test_gates.py` | ⬜ |
-| M3 | R1 clean = `0.9597`, R2 clean = `0.9707` on the unified harness | `src.eval.race --roads r1,r2` | ⬜ |
-| M4 | Kit byte-identical to upstream before and after every run | `src/eval/kit_manifest.json` check | ⬜ |
-| M5 | No module under `src/` imports `evaluator.local_evaluator` | `tests/test_imports.py` (AST) | ⬜ |
-| M6 | Two subprocess index builds are byte-identical | `tests/test_determinism.py` | ⬜ |
-| M7 | One `no_spec_phrase` definition applied to both roads; corrected numbers published | `04-merge-plan.md` §7 filled | ⬜ |
-| M8 | 140/60 manifest: disjoint on sample ID **and** target ASIN, scenario-stratified, content-hashed | `tests/test_holdout.py` | ⬜ |
+| M1 🟩 | R1's 59 pytest + R2's 38 unittest pass as one suite | `pytest tests/` | 🟩 |
+| M2 🟩 | Unified harness reproduces starter `0.106710` and seed `0.9607` **exactly** | `tests/test_gates.py` | ⬜ |
+| M3 🟩 | R1 clean = `0.9597`, R2 clean = `0.9707` on the unified harness | `src.eval.race --roads r1,r2` | ⬜ |
+| M4 🟩 | Kit byte-identical to upstream before and after every run | `src/eval/kit_manifest.json` check | ⬜ |
+| M5 🟩 | No module under `src/` imports `evaluator.local_evaluator` | `tests/test_imports.py` (AST) | ⬜ |
+| M6 🟩 | Two subprocess index builds are byte-identical | `tests/test_determinism.py` | ⬜ |
+| M7 🟩 | One `no_spec_phrase` definition applied to both roads; corrected numbers published | `04-merge-plan.md` §7 filled | ⬜ |
+| M8 🟩 | 140/60 manifest: disjoint on sample ID **and** target ASIN, scenario-stratified, content-hashed | `tests/test_holdout.py` | ⬜ |
 
 ⚠️ **M3 is score-neutrality on clean only.** The stress and ablation numbers are *expected* to move —
 that is the merge's output, not a regression (see [04-merge-plan.md](04-merge-plan.md) §5).
@@ -52,7 +52,7 @@ pool by counting shared words ([00-r3-spec.md](00-r3-spec.md) §2.3).
 | ID | Criterion | Test | Status |
 |---|---|---|---|
 | **R3-A27** | Level-1 category accuracy under L3 paraphrase ≥ **0.95** (R1 measures **0.85**) | `tests/test_category_belief.py` | ⬜ |
-| **R3-A3** | Stressed Hit@10 ≥ **0.90** (best current: R2 `no_spec_phrase` 0.890, R1 L3 0.820) | `src.eval.race --stress` | ⬜ |
+| **R3-A3** | **L2 paraphrase Hit@10 ≥ 0.95** (best current **0.890**, R1). Revised up after the merge: removing inversion costs R1 *no* recall (0.995), so paraphrase is the whole cause — 04-merge-plan.md §7.1 ④ | `src.eval.race --stress 2` | ⬜ |
 | R3-A12 | Clean score unchanged by widening (within 0.005) — the pool opens only when the belief is diffuse, exactly as R1's hedge measured 0.0000 on clean | `src.eval.race` | ⬜ |
 | R3-A13 | `τ_mass` replaces `hedge(keep=0.6)`, the top-3 cutoff and the 4000 cap; none of those constants survive in `src/r3/` | `tests/test_constants.py` | ⬜ |
 | R3-A14 | Pool size bounded: p95 candidates ≤ 8000, so R3-A11 still holds | `tests/test_latency.py` | ⬜ |
