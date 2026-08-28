@@ -15,12 +15,16 @@ products is the customer describing?* — and the right way to combine evidence 
 
 ```
 P₀(item) ∝ popularity                        the 570× target skew IS a prior
-each turn:  P(item) ∝ P(item) · L(uₜ | item) every utterance is evidence
-            search wide enough that Σ P over the pool ≥ τ_mass
-            ask  argmax_a  H(P) − 𝔼_r[H(P | a,r)]
-            ship the top-k where cumulative mass ≥ τ_ship
-            convert when H(P) < τ_convert
+each turn:  P(·) ∝ P(·) · L(uₜ | ·)          every utterance is evidence
+            search wide enough that Σ P(category) ≥ τ_mass       ← recall
+            ask  argmax_a  H(P) − 𝔼_r[H(P | a,r)]                ← questions
+            ship the top-k where cumulative mass ≥ τ_ship        ← depth
+            convert when H(P) < τ_convert                        ← stopping
 ```
+
+The belief is maintained at **two levels** — over the 1,115 coarse categories, and over the items in
+whichever categories the first level says are plausible. §2.3 is why that matters more than the item
+level alone.
 
 Set `L` to hard 0/1 and you recover R1. Read the posterior as a score and ignore its normalisation and
 you recover R2. **R3 is the generalisation both roads are special cases of** — that is the claim, and
@@ -44,37 +48,74 @@ become **one object with one number** instead of three hand-tuned subsystems.
 
 ## 2. What changed from IDEA.md §0.3 — read this
 
-IDEA.md scopes R3's posterior to **ranking and stopping**. The measurements taken since say that is
-aimed at the wrong place.
+IDEA.md scopes R3's posterior to **ranking and stopping**, over items. The measurements taken since say
+that is aimed at the wrong level of the problem.
 
-**Clean is saturated.** R2 reached MRR 0.9746 / MTTC 2.08 / score 0.9707. The theoretical maximum is
-0.9922, so clean headroom is **0.0215** — and CLAUDE.md trap 7 says a 0.02 gap on 200 sessions is
-noise. **R3 cannot win on the clean set, and a clean-only win is not a win** (§8).
+### 2.1 Clean is saturated
 
-**Every number that estimates the private set is a recall failure, not a ranking failure:**
+R2 reached MRR 0.9746 / MTTC 2.08 / score 0.9707. The theoretical maximum is 0.9922, so clean headroom
+is **0.0215** — and CLAUDE.md trap 7 says a 0.02 gap on 200 sessions is noise. **R3 cannot win on the
+clean set, and a clean-only win is not a win** (§8).
+
+### 2.2 Every private-set estimate is a recall failure
 
 | Condition | Hit@10 | Score |
 |---|---|---|
 | R1 @ L3 paraphrase | 0.820 | 0.7246 |
 | R2 heavy paraphrase | 0.845 | 0.7961 |
 | R2 `no_spec_phrase` | 0.890 | 0.8315 |
-| — a teammate's non-inversion pipeline, same 200 sessions | **0.995** | 0.9044 |
+| — a teammate's **non-inversion** pipeline, same 200 sessions | **0.995** | 0.9044 |
 
 15–18% of stressed sessions never had the target in the returned list at all. **A posterior that only
 reorders cannot fix that**, because a posterior over a pool that excludes the target is worth zero no
-matter how well calibrated it is.
+matter how well calibrated it is. That last row is the most instructive number in the project: a
+pipeline using *none* of the inversion trick beats R2-without-inversion on both recall **and** speed,
+and loses only on MRR.
 
-**So R3's posterior does three jobs, not two:**
+### 2.3 🔑 And the recall failure has one identified cause
 
-| Job | Replaces | Where the points are |
-|---|---|---|
-| **how wide to search** | R1's `hedge(keep=0.6)`, R2's fixed 4000 cap | ⬅ **here** |
-| how to order | R2's two weight schedules + regime switch | saturated |
-| when to stop / how deep | R1's NQC 0.35 + deadline 3, R2's 4-rung ladder | ~0.012 |
+R1 diagnosed it precisely in its own handover: *"At L3, the losses are pools that never contained the
+target. Category resolution is 85% accurate there."* And in `catalog.py` itself: *"15% of
+model-paraphrased openers resolve to the wrong category, and those are guaranteed misses."*
 
-Opening the pool by **posterior mass** rather than a tuned constant is not a bolt-on: it is the most
-natural thing a belief lets you do, and it is the only stage aimed at measured headroom. Dropping it
-makes R3 a rename of R2 with Greek letters.
+Here is what actually chooses the pool in both roads today:
+
+```python
+scored.append((category, hit * hit / (len(category_tokens) or 1)))   # R1: lexical token overlap
+chosen = [c for c, s in ranked[:3] if s >= 0.6 * best]               # hedge: top-3, tuned constant
+```
+
+**Both roads build careful machinery on top of a pool chosen by counting shared words**, across 1,115
+coarse categories, from a single opening sentence, with a tuned cutoff over an arbitrary top-3. It is
+the earliest decision in the session, it is unrecoverable when wrong, and it is the least principled
+line of code in either road.
+
+R1 already measured that treating it probabilistically helps: hedging the union is worth **+0.0464 at
+L3** and exactly **0.0000** on clean — it pays only when the wording is genuinely ambiguous, which is
+precisely the private-set risk. That is a distribution over categories, implemented as a tuned
+heuristic and stopped at the top 3.
+
+### 2.4 So R3 is a two-level belief
+
+```
+level 1   P(category | evidence)     over 1,115 coarse categories    ← the recall fix
+level 2   P(item | category, evidence) over the resulting pool       ← ranking + stopping
+```
+
+Level 1 is cheap (1,115 elements), it is where 15–18% of sessions are lost, and it turns R1's
+`hedge(keep=0.6, top=3)` into *"search until the category posterior mass exceeds τ_mass"* — a derived
+consequence rather than two tuned constants. Level 2 is the posterior IDEA.md described.
+
+**This is the reorganisation.** Aiming a belief at the 50,000 items was aiming it where the problem is
+already solved; aiming it at the 1,115 categories aims it at the one decision that silently forfeits
+sessions. Both levels use the same machinery, so this is a change of emphasis and target, not extra
+scope.
+
+| Job | Replaces | Level | Headroom |
+|---|---|---|---|
+| **how wide to search** | R1's `hedge(keep=0.6, top=3)`, R2's fixed 4000 cap | 1 | ⬅ **all of it** |
+| how to order | R2's two weight schedules + its regime switch | 2 | saturated |
+| when to stop / how deep | R1's NQC 0.35 + deadline 3, R2's 4-rung ladder | 2 | ~0.012 |
 
 ---
 
@@ -87,42 +128,51 @@ R3 is **one system**, not a shim over two others.
 utterance ─── parse ──►│  Evidence  eₜ = (constraints, category)│
                        └────────────────┬──────────────────────┘
                                         ▼
-              ┌──────────────────── BELIEF ────────────────────┐
-              │  log P(item) = log P₀(item) + Σₜ log L(eₜ|item)│
-              │  P₀ ∝ log1p(rating_number), pool-normalised     │
-              └───┬───────────────┬───────────────┬────────────┘
-    pool width ───┘               │ order         └─── H(P), mass
-    Σ P ≥ τ_mass                  ▼                     │
-    (RECALL)              top-k by P (RANK)              ▼
-                                                  ask / ship / convert
-                                                      (POLICY)
+        ┌───────────── LEVEL 1 — belief over categories ──────────────┐
+        │  log P(c) = log P₀(c) + Σₜ log L(eₜ | c)      1,115 elements│
+        │  pool = smallest set of categories with Σ P(c) ≥ τ_mass     │
+        └────────────────────────────┬────────────────────────────────┘
+                                     ▼
+        ┌───────────── LEVEL 2 — belief over items ───────────────────┐
+        │  log P(i) = log P₀(i) + log P(c(i)) + Σₜ log L(eₜ | i)      │
+        │  P₀ ∝ log1p(rating_number), pool-normalised                 │
+        └───┬─────────────────────┬──────────────────┬────────────────┘
+            │ top-k by P          │ H(P)             │ cumulative mass
+            ▼                     ▼                  ▼
+          RANK                 convert            ship-depth
+                                      └─ EIG question selection ─┘
 ```
 
-One number — the posterior — drives all three. There is no separate confidence signal, no separate
-regime switch, and no separate stopping heuristic.
+One object — the belief — drives pool width, ordering, question choice and conversion. There is no
+separate confidence signal, no separate regime switch, no separate stopping heuristic, and no tuned
+hedge.
 
 ### 3.1 The likelihood family
 
-`L(e | item)` is a product of independent **evidence terms**, each a bounded factor in `[ℓ_min, 1]`
-so that no single term can zero out an item (an item that survives no evidence must still be
-reachable — this is R1's relaxation rule, expressed as arithmetic instead of a special case):
+`L(e | ·)` is a product of independent **evidence terms**, each a bounded factor in `[ℓ_min, 1]` so
+that no single term can zero out a candidate (an item that matches no evidence must still be
+reachable — this is R1's relaxation rule expressed as arithmetic instead of a special case):
 
-| Term | Signal | Origin |
-|---|---|---|
-| `exact` | the constraint string appears verbatim in the item's own spec phrases | R1's sharp matcher |
-| `attribute` | the normalised `(attribute, value)` pair matches | R1's ontology matcher |
-| `lexical` | IDF-weighted content-token overlap | R2's lexical route |
-| `semantic` | cosine between the rewritten query and the item embedding | R2's dense route |
+| Term | Signal | Level | Origin |
+|---|---|---|---|
+| `exact` | the constraint string appears verbatim in the candidate's spec phrases | 2 | R1's sharp matcher |
+| `attribute` | the normalised `(attribute, value)` pair matches | 2 | R1's ontology matcher |
+| `lexical` | IDF-weighted content-token overlap | 1, 2 | R2's lexical route |
+| `semantic` | cosine against the encoded category name / item blob | **1**, 2 | R2's dense route, retargeted |
 
-**These are R3's terms, written in R3's vocabulary against R3's index.** They are informed by R1 and R2
-and in places lifted from them, but `src/r3/` imports nothing from `src/r1/` or `src/r2/` — see
-[01-contracts.md](01-contracts.md) §3, which is enforced by a test, not by discipline.
+🔑 **The `semantic` term at level 1 is the specific fix for §2.3.** Resolving 1,115 category names by
+cosine instead of by shared word count is ~20 lines and R1 estimated it at **+0.03** without building
+it. It also costs almost nothing: 1,115 encoded names is a 1,115 × d matrix, encoded once.
 
-🔑 **A term with no evidence contributes a flat factor, automatically.** R2 needed a hand-coded regime
-switch (`spec_support < 0.60` → load a second weight table) to stop a dominant popularity weight from
-swamping the routes that still had something to say. In a posterior, a term that assigns the same
-likelihood to every candidate *cancels in the normalisation*. The regime switch is not implemented
-better — it stops existing. That is the clearest single argument for this road.
+🔑 **Each constraint contributes its own evidence term, rather than one fused query.** This is the
+lesson taken from the non-inversion pipeline that beats R2 on recall — per-constraint routes, not one
+blended query vector. In a posterior it is not a design choice bolted on; it is what independent
+evidence *means*.
+
+🔑 **A term with no evidence contributes a flat factor and cancels in the normalisation.** R2 needed a
+hand-coded regime switch (`spec_support < 0.60` → load a second weight table) to stop a dominant
+popularity weight swamping the routes that still had something to say. In a posterior that switch is
+not implemented better — **it stops existing.** That is the single clearest argument for this road.
 
 ### 3.2 Calibration
 
@@ -155,7 +205,7 @@ The Innovation exhibit is a count, and it must be reported before and after.
 | R2 depth ladder | 4 rungs + 3 cutoffs | `τ_ship` on cumulative mass |
 | R1 NQC `0.35` | 1 | `τ_convert` on `H(P)` |
 | R1 deadline `turn ≥ 3` | 1 | `τ_convert` (the override floor stays — it is structural, §5) |
-| R1 `hedge(keep=0.6)` + `cap=4000` | 2 | `τ_mass` |
+| **R1 `hedge(keep=0.6)` + top-3 + `cap=4000`** | **3** | **`τ_mass` on the level-1 category belief — §2.3** |
 | R1 `shrink_min`, attribute `0.6`, token `0.3`, `demote 0.35`, decay `0.9` | 5 | calibrated likelihood |
 
 **~45 hand-tuned constants → 3 thresholds (`τ_mass`, `τ_ship`, `τ_convert`) plus the calibrator's fitted
@@ -188,48 +238,76 @@ These were measured and are structural. Re-deriving them is not exploration, it 
 
 ## 6. Models
 
-Rules: *"For official final scoring, organizer policy may disable network access"* (submission_rules
-§Model Policy); out of scope is *"full-model training"* and *"infrastructure-heavy vector databases"*
-(competition_specification). A pretrained encoder run locally is neither.
+### 6.0 Scope audit — [docs/PROBLEM.md](../PROBLEM.md) §4.3, verbatim
 
-### 6.1 The semantic term — BLaIR, measured against the incumbents
+| PROBLEM.md says | Consequence for R3 |
+|---|---|
+| **Out:** *"Training or full-parameter fine-tuning of base foundational LLMs."* | We train **no** LLM. A pretrained encoder used for inference is not training. Fitting a calibrator or a gradient-boosted model is not a foundational LLM. |
+| **Out:** *"Deploying heavy external industrial vector DB clusters (must run entirely in-memory for light execution)."* | Embeddings are **one numpy matrix and one matmul**, in-process. No FAISS server, no Milvus, no Pinecone. Peak RSS is reported in the registry. |
+| ⚠️ **Out:** *"Multi-Modal Processing (restricted strictly to text catalogs, structured metadata, and text dialogs)."* | 🚫 **No image models.** The catalog carries product images and CLIP-style retrieval would be an easy, natural, and disqualifying reach. Text and structured metadata only. |
+| **Out:** UI/UX development | Headless. Not our concern. |
+| **Limit:** catalog is strictly read-only, no mock ASIN injection | Synthetic sessions (§3.2) generate **dialogs**, never catalog rows. The catalog file is never written. |
+| **In (§4.3):** *"Fine-tuning prompt strategies or local scoring logic for the LLM ranking stage."* | The learned calibrator is explicitly in scope. |
+| **In (§4.4):** *"keyword retrieval, rule-based methods, dense retrieval, hybrid retrieval, reranking, **local models**, and external model APIs"* | A local pretrained encoder is explicitly supported, not merely tolerated. |
+| **Disclosure (§ Submission):** name *"Hugging Face Transformers, PyTorch, scikit-learn"* | These are anticipated dependencies. Every one used gets declared, with version, in the manifest. |
 
-R2 measured `bge-m3` (API, 1024-d) ≈ TF-IDF→SVD (local, 256-d): 0.9676 vs 0.9707, statistically
-identical. It concluded dense is not worth a network dependency. Both that finding and the teammate's
-independent one are about **generic** encoders.
+**Nothing in PROBLEM.md blocks anything below.** Where it is silent, we are free — and it is silent on
+encoder choice, on gradient-boosted models, and on offline precomputation.
 
-**[`hyp1231/blair-roberta-base`](https://huggingface.co/hyp1231/blair-roberta-base)** (125M, RoBERTa
-architecture) is pretrained on **Amazon Reviews 2023 — this exact corpus** — and the upstream repo is
-already vendored at [`AmazonReviews2023/blair/`](../../AmazonReviews2023/blair/). It is the one encoder
-whose training distribution matches the failure R3 is attacking: vocabulary mismatch between how a
-customer words a constraint and how the catalog words it (`made of alloy` → `Material: alloy`). TF-IDF
-cannot bridge that at all; a generic encoder bridges it weakly.
+### 6.1 The semantic term is a switch, and the switch is the experiment
 
-**Deployment shape — this is the part that makes it cheap:**
+The `semantic` term has one interface and interchangeable backends. It is measured as a **matrix**, not
+chosen by argument, on the **stressed** and **`no_spec_phrase`** numbers — never on clean, where
+everything ties.
 
-- `torch` + `transformers` are **build-time only**. One offline pass embeds all 50,000 products.
-- The artifact is `50000 × 768` float16 ≈ **77 MB**, loaded by numpy.
-- **Runtime needs numpy alone. Zero network calls.** Strictly better than R2's `bge-m3` path under the
-  "network may be disabled" rule, and not a vector database — it is one matrix and one matmul.
+| Backend | d | Where | Runtime dep | Prior |
+|---|---|---|---|---|
+| `tfidf_svd` | 256 | local, built at startup | scikit-learn | R2's incumbent; scored 0.9707, tied `bge-m3` |
+| `bge_m3` | 1024 | API, precomputed | numpy | R2 measured 0.9676 — no gain, costs a network bet |
+| **`blair_base`** | 768 | local, precomputed | **numpy** | untested — the hypothesis |
+| `blair_large` | 1024 | local, precomputed | numpy | untested — does scale help, if base does? |
+| `qwen3_emb_0.6b` | 1024 | local, precomputed | numpy | untested — is it domain fit, or just a better encoder? |
 
-Measured against `bge-m3` and TF-IDF/SVD on the same harness, on **stressed and `no_spec_phrase`**, not
-on clean. **Kill:** if BLaIR does not beat TF-IDF/SVD by ≥0.01 on the stressed number, drop it and keep
-SVD — the prior from two independent measurements is that dense does not help here, and a 2.5 GB
-build-time dependency needs to earn its place.
+Each is measured at **both levels**: as the level-1 category resolver (1,115 names — cheap, and where
+§2.3 says the points are) and as the level-2 item term. It is entirely possible that a backend wins at
+one level and loses at the other; that result would itself be worth reporting.
 
-### 6.2 The calibrator — LightGBM / isotonic, already installed
+**Why BLaIR is the hypothesis:** [`hyp1231/blair-roberta-base`](https://huggingface.co/hyp1231/blair-roberta-base)
+(125M, RoBERTa) is pretrained on **Amazon Reviews 2023 — this exact corpus** — and the upstream repo is
+already vendored at [`AmazonReviews2023/blair/`](../../AmazonReviews2023/blair/). R2 and a teammate both
+measured dense underperforming here, but **both used generic encoders.** The failure R3 attacks is
+vocabulary mismatch between how a customer words a constraint and how the catalog words it (`made of
+alloy` → `Material: alloy`); a corpus-matched encoder is the specific tool for that, and TF-IDF cannot
+bridge it at all.
 
-`lightgbm 4.6.0` and `scikit-learn 1.7.2` are already present. The principled use here is **not** a
-black-box reranker bolted on top of a Bayesian story — that would compete with the posterior instead of
-composing with it. It is to fit `P(evidence | item)` on the free synthetic sessions (§3.2). Isotonic
-regression is the first thing to try; LightGBM only if a monotone map is measurably insufficient.
+**Why it is cheap:** `torch` and `transformers` are **build-time only**. One offline pass embeds the
+50,000 products and the 1,115 category names; the artifact is 50000 × 768 float16 ≈ **77 MB**.
+**Runtime is numpy.** Zero network calls — strictly better than R2's `bge-m3` path under *"organizer
+policy may disable network access"* (submission_rules §Model Policy).
+
+🔴 **Kill (R3-A23):** the winning backend must beat `tfidf_svd` by ≥0.01 on the stressed number, or
+`tfidf_svd` ships and the whole matrix is reported as a negative result. Two independent measurements
+say dense does not help here; that prior has to be paid for, not assumed away.
+
+### 6.2 The calibrator — already installed
+
+`lightgbm 4.6.0` and `scikit-learn 1.7.2` are present; `torch` and `transformers` are not (≈2.5 GB, and
+build-time only — see 6.1).
+
+The principled use is **not** a black-box reranker bolted on top of a Bayesian story — that would
+compete with the posterior instead of composing with it, and it would be unexplainable in a write-up
+whose entire claim is *one derived mechanism*. It is to fit `P(evidence | ·)` on the free synthetic
+sessions (§3.2). **Isotonic regression first**; LightGBM only if a monotone map is measurably
+insufficient, and only with that measurement recorded.
 
 ### 6.3 Rejected without building
 
-- **Cross-encoder / LLM reranker.** Two independent measurements say listwise reranking *reduces* MRR
-  here. Not where the points are.
-- **`Qwen3-Embedding-0.6B`.** MTEB leader, but generic — BLaIR's domain match is the specific hypothesis
-  worth testing. Fall back to this only if BLaIR wins and we want to know whether domain or scale did it.
+- **Cross-encoder / LLM listwise reranker.** Two independent codebases measured listwise reranking
+  *reducing* MRR here (R2: 0.9642 vs 0.9707; a teammate's separate 10-session ablation agreed). R1
+  measured −0.0053 clean. Not where the points are. An LLM tier survives for **extraction only**,
+  escalation-gated, where R1 measured identical clean cost and +0.07 under stress.
+- **Any image or multi-modal model.** Out of scope by PROBLEM.md §4.3. See §6.0.
+- **A vector database.** Out of scope by PROBLEM.md §4.3, and unnecessary at 50,000 × 768.
 
 ---
 
@@ -241,6 +319,7 @@ road:
 | ID | Gate |
 |---|---|
 | **R3-A1** | With a degenerate 0/1 likelihood the posterior orders **identically** to R1's filter; read as a score with flat calibration it orders identically to R2's blend. The generalisation claim is tested, not asserted. |
+| **R3-A27** | Level-1 category accuracy under L3 paraphrase ≥ **0.95** (R1 measures 0.85 today). The §2.3 fix, isolated from everything downstream. |
 | **R3-A2** | Clean score within 0.01 of R2's 0.9707 on the unified harness. |
 | **R3-A3** | Stressed Hit@10 ≥ 0.90 (best current: 0.890). This is the recall gate and the road's reason to exist. |
 | **R3-A4** | `no_spec_phrase` and stressed scores beat `max(R1, R2)` by more than the bootstrap CI. |

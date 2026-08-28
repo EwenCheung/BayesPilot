@@ -94,3 +94,52 @@ posterior instead of composing with it — a black box bolted onto a Bayesian st
 alone, and unexplainable in a write-up whose whole claim is "one derived mechanism". Fitting
 `P(evidence | item)` is where supervised learning genuinely belongs in this architecture.
 **Status:** open.
+
+## D9 — PROBLEM.md §4.3 scope audit, done before any model was chosen
+
+**Decision:** audited [docs/PROBLEM.md](../PROBLEM.md) §4.3/§4.4 verbatim; recorded as
+[00-r3-spec.md](00-r3-spec.md) §6.0.
+**Findings:** nothing in the brief blocks a local pretrained encoder, a gradient-boosted calibrator, or
+offline precomputation — §4.4 lists *"dense retrieval, hybrid retrieval, reranking, **local models**"*
+as supported, and the submission section names Transformers/PyTorch/scikit-learn as expected
+disclosures. Three real limits do bind: no training of foundational LLMs, no vector-DB cluster
+(*"must run entirely in-memory"*), and **no multi-modal processing.**
+**The trap this catches:** the catalog carries product images, and CLIP-style retrieval is a natural
+reach that would be **out of scope**. Written down as R3-A29 with a test, before anyone reaches for it.
+**Status:** decided.
+
+## D10 — ⭐ R3 is a **two-level** belief; level 1 is over categories, and that is the road's point
+
+**Decision:** rewrite R3 from "posterior over 50,000 items" to a belief over the **1,115 coarse
+categories** (choosing the pool by mass) with a second belief over items inside it. Supersedes D4, which
+had the right instinct — recall, not ranking — aimed one level too low.
+**Why:** R1 diagnosed the recall failure precisely and did not act on it: *"At L3 the losses are pools
+that never contained the target. Category resolution is 85% accurate there."* What actually chooses the
+pool in **both** roads is `hits² / |category tokens|` over 1,115 names, hedged over an arbitrary top-3
+with a tuned `keep=0.6`. Both roads then build careful machinery on top of a pool chosen by counting
+shared words. It is the earliest decision in a session and unrecoverable when wrong.
+**The numbers that decided it:** category accuracy 0.85 at L3 · 15% of paraphrased openers resolve to
+the wrong category, all guaranteed misses · R1's hedge is worth **+0.0464 at L3 and 0.0000 clean**, i.e.
+a distribution over categories already pays and is currently a heuristic · R1's own estimate for
+resolving by cosine instead: **+0.03**, unbuilt.
+**Why it is the right shape for R3 specifically:** a belief over 1,115 elements is cheap, it converts
+R1's two tuned constants into one derived threshold, and it is the *only* stage aimed at measured
+headroom. Aiming a posterior at the 50,000 items was aiming it where the problem is already solved.
+**Gate:** R3-A27 — level-1 accuracy ≥0.95 under L3, measured **in isolation before** it is entangled
+with level 2. If it does not move, the diagnosis is wrong and P2 is re-planned, not tuned.
+**Status:** open. This is the largest departure from IDEA.md §0.3 and the highest-value one.
+
+## D11 — the semantic backend is a switch, and the switch is the experiment
+
+**Decision:** one interface, five interchangeable backends (`tfidf_svd`, `bge_m3`, `blair_base`,
+`blair_large`, `qwen3_emb_0.6b`), measured as a matrix on stressed + `no_spec_phrase`, at **both**
+belief levels. Supersedes the narrower D6, which tested BLaIR alone.
+**Why:** R2 and a teammate both measured dense underperforming — with **generic** encoders, as an item
+term, on the clean set. Three things are untested at once: a **corpus-matched** encoder, the **level-1
+category** application, and the **stressed** condition. Testing them as a matrix costs little (the
+harness runs variants in one process) and produces an ablation table, which is worth more to Technical
+Execution than a single tuned number.
+**A backend may win at one level and lose at the other.** That result would itself be worth publishing.
+**Kill:** R3-A23 — beat `tfidf_svd` by ≥0.01 stressed or `tfidf_svd` ships and the matrix is reported as
+a negative result. The prior from two independent measurements has to be paid for, not assumed away.
+**Status:** open.

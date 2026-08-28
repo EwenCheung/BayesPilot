@@ -44,18 +44,23 @@ ship the better of R1/R2 on the unified harness.
 
 ---
 
-## Phase P2 — belief-sized recall
+## Phase P2 — the level-1 category belief
 
-**This is the phase the road exists for.** All measured headroom is here.
+**This is the phase the road exists for.** All measured headroom is here, and today both roads pick the
+pool by counting shared words ([00-r3-spec.md](00-r3-spec.md) §2.3).
 
 | ID | Criterion | Test | Status |
 |---|---|---|---|
+| **R3-A27** | Level-1 category accuracy under L3 paraphrase ≥ **0.95** (R1 measures **0.85**) | `tests/test_category_belief.py` | ⬜ |
 | **R3-A3** | Stressed Hit@10 ≥ **0.90** (best current: R2 `no_spec_phrase` 0.890, R1 L3 0.820) | `src.eval.race --stress` | ⬜ |
-| R3-A12 | Clean score unchanged by widening (within 0.005) — the pool opens only when the belief is diffuse | `src.eval.race` | ⬜ |
-| R3-A13 | `τ_mass` replaces R1's `hedge(keep=0.6)` and the 4000 cap; neither constant survives in `src/r3/` | `grep` assertion in `tests/test_constants.py` | ⬜ |
-| R3-A14 | Pool size is bounded: p95 candidates ≤ 8000, so R3-A11 still holds | `tests/test_latency.py` | ⬜ |
+| R3-A12 | Clean score unchanged by widening (within 0.005) — the pool opens only when the belief is diffuse, exactly as R1's hedge measured 0.0000 on clean | `src.eval.race` | ⬜ |
+| R3-A13 | `τ_mass` replaces `hedge(keep=0.6)`, the top-3 cutoff and the 4000 cap; none of those constants survive in `src/r3/` | `tests/test_constants.py` | ⬜ |
+| R3-A14 | Pool size bounded: p95 candidates ≤ 8000, so R3-A11 still holds | `tests/test_latency.py` | ⬜ |
+| R3-A28 | Per-constraint evidence terms, not one fused query — each constraint updates the belief independently | `tests/test_likelihood.py` | ⬜ |
 
----
+⚠️ **R3-A27 is the isolated version of the fix and should be measured first**, before it is entangled
+with level 2. If category accuracy does not move, the §2.3 diagnosis is wrong and P2 should be
+re-planned rather than tuned.
 
 ## Phase P3 — calibration
 
@@ -79,16 +84,20 @@ ship the better of R1/R2 on the unified harness.
 
 ---
 
-## Phase P5 — models
+## Phase P5 — the model switch matrix
+
+[00-r3-spec.md](00-r3-spec.md) §6.0 is the scope audit; §6.1 is the matrix. Every backend is measured on
+**stressed** and **`no_spec_phrase`**, at **both** belief levels, on the same harness.
 
 | ID | Criterion | Test | Status |
 |---|---|---|---|
-| R3-A21 | BLaIR embeddings are a **build-time** artifact; runtime imports numpy only, no torch, no transformers | `tests/test_runtime_deps.py` (AST) | ⬜ |
-| R3-A22 | BLaIR vs `bge-m3` vs TF-IDF/SVD measured on **stressed** and `no_spec_phrase`, same harness | `docs/R3-RESULTS.md` | ⬜ |
-| R3-A23 | 🔴 BLaIR beats TF-IDF/SVD by ≥ 0.01 stressed, **or it is dropped** and SVD ships | decision in `03-decisions.md` | ⬜ |
+| R3-A21 | Embeddings are a **build-time** artifact; the runtime imports numpy only — no torch, no transformers | `tests/test_runtime_deps.py` (AST) | ⬜ |
+| R3-A22 | Full matrix reported: `tfidf_svd` · `bge_m3` · `blair_base` · `blair_large` · `qwen3_emb_0.6b`, × {level 1, level 2} | `docs/R3-RESULTS.md` | ⬜ |
+| **R3-A23** | 🔴 The winning backend beats `tfidf_svd` by ≥0.01 stressed, **or `tfidf_svd` ships** and the matrix is reported as a negative result | `03-decisions.md` D6 | ⬜ |
+| R3-A29 | 🚫 No image or multi-modal model anywhere — PROBLEM.md §4.3 | `tests/test_scope.py` | ⬜ |
+| R3-A30 | No vector DB; embeddings are one in-memory matrix. Peak RSS reported | registry row | ⬜ |
+| R3-A31 | Every dependency declared with a version, split build-time vs runtime | `requirements*.txt` | ⬜ |
 | **R3-A8** | Zero network calls on the default path; `R3_OFFLINE=1` is bit-identical to the networked run | `tests/test_offline.py` | ⬜ |
-
----
 
 ## Phase P6 — the race, then re-plan
 
