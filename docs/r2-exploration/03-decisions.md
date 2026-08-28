@@ -111,3 +111,30 @@ which is the opposite of the schedule intuition says to build.
 
 The optimum is a broad plateau (0.969–0.971 across a 4x range of both weights), not a peak — evidence
 that this is not a knife-edge fit to 200 sessions.
+
+---
+
+### D9 — The LLM ranking stage: built, measured, and worth ~nothing here
+**Result.** `R2 + qwen3.6:35b listwise rerank` scored **0.9642** against 0.9707 without it — a small
+*loss*. 68 calls succeeded, **318 failed**, 139k tokens, 132s of wall clock.
+
+⚠️ **The failure count is contention, not the model.** A second session on this machine was working R1
+against the same shared endpoint and saturating its rate limit; a direct probe returned 429 after two
+requests. `retries`/`backoff` were added afterwards, but re-measuring cleanly is not possible while the
+endpoint is shared, so **this measurement is reported as inconclusive on the reranker's own merits.**
+
+**Two things it does establish, and they are the interesting ones:**
+
+1. **With 82% of LLM calls failing, R2 lost 0.0065.** That is the escalation-only design working exactly
+   as intended: the model is consulted only when the deterministic path is unsure, and a failed call
+   returns the original ordering untouched. The LLM is a bonus, never a dependency. That is the
+   Feasibility answer to "what if the endpoint is down during official scoring", and it is now measured
+   rather than asserted.
+2. **The instrumentation earned its keep.** IMPORTANT.md §13.1.3 records a previous run scoring 60
+   silently-failed calls as "the model doesn't help". Here the failure count was visible immediately and
+   the wrong conclusion was avoided. Every call site asserts on a parsed non-empty result.
+
+**Expected, and confirmed:** the blend already places the target at rank 1 in the large majority of
+sessions, so on the clean set there is almost nothing left for a reranker to fix. This is exactly the
+position IMPORTANT.md §14.1 argues for — build the stage the brief names, then report honestly that its
+contribution here is small and that its real value would be paraphrase robustness.
