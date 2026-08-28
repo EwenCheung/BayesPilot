@@ -42,7 +42,12 @@ class TestA0HarnessCalibration(unittest.TestCase):
         self.assertAlmostEqual(result["mttc"], 9.81, places=6)
 
     def test_a0_reproduces_r1_incumbent(self) -> None:
-        """R2-A0: experiments/agent_best_0.9607.py == 0.9607, the road we are racing."""
+        """R2-A0: experiments/agent_best_0.9607.py == 0.9607.
+
+        This is the shared SEED prototype, not the R1 road — R1 is developed in its own worktree. It is
+        pinned here because it is a second independently-known number the harness must reproduce, which
+        is all R2-A0 needs it for.
+        """
         r1 = load_module(ROOT / "experiments" / "agent_best_0.9607.py", "r1_incumbent")
         result = harness.run(r1.Agent(str(harness.CATALOG)))
         self.assertAlmostEqual(harness.score(result), 0.9607, places=4)

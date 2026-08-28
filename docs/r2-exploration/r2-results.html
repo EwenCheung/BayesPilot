@@ -139,8 +139,8 @@ footer{border-top:1px solid var(--rule);padding-top:20px;color:var(--muted);font
   </div>
   <h1>The agent is a ranker</h1>
   <p class="deck">R2 scores everything, orders it, and ships the top of the list. It matches the
-  incumbent on the clean benchmark — and it is the only one of the two still standing when the
-  customer's words are reworded.</p>
+  seed prototype on the clean benchmark, holds most of its score when the customer's words are
+  reworded, and needs no network to do either.</p>
 </header>
 
 <section>
@@ -148,11 +148,11 @@ footer{border-top:1px solid var(--rule);padding-top:20px;color:var(--muted);font
   <div class="verdict">
     <div class="stat">
       <span class="stat-v v-r2">0.9707</span>
-      <span class="stat-n">Clean TechnicalScore.<br>R1 incumbent: 0.9607</span>
+      <span class="stat-n">Clean TechnicalScore.<br>Seed prototype: 0.9607</span>
     </div>
     <div class="stat">
       <span class="stat-v v-r2">0.7961</span>
-      <span class="stat-n">Under heavy paraphrase.<br>R1: <span class="mono">0.0000</span></span>
+      <span class="stat-n">Under heavy paraphrase.<br>Seed prototype: <span class="mono">0.0000</span></span>
     </div>
     <div class="stat">
       <span class="stat-v v-r2">0.8315</span>
@@ -170,14 +170,16 @@ footer{border-top:1px solid var(--rule);padding-top:20px;color:var(--muted);font
 <section class="prose">
   <span class="label">What R2 is</span>
   <h2>Meaning beats matching</h2>
-  <p>The three roads disagree about what kind of problem this is. <strong>R1 says it is a database
-  query</strong>: the customer states facts, each fact eliminates products, and you intersect sets until
-  one item survives. <strong>R2 says it is a ranking problem</strong>: score every candidate by how well
-  it explains what the customer said, sort, and take ten.</p>
+  <p>The three roads disagree about what kind of problem this is. <strong>The filter view says it is a
+  database query</strong>: the customer states facts, each fact eliminates products, and you intersect
+  sets until one item survives. <strong>R2 says it is a ranking problem</strong>: score every candidate
+  by how well it explains what the customer said, sort, and take ten. R1 is the road exploring the first
+  view; the numbers on this page come from the shared seed prototype, not from R1's own agent.</p>
   <p>The difference is not cosmetic, and it shows up in exactly one place — what happens when a
-  constraint is worded differently than the catalog words it. R1's set intersection returns
-  <em>nothing</em>: one changed character and the match is gone. R2's scored overlap returns a smaller
-  number. One fails off a cliff, the other down a slope.</p>
+  constraint is worded differently than the catalog words it. A set intersection returns
+  <em>nothing</em>: one changed character and the match is gone. A scored overlap returns a smaller
+  number. One fails off a cliff, the other down a slope. Whether a mature filter can defend against that
+  is an open question this page does not answer.</p>
   <div class="pipe"><pre>user message
     │
     ├─ parse ──────────────► slots · slot age · disclosed · asked · barren
@@ -193,8 +195,16 @@ footer{border-top:1px solid var(--rule);padding-top:20px;color:var(--muted);font
 </section>
 
 <section>
-  <span class="label">The race</span>
+  <span class="label">Failure shape</span>
   <h2>A cliff and a slope</h2>
+  <div class="note warn"><p><strong>⚠️ This is not the R1 road, and it is not the race.</strong> The
+  comparison below is against <span class="mono">experiments/agent_best_0.9607.py</span> — the frozen
+  ~50-line prototype on <span class="mono">main</span> that IDEA.md assigns to R1 as its
+  <em>starting point</em>. The R1 road is being built in a separate worktree and has moved on; it is
+  actively adding paraphrase handling, which is exactly the weakness shown here. Nothing on this page
+  was measured against it. Treat what follows as <strong>a claim about two mechanisms</strong> —
+  set intersection versus scored overlap — <strong>not a verdict on R1.</strong> The real race needs
+  R1's current agent run through this harness, and that has not happened.</p></div>
   <figure>
     <div class="chartbox">
       <svg viewBox="0 0 720 372" role="img" aria-label="TechnicalScore for R1 and R2 across clean, lightly paraphrased and heavily paraphrased conditions. R2 declines from 0.97 to 0.80; R1 falls from 0.96 to zero.">
@@ -251,10 +261,10 @@ footer{border-top:1px solid var(--rule);padding-top:20px;color:var(--muted);font
         </g>
 
         <g font-family="Chivo, sans-serif" font-size="11.5" font-weight="600">
-          <text x="176" y="46" fill="var(--r2)">R2 · ranker</text>
-          <text x="176" y="62" fill="var(--r1)">R1 · filter</text>
+          <text x="176" y="46" fill="var(--r2)">R2 · scored overlap</text>
+          <text x="176" y="62" fill="var(--r1)">seed · set intersection</text>
           <text x="176" y="297" fill="var(--r1)" opacity="0.8" font-weight="400"
-                font-size="10.5">R1 + popularity fallback · 0.0273</text>
+                font-size="10.5">seed + popularity fallback · 0.0273</text>
         </g>
 
         <g fill="var(--muted)" font-family="Chivo, sans-serif" font-size="11.5" text-anchor="middle">
@@ -267,17 +277,17 @@ footer{border-top:1px solid var(--rule);padding-top:20px;color:var(--muted);font
         </g>
       </svg>
     </div>
-    <figcaption>Both agents run through the identical harness and the identical rewriter. The rewriter
+    <figcaption>Both run through the identical harness and the identical rewriter. The rewriter
     wraps the <em>agent</em>, never the evaluator — the labels, the scoring and the exact-code hit check
     are untouched.</figcaption>
   </figure>
 
-  <div class="note warn"><p><strong>The fair-control result is the one that matters.</strong> R1 scores
+  <div class="note warn"><p><strong>The fair-control result is the one that matters.</strong> The seed scores
   exactly zero partly because it has no fallback: when its regex misses, it ships an empty list every
   turn of every session. That is a missing guard, not an architecture. So we added the guard — fall back
   to the popularity prior, the same one R2 uses — and re-ran. It recovers to
   <span class="mono">0.0273</span>. The collapse survives the fix, which is what makes it a finding
-  about filters rather than a bug report about one file.</p></div>
+  about set intersection rather than a bug report about one file.</p></div>
 </section>
 
 <section>
@@ -295,11 +305,11 @@ footer{border-top:1px solid var(--rule);padding-top:20px;color:var(--muted);font
         <td class="num">0.845</td><td class="num">0.7569</td><td class="num">3.67</td><td class="num">0.7961</td></tr>
       <tr><td>R2 — full, <span class="mono">bge-m3</span> dense</td>
         <td class="num">0.995</td><td class="num">0.9746</td><td class="num">2.12</td><td class="num">0.9676</td></tr>
-      <tr><td>R1 incumbent — constraint filter</td>
+      <tr><td>Seed prototype — set intersection</td>
         <td class="num">1.000</td><td class="num">0.9750</td><td class="num">2.59</td><td class="num">0.9607</td></tr>
       <tr class="bad sub"><td>stressed · either level</td>
         <td class="num">0.000</td><td class="num">0.0000</td><td class="num">11.00</td><td class="num">0.0000</td></tr>
-      <tr><td>R1 + popularity fallback <span class="tag">fair control</span></td>
+      <tr><td>Seed + popularity fallback <span class="tag">fair control</span></td>
         <td class="num">1.000</td><td class="num">0.9543</td><td class="num">2.55</td><td class="num">0.9553</td></tr>
       <tr class="bad sub"><td>stressed · either level</td>
         <td class="num">0.035</td><td class="num">0.0103</td><td class="num">10.66</td><td class="num">0.0273</td></tr>
@@ -312,8 +322,8 @@ footer{border-top:1px solid var(--rule);padding-top:20px;color:var(--muted);font
     </tbody>
   </table>
   </div>
-  <p class="note">R2 beats R1 by <span class="mono">0.0100</span> on the clean set, but the bootstrap
-  intervals overlap — R2 <span class="mono">[0.9630, 0.9774]</span>, R1
+  <p class="note">R2 beats the seed by <span class="mono">0.0100</span> on the clean set, but the bootstrap
+  intervals overlap — R2 <span class="mono">[0.9630, 0.9774]</span>, seed
   <span class="mono">[0.9543, 0.9666]</span> over 1,000 resamples. <strong>The clean result is a
   tie.</strong> The race is decided by the rows underneath it.</p>
 </section>
@@ -431,6 +441,10 @@ footer{border-top:1px solid var(--rule);padding-top:20px;color:var(--muted);font
 <section>
   <span class="label">Honest limits</span>
   <h2>What this does not prove</h2>
+  <p class="prose"><strong>It does not prove anything about the R1 road.</strong> Every non-R2 number
+  here comes from the frozen seed prototype. R1's actual agent has never been run through this harness,
+  and the two are being developed in parallel — so the honest statement is that R2 has a measured
+  robustness profile and R1's is currently unknown to us.</p>
   <p class="prose">The stress rewriter is rule-based and deliberately harsher than anything the organizer
   is likely to ship — token reordering, synonym substitution and case changes inside the constraint
   strings. It is a lower bound on robustness, not a prediction, and R2's advantage under it is a claim

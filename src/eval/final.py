@@ -3,8 +3,11 @@
     python3 -m src.eval.final
 
 Writes one registry row per headline variant to runs/registry.jsonl and prints the comparison table.
-R1 is run through the IDENTICAL harness and the IDENTICAL stress rewriter — a race where the two roads
-are measured differently is not a race.
+⚠️ The reference agent here is experiments/agent_best_0.9607.py — the frozen ~50-line prototype that
+IDEA.md assigns to R1 as its STARTING POINT. It is NOT the R1 road, which is being developed in a
+separate worktree and has moved past it. Label these rows "seed", never "R1": a comparison against a
+frozen seed is a claim about two mechanisms, not a race between two roads. The real race needs R1's
+current agent run through this harness.
 """
 from __future__ import annotations
 
@@ -58,12 +61,12 @@ def main() -> None:
 
     print("\n--- reference points (identical harness) ---")
     r1_agent = load_r1()
-    RESULTS["r1"] = measure("R1 incumbent (constraint filter)",
+    RESULTS["r1"] = measure("seed prototype (set intersection)",
                             lambda: r1_agent(str(harness.CATALOG)))
 
     from src.eval import r1_hardened
     RESULTS["r1_hardened"] = measure(
-        "R1 + popularity fallback (fair control)",
+        "seed + popularity fallback (fair control)",
         lambda: r1_hardened.make(str(harness.CATALOG)))
 
     RESULTS["popularity"] = measure(
@@ -138,11 +141,11 @@ def main() -> None:
         notes="R2 = retrieve & rank. Headline metric is no_spec_phrase + stressed, not clean.",
     )
     harness.register(
-        "r1-incumbent", RESULTS["r1"]["clean"],
+        "seed-prototype", RESULTS["r1"]["clean"],
         paraphrase={"clean": harness.score(RESULTS["r1"]["clean"]),
                     "scaffold": harness.score(RESULTS["r1"]["scaffold"]),
                     "full": harness.score(RESULTS["r1"]["full"])},
-        notes="R1 run through the identical harness and stress rewriter, for the race.",
+        notes="experiments/agent_best_0.9607.py (R1 SEED, not the R1 road) through the identical harness.",
     )
 
     lo, hi = harness.bootstrap_ci(headline["clean"])

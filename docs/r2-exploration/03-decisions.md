@@ -138,3 +138,31 @@ endpoint is shared, so **this measurement is reported as inconclusive on the rer
 sessions, so on the clean set there is almost nothing left for a reranker to fix. This is exactly the
 position IMPORTANT.md §14.1 argues for — build the stage the brief names, then report honestly that its
 contribution here is small and that its real value would be paraphrase robustness.
+
+---
+
+### D10 — ⚠️ Correction: the comparison agent is the SEED, not the R1 road
+**What was claimed.** The first results report labelled `experiments/agent_best_0.9607.py` as
+"R1 incumbent" and built its headline chart around R2 beating it — presenting a measured cross-road
+race.
+
+**What was actually run.** That file, and only that file: the frozen ~50-line prototype committed on
+`main` at `5e8e0e7`, which IDEA.md assigns to R1 as its *starting point*. It was executed through the
+official evaluator four times (manual check, `test_gates`, and clean + two stress levels in
+`src/eval/final.py`). The numbers are real and reproducible. **The R1 road was never run.** It lives in
+its own worktree, no code here references it, and it is being developed in parallel — with paraphrase
+handling among the things it is adding, which is exactly the weakness the seed exhibits.
+
+**Why this matters beyond a label.** A frozen seed cannot lose a race it was never entered in. Comparing
+against it and calling the result "the race" inflates R2 and understates a rival that is actively
+closing the gap. It also risks the project acting on a conclusion — "filters collapse under paraphrase"
+— that has only been demonstrated for one 50-line implementation with no fallback.
+
+**What survives the correction.** R2's own numbers, all of them. And the *mechanism* claim, which is
+inspectable rather than merely measured: the seed's `CAT_RE` requires the literal string
+`"I'm looking for"`, and on a miss `by_cat.get(None, [])` returns empty, so it ships nothing at all. Set
+intersection returns zero on a reworded constraint; scored overlap returns a smaller number. Whether a
+*mature* filter can defend against that is open, and R1's worktree is the place it gets answered.
+
+**Rule going forward.** Rows from that file are labelled **seed**, never R1. R2-A8 stays open until
+R1's current agent runs through this harness with the same rewriter.

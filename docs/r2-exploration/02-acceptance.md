@@ -16,7 +16,7 @@ Gates: `python3 -m unittest tests.test_gates -v` (runs the real evaluator, ~1 mi
 | **R2-A5** | Agent contract conformance: positional `__init__`, `reset` clears session state, `respond` always returns a valid dict with non-empty `message` and legal `ask_attribute`, and survives a poisoned catalog row. | unit | `test_contract` |
 | **R2-A6** | Fusion: the scheduled linear blend beats RRF on the same candidates and routes. | blend > RRF | `test_gates.test_a6_blend_beats_rrf` |
 | **R2-A7** | Full R2 clean score. | report vs R1 **0.9607** | `test_gates.test_a7_clean` |
-| **R2-A8** | Paraphrase stress: R2's stressed score exceeds R1's stressed score. **This is the race.** | R2 > R1 stressed | `test_gates.test_a8_stress_race` |
+| **R2-A8** | Paraphrase stress: R2 degrades rather than collapsing. ⚠️ Measured against the shared **seed prototype**, not the R1 road — see note. | R2 stressed > seed stressed | `test_gates.test_a8_stress_race` |
 | **R2-A9** | The dense route has a working offline backend and the agent runs with the network disabled. | runs, score reported | `test_gates.test_a9_offline` |
 | **R2-A10** | LLM listwise rerank: measured on top of the blend, with `llm_call_failures` reported. Answers [IDEA.md Part II Q1](../../IDEA.md) — does its +0.19 MRR overlap with the blend's gain? | report Δ and failures | `test_gates.test_a10_llm_rerank` |
 
@@ -46,8 +46,8 @@ Kit verified pristine on the run that produced these.
 | R2-A4 | paraphrase-proof floor, end-to-end | **0.8315** (docs estimated 0.826) | ✅ |
 | R2-A5 | contract conformance | 9 unit tests | ✅ |
 | R2-A6 | blend > RRF | 0.9707 vs 0.8625 | ✅ |
-| R2-A7 | clean vs R1 0.9607 | **0.9707**, CI [0.9630, 0.9774] | ✅ tie |
-| R2-A8 | R2 stressed > R1 stressed | **0.7961 vs 0.0000** | ✅ decisive |
+| R2-A7 | clean vs seed 0.9607 | **0.9707**, CI [0.9630, 0.9774] | ✅ tie |
+| R2-A8 | R2 stressed > seed stressed | **0.7961 vs 0.0000** | ✅ vs seed only |
 | R2-A9 | runs offline | offline backend is the default; 0.9707 | ✅ |
 | R2-A10 | LLM rerank measured, failures reported | see `runs/rerank_retry.log` | ✅ |
 
@@ -60,3 +60,13 @@ richer evidence, not a retrieval regression — so the gate is recorded as expla
 
 **Bootstrap.** R2 [0.9630, 0.9774] and R1 [0.9543, 0.9666] overlap. The clean difference is **not
 significant** and must be reported as a tie.
+
+⚠️ **R2-A7/A8 scope — read before quoting these.** Every non-R2 number above comes from
+`experiments/agent_best_0.9607.py`, the frozen seed prototype committed on `main`. **The R1 road was
+never run.** It lives in its own worktree, is being developed in parallel, and is actively adding
+paraphrase handling — precisely the weakness the seed exhibits. So R2-A8's result is a claim about two
+*mechanisms* (set intersection fails as a cliff, scored overlap as a slope), not a verdict on R1.
+
+**R2-A8 is therefore not yet satisfied as written.** It is closed only when R1's current agent is run
+through this harness with the same rewriter, which requires R1 to merge. Until then, report R2's
+robustness profile on its own and say R1's is unknown to us.
