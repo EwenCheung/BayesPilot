@@ -259,6 +259,7 @@ clean set alone tells us nothing about the private set.
 
 | Road | Spec |
 |---|---|
+| 🟣 **R3** Bayesian Fusion | [docs/r3-exploration/](../docs/r3-exploration/) — [00-r3-spec.md](../docs/r3-exploration/00-r3-spec.md) (the bet, architecture, kill criteria) · [01-contracts.md](../docs/r3-exploration/01-contracts.md) (frozen seams; R3 imports nothing from R1/R2) · [02-acceptance.md](../docs/r3-exploration/02-acceptance.md) (`M1-M8`, `R3-A1..A31`) · [03-decisions.md](../docs/r3-exploration/03-decisions.md) (ADR log, **four reversals**) |
 | 🟢 **R2** Retrieve & Rank | [docs/r2-exploration/](../docs/r2-exploration/) — [00-r2-spec.md](../docs/r2-exploration/00-r2-spec.md) (the bet, architecture, kill criteria) · [01-contracts.md](../docs/r2-exploration/01-contracts.md) (frozen seams, shared with R1/R3) · [02-acceptance.md](../docs/r2-exploration/02-acceptance.md) (`R2-A0..A10`) · [03-decisions.md](../docs/r2-exploration/03-decisions.md) (ADR log) |
 
 The loop, in order, no steps skipped:
@@ -284,3 +285,31 @@ numbers — the clean score is sanity, not the point.
 
 ⚠️ **The harness never writes to `starter/agent.py`.** It imports the evaluator's own `evaluate()` and
 injects our agent. If you find yourself copying a file over the starter, you are using the wrong tool.
+
+---
+
+## Working on R3 — the current road
+
+**Read [docs/r3-exploration/00-r3-spec.md](../docs/r3-exploration/00-r3-spec.md) before writing code,
+and [docs/r3-exploration/SUMMARY.md](../docs/r3-exploration/SUMMARY.md) §7 before trusting a number.**
+
+```bash
+python3 -m pytest tests/ -q          # 111 tests
+python3 -m src.eval.race             # all three roads, one harness
+python3 -m src.eval.race --stress 3  # ...under category paraphrase
+python3 scripts/final.py             # the full table + held-out -> runs/final.json
+```
+
+⚠️ **Tune on the 140, report on the 60.** `src/eval/holdout.py`, manifest hash `a367f15873d772aa`.
+A threshold chosen while looking at the held-out 60 has spent it.
+
+⚠️ **Do not tune on the clean score.** It is saturated: R1 0.9597, R2 0.9707, R3 0.9720, theoretical max
+0.9922, and a 0.02 gap on 200 sessions is noise. R3 is judged on its **L2/L3 paraphrase** and
+**`no_spec_phrase`** numbers.
+
+⚠️ **`src/r3/` imports nothing from `src/r1/` or `src/r2/`** — two AST tests enforce it. Lift code, do
+not call across roads, or the race compares a system against its own components.
+
+**Four things were measured and rejected. Do not re-propose them without new evidence:** per-category
+naive Bayes for category resolution (D14) · EIG question selection (D18) · entropy as the patience
+signal (D15) · channel-conditioned evidence gains (D17).

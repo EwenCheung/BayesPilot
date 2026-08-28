@@ -35,8 +35,16 @@ def _r2(ablate: tuple[str, ...] = (), **kwargs):
     return Agent(str(harness.CATALOG), ablations=ablations.r2_ablations(*ablate), **kwargs)
 
 
+def _r3(ablate: tuple[str, ...] = (), **kwargs):
+    from src.r3.agent import Agent
+    agent = Agent(str(harness.CATALOG), **kwargs)
+    if ablate:
+        agent.flags = ablations.r3_flags(*ablate)
+    return agent
+
+
 # name -> factory. A road is a name; nothing else about the runner knows which is which.
-ROADS = {"r1": _r1, "r2": _r2}
+ROADS = {"r1": _r1, "r2": _r2, "r3": _r3}
 
 
 def run_road(road: str, stress: int = 0, ablate: str | tuple[str, ...] = (), **kwargs) -> dict:

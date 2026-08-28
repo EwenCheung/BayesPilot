@@ -281,3 +281,108 @@ pool coverage 0.99 → 0.97 (the clean-cost frontier, above). Both were set befo
 measured. Revising a gate after seeing data is only legitimate when the reason is recorded and is about
 what is achievable rather than what was achieved — that is the case here, and both original targets are
 left in the test docstrings so the change is visible.
+
+## D15 — the policy: three wrong models of "what is waiting worth?", and the one that works
+
+R3 ships depth by expected utility. The evaluator does `if target in ranked: break`, so **any** hit ends
+the session and locks that reciprocal rank — shipping ten items is not free, it converts a future rank-1
+hit into a present rank-7 one. Shipping `k` is worth
+
+    U(k) = Σ_{i≤k} p_i·(1/i)  +  (1 − Σ_{i≤k} p_i)·V
+
+and `U(0) = V`, so "say nothing this turn" falls out as the k=0 case instead of being a special rule.
+`turn_cost` is not a knob: one turn costs 0.2 × 0.1 = 0.02 of efficiency against MRR's weight of 0.3,
+so a turn is worth 0.02/0.3 ≈ 0.0667 of reciprocal rank. **The entire difficulty is `V`.**
+
+| Model of `V` | clean | L3 | Why it failed |
+|---|---|---|---|
+| constant 0.90 | 0.9467 | **0.6216** | `U(1) − U(0) = p₁(1 − V) > 0` and `U(2) − U(1) = p₂(0.5 − V) < 0` **unconditionally** — so it shipped exactly one item every turn forever. Sweeping V over 0.75–0.92 changed *nothing*, which is what exposed it. |
+| 0 on one barren turn | 0.9377 | 0.7124 | Panicked at a single unproductive reply; cost 0.068 of clean MRR. |
+| `(1 − normalised entropy)` | 0.9243 | 0.7095 | Entropy over a 275-item pool is high even when the belief is good. Measured separation clean-vs-L3: only **1.34×**. |
+| `p₁ ** power` | 0.9090 | 0.7778 | p₁ separates the conditions **2.4×** (median 0.393 clean vs 0.167 at L3) — but the fit chose `power = 0`, i.e. it preferred not to use it at all. |
+| **constant × `stall_decay ** consecutive_barren_turns`** | **0.9509** | **0.7899** | **shipped** |
+
+The lesson is not about the winner, it is that **a constant `V` makes the whole expected-utility
+apparatus degenerate into a fixed rule**, and it does so silently — the score looked reasonable and the
+parameter appeared not to matter. What actually matters is that waiting is only worth something when
+**more evidence is coming**, and the honest estimator of that is how many recent turns taught us
+anything.
+
+### Two bugs the trace found that no sweep would have
+
+Printing depth, constraint count and the customer's actual words for six L3 sessions:
+
+1. **It asked `"feature"` seven turns in a row** while the customer answered *"feature is up to you"*
+   each time. `best_question` skips attributes recorded as barren; nothing ever *recorded* one. Both
+   roads have this logic and I had implemented only the read side. Worth ~1.5 turns of MTTC at L3.
+2. **`stalled` shipped depth 2, not 10.** Setting `V` to "what this list is worth" left `horizon` high
+   enough that `dU/dk = p_k(1/k − horizon)` turned negative at k≈2.
+
+## D16 — ⚠️ the popularity prior was a units error, and it was worth 0.066
+
+`log1p(rating_number)` spans **0–11** across this catalog. One exact card-string match is worth **3.2**
+in log space. Used raw as a log-prior — which is what "P₀ ∝ popularity" naively implies — the prior
+**outvotes three exact matches**. That is not a strong prior, it is a units error, and it is the kind
+that hides because the resulting agent still behaves sensibly.
+
+Fitted on the 140:
+
+| prior_weight | clean | L3 |
+|---|---|---|
+| 0.05 | 0.9084 | 0.7129 |
+| 0.10 | 0.9084 | 0.7627 |
+| **0.18** | 0.9090 | **0.7778** |
+| 0.50 | 0.9144 | 0.7326 |
+| 0.85 | 0.9297 | 0.7082 |
+
+**+0.066 at L3** against the raw prior, and the curve is single-peaked — under-weighting the prior
+costs robustness (it is the paraphrase insurance both roads measured), over-weighting it drowns the
+evidence. R2 reached the same shape empirically with its schedule; the difference is that here it is
+one number with units rather than 28 tuned weights.
+
+## D17 — measured and rejected: channel-conditioned evidence gains
+
+**Idea:** `P(the catalog's exact wording appears | this item is the target)` should be high while the
+customer speaks in template language and low once they paraphrase, so `exact_gain` should switch on
+`state.paraphrased()`. This is ordinary Bayesian practice — conditioning a likelihood on the observed
+channel — and it is the principled version of R2's hand-coded `spec_support < 0.60` regime switch.
+
+**Result: it buys nothing.** Fitted on the 140, the clean score is flat in `exact_gain` (0.9478 at 3.2,
+0.9472 at 6.0, 0.9472 at 8.0) and every paraphrased gain other than 3.2 loses. The two-gain model
+collapses to the one-gain model.
+
+**Why that is interesting rather than disappointing:** the abstention rule in `likelihood.py` is
+already doing the work. A term whose evidence matches nothing in the pool returns `{}` and contributes
+nothing at all, so when paraphrase kills exact matching the exact term simply stops voting — no switch
+required. This is the one place where §3.1's claim that "the regime switch stops existing" is
+**tested rather than asserted**, and it holds.
+
+## D18 — ⚠️ REVERSAL: expected information gain loses at every stress level, and is switched off
+
+EIG question selection is one of the two things IDEA.md §0.3 promised R3 would do natively — *"the best
+question is the one that most reduces entropy"* — and it is now **off by default**.
+
+| | with EIG | hardcoded `"other"` | Δ |
+|---|---|---|---|
+| clean | 0.9509 | **0.9720** | **−0.021** |
+| L2 full | 0.8426 | **0.8845** | **−0.042** |
+| L3 category | 0.7899 | **0.8297** | **−0.040** |
+
+R1 measured the same sign at −0.0010 and kept it for the mechanism. Here it costs twenty to forty
+times more, and keeping it would be indefensible.
+
+**The reason is structural, not a tuning failure.** `"other"` makes the simulator return **the next two
+undisclosed constraints**; any named attribute returns at most one. And `classify_constraint` never
+emits `brand`, `budget` or `category` at all, so a third of the attributes EIG can choose are dead
+letters that burn a whole turn for nothing. **No question-selection objective can beat "ask for
+strictly more evidence" when one of the options literally returns twice as much of it.** EIG is
+optimising the wrong thing — it maximises information per *question*, and the scoring function pays for
+information per *turn*.
+
+This is worth stating plainly because it is the second IDEA.md claim about R3 that did not survive
+contact with measurement (D13 was the first). The posterior framing earns its place through the pool,
+the prior's units and the expected-utility policy — not through the question selection that looked like
+its most elegant consequence.
+
+Kept behind `R3_FLAGS=infogain` because the mechanism is worth demonstrating and the measurement is the
+contribution. It is not shipped, and R3-A19 is satisfied by reporting the loss rather than by winning.

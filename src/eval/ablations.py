@@ -23,10 +23,17 @@ SHARED: dict[str, dict[str, object]] = {
         # normalised — partial credit for the same inversion.
         "r1": {"spec_phrase": False, "attribute": False},
         "r2": ("no_spec_phrase",),
+        "r3": {"exact": False, "attribute": False},
     },
-    "no_popularity": {"r1": {"popularity": False}, "r2": ("no_popularity",)},
-    "no_dense": {"r1": {"dense": False}, "r2": ("no_dense",)},
-    "no_lexical": {"r1": {"token": False}, "r2": ("no_lexical",)},
+    "no_popularity": {"r1": {"popularity": False}, "r2": ("no_popularity",),
+                      "r3": {"prior": False}},
+    "no_dense": {"r1": {"dense": False}, "r2": ("no_dense",), "r3": {}},
+    "no_lexical": {"r1": {"token": False}, "r2": ("no_lexical",), "r3": {"lexical": False}},
+    # R3-only: does the level-1 belief earn the pool it asks for? (D14)
+    "no_belief_pool": {"r1": {"hedge": False}, "r2": (), "r3": {"belief_pool": False}},
+    "no_infogain": {"r1": {"infogain": False}, "r2": (), "r3": {"infogain": False}},
+    # R3 ships with EIG OFF (D18), so this switch turns it ON to reproduce the measured loss
+    "infogain": {"r1": {"infogain": True}, "r2": (), "r3": {"infogain": True}},
 }
 
 
@@ -38,6 +45,18 @@ def r1_flags(*names: str):
     for name in names:
         assert name in SHARED, f"unknown ablation {name!r}; have {sorted(SHARED)}"
         for field, value in SHARED[name]["r1"].items():
+            setattr(flags, field, value)
+    return flags
+
+
+def r3_flags(*names: str):
+    """R3's Flags with the named shared ablations applied."""
+    from src.r3.flags import Flags
+
+    flags = Flags.from_env()
+    for name in names:
+        assert name in SHARED, f"unknown ablation {name!r}; have {sorted(SHARED)}"
+        for field, value in SHARED[name]["r3"].items():
             setattr(flags, field, value)
     return flags
 

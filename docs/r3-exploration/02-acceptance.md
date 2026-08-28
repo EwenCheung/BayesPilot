@@ -35,7 +35,7 @@ that is the merge's output, not a regression (see [04-merge-plan.md](04-merge-pl
 | **R3-A1b** | With flat calibration and R2's weights as log-likelihood coefficients, the posterior's top-10 equals R2's blend on ≥95% of sessions | `tests/test_generalisation.py` | ⬜ |
 | R3-A9 | A term that abstains returns `{}` and provably cancels in the normalisation | `tests/test_likelihood.py` | ⬜ |
 | R3-A10 | No evidence term can drive any item's posterior to zero (`ℓ_min > 0`) | `tests/test_likelihood.py` | ⬜ |
-| **R3-A2** | Clean score ≥ `0.9607` (within 0.01 of R2's 0.9707) | `src.eval.race` | ⬜ |
+| **R3-A2** 🟩 | **0.9720** — Clean score ≥ `0.9607` (within 0.01 of R2's 0.9707) | `src.eval.race` | ⬜ |
 | R3-A11 | Per-turn cost: posterior update + EIG over the pool < 50 ms p95 | `tests/test_latency.py` | ⬜ |
 
 🔴 **KILL GATE.** If R3-A2 fails with hand-set likelihood parameters, the likelihood family is
@@ -51,8 +51,8 @@ pool by counting shared words ([00-r3-spec.md](00-r3-spec.md) §2.3).
 
 | ID | Criterion | Test | Status |
 |---|---|---|---|
-| **R3-A27** | Level-1 category accuracy under L3 paraphrase ≥ **0.95** (R1 measures **0.85**) | `tests/test_category_belief.py` | ⬜ |
-| **R3-A3** | **L2 paraphrase Hit@10 ≥ 0.95** (best current **0.890**, R1). Revised up after the merge: removing inversion costs R1 *no* recall (0.995), so paraphrase is the whole cause — 04-merge-plan.md §7.1 ④ | `src.eval.race --stress 2` | ⬜ |
+| **R3-A27** 🟩 | Level-1 category accuracy under L3 paraphrase ≥ **0.95** (R1 measures **0.85**) | `tests/test_category_belief.py` | ⬜ |
+| **R3-A3** 🟩 | **0.970 achieved.** L2 paraphrase Hit@10 ≥ 0.95 (best current **0.890**, R1). Revised up after the merge: removing inversion costs R1 *no* recall (0.995), so paraphrase is the whole cause — 04-merge-plan.md §7.1 ④ | `src.eval.race --stress 2` | ⬜ |
 | R3-A12 | Clean score unchanged by widening (within 0.005) — the pool opens only when the belief is diffuse, exactly as R1's hedge measured 0.0000 on clean | `src.eval.race` | ⬜ |
 | R3-A13 | `τ_mass` replaces `hedge(keep=0.6)`, the top-3 cutoff and the 4000 cap; none of those constants survive in `src/r3/` | `tests/test_constants.py` | ⬜ |
 | R3-A14 | Pool size bounded: p95 candidates ≤ 8000, so R3-A11 still holds | `tests/test_latency.py` | ⬜ |
@@ -62,7 +62,7 @@ pool by counting shared words ([00-r3-spec.md](00-r3-spec.md) §2.3).
 with level 2. If category accuracy does not move, the §2.3 diagnosis is wrong and P2 should be
 re-planned rather than tuned.
 
-## Phase P3 — calibration
+## Phase P3 — calibration  ⬛ NOT BUILT (see SUMMARY §7.2)
 
 | ID | Criterion | Test | Status |
 |---|---|---|---|
@@ -77,14 +77,14 @@ re-planned rather than tuned.
 
 | ID | Criterion | Test | Status |
 |---|---|---|---|
-| **R3-A6** | Tuned-constant count materially below [00-r3-spec.md](00-r3-spec.md) §4's "before" (~45 → ~3 + fitted) | `tests/test_constants.py` | ⬜ |
+| **R3-A6** 🟩 | **6 fitted + 2 structural.** Materially below [00-r3-spec.md](00-r3-spec.md) §4's "before" (~45 → ~3 + fitted) | `tests/test_constants.py` | ⬜ |
 | R3-A18 | Override sessions still ship nothing before the override lands; override MTTC ≥ 3.60 floor, not below | `tests/test_policy.py` | ⬜ |
-| R3-A19 | EIG question selection reported **against** hardcoded `"other"`; a −0.001 delta is reported as a loss, not a win | `src.eval.race --ablate no_infogain` | ⬜ |
+| R3-A19 🟩 | **Reported as a loss and shipped off (D18): −0.021 clean, −0.040 L3.** EIG reported against hardcoded `"other"`; a −0.001 delta is reported as a loss, not a win | `src.eval.race --ablate no_infogain` | ⬜ |
 | R3-A20 | MTTC ≤ R2's 2.08 with MRR not worse | `src.eval.race` | ⬜ |
 
 ---
 
-## Phase P5 — the model switch matrix
+## Phase P5 — the model switch matrix  ⬛ NOT BUILT (see SUMMARY §7.1)
 
 [00-r3-spec.md](00-r3-spec.md) §6.0 is the scope audit; §6.1 is the matrix. Every backend is measured on
 **stressed** and **`no_spec_phrase`**, at **both** belief levels, on the same harness.
@@ -97,14 +97,14 @@ re-planned rather than tuned.
 | R3-A29 | 🚫 No image or multi-modal model anywhere — PROBLEM.md §4.3 | `tests/test_scope.py` | ⬜ |
 | R3-A30 | No vector DB; embeddings are one in-memory matrix. Peak RSS reported | registry row | ⬜ |
 | R3-A31 | Every dependency declared with a version, split build-time vs runtime | `requirements*.txt` | ⬜ |
-| **R3-A8** | Zero network calls on the default path; `R3_OFFLINE=1` is bit-identical to the networked run | `tests/test_offline.py` | ⬜ |
+| **R3-A8** 🟩 | Zero network calls on the default path; `R3_OFFLINE=1` is bit-identical to the networked run | `tests/test_offline.py` | ⬜ |
 
 ## Phase P6 — the race, then re-plan
 
 | ID | Criterion | Test | Status |
 |---|---|---|---|
-| **R3-A4** | Stressed and `no_spec_phrase` beat `max(R1, R2)` by more than the bootstrap CI | `src.eval.race --all --bootstrap` | ⬜ |
-| **R3-A5** | Held-out 60 within its CI of the 140-tuned score | `src.eval.race --holdout` | ⬜ |
+| **R3-A4** 🟩 | **+0.096 L2, +0.106 L3, +0.021 no_spec_phrase.** Beat `max(R1, R2)` by more than the bootstrap CI | `src.eval.race --all --bootstrap` | ⬜ |
+| **R3-A5** 🟩 | **test60 L3 0.8381 > train140 0.8261.** Held-out within CI of the 140-tuned score | `src.eval.race --holdout` | ⬜ |
 | R3-A24 | All four scenario breakdowns reported for all three roads | `docs/R3-RESULTS.md` | ⬜ |
 | R3-A25 | `llm_call_failures`, latency p50/p95, token usage and estimated USD disclosed | registry row | ⬜ |
 | R3-A26 | **Re-plan pass**: with the final numbers in hand, an explicit written review — is this the best available design, what would be reorganised, what is still open — before anything is called final | `docs/r3-exploration/SUMMARY.md` §"what I would change" | ⬜ |
