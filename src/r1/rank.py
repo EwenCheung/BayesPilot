@@ -6,7 +6,7 @@ Popularity is never ablated by default: it is the one signal no rewording can to
 """
 from __future__ import annotations
 
-from src.common.catalog import CatalogIndex
+from src.r1.catalog import CatalogIndex
 from src.common.contracts import SessionState
 from src.r1.flags import Flags
 

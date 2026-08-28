@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from src.common.attributes import normalise
-from src.common.catalog import CatalogIndex
+from src.r1.catalog import CatalogIndex
 
 CATALOG = Path(__file__).parent.parent / "techjam-conversational-search-main" / "data" / "catalog.jsonl"
 

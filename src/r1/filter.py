@@ -7,7 +7,7 @@ and a wrong-but-non-empty set still has the target in it more often than not.
 from __future__ import annotations
 
 from src.common.attributes import tokens
-from src.common.catalog import CatalogIndex
+from src.r1.catalog import CatalogIndex
 from src.common.contracts import Constraint, SessionState
 from src.r1.flags import Flags
 

@@ -12,7 +12,7 @@ from __future__ import annotations
 import math
 from collections import defaultdict
 
-from src.common.catalog import CatalogIndex
+from src.r1.catalog import CatalogIndex
 from src.common.contracts import SessionState
 from src.common.simulator import classify_constraint
 

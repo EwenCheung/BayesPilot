@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from src.common.catalog import CatalogIndex
+from src.r1.catalog import CatalogIndex
 from src.common.contracts import SessionState
 from src.common.parse import parse
 from src.r1 import policy, question, rank

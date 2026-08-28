@@ -45,16 +45,43 @@ def test_classify_constraint_matches_reference(products):
             assert ours.classify_constraint(value) == ref.classify_constraint(value), value
 
 
-def test_agent_tree_never_imports_the_evaluator():
-    """Spec C2 — the evaluator imports starter.agent, so importing it back is a hard crash."""
-    import ast
+AGENT_TREES = ("common", "r1", "r2", "r3")
 
-    for path in (Path(__file__).parent.parent / "src").rglob("*.py"):
-        tree = ast.parse(path.read_text(encoding="utf-8"))
-        for node in ast.walk(tree):
-            names = []
-            if isinstance(node, ast.Import):
-                names = [alias.name for alias in node.names]
-            elif isinstance(node, ast.ImportFrom):
-                names = [node.module or ""]
-            assert not any("local_evaluator" in name or name == "evaluator" for name in names), path
+
+def _imported_names(path):
+    import ast
+    for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+        if isinstance(node, ast.Import):
+            yield from (alias.name for alias in node.names)
+        elif isinstance(node, ast.ImportFrom):
+            yield node.module or ""
+
+
+def _agent_modules():
+    src = Path(__file__).parent.parent / "src"
+    for tree in AGENT_TREES:
+        yield from (src / tree).rglob("*.py")
+
+
+def test_agent_tree_never_imports_the_evaluator():
+    """Spec C2 — the evaluator imports starter.agent, so importing it back is a hard crash.
+
+    ⚠️ Scoped to the AGENT trees, not all of `src/`. `src/eval/` runs the evaluator in-process and
+    must import it; it sits outside the cycle because no agent module reaches it — which is exactly
+    what `test_agent_tree_never_imports_the_harness` below keeps true. Narrowing this test without
+    that second one would open the hole it exists to close.
+    """
+    for path in _agent_modules():
+        for name in _imported_names(path):
+            assert "local_evaluator" not in name and name != "evaluator", path
+
+
+def test_agent_tree_never_imports_the_harness():
+    """Spec C2 — the exemption above holds only while agent code cannot reach `src.eval`.
+
+    `src/eval/harness.py` imports the evaluator. If an agent module ever imports anything under
+    `src.eval`, the circular import returns by the back door and the agent crashes at startup.
+    """
+    for path in _agent_modules():
+        for name in _imported_names(path):
+            assert not name.startswith("src.eval") and name != "..eval", path

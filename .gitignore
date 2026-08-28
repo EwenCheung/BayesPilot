@@ -4,13 +4,20 @@ __pycache__/
 .DS_Store
 CLAUDE.local.md
 results.json
-runs/
 
-# Catalog: 76 MB, re-downloadable from the official release and verified by assets/SHA256SUMS.
+# Catalog: 60 MB, re-downloadable from the official release and verified by assets/SHA256SUMS.
 # Keeping it out avoids GitHub's >50 MB warning on the public submission repo.
 assets/catalog.jsonl
 assets/catalog.jsonl.gz
 
-# The run registry is a committed artefact (IDEA.md 0.5); the raw run dumps are not.
+# The run registry is the race's shared record and IS committed (IDEA.md §0.5, merge plan §4).
+# Raw per-run dumps are not. `runs/*` not `runs/` — git cannot un-ignore a file inside an
+# ignored DIRECTORY, only inside an ignored glob.
+runs/*
 !runs/registry.jsonl
+
 .cache/
+
+# Derived artifacts: regenerable via scripts/embed_all.py (~14 min, ~$0.10).
+# emb.npy alone is 98 MB and must never enter git history.
+artifacts/

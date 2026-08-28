@@ -9,6 +9,11 @@ Levels
   1  scaffold       — templates reworded, constraint payloads verbatim   (tests the parser)
   2  full           — scaffold + payloads reworded                       (tests the matcher)
   3  llm            — a model rewrites the whole utterance, cached       (tests both, realistically)
+
+⚠️ **This is the ONE rewriter, for all three roads.** R1 and R2 each shipped their own, which is why
+R1's L2 = 0.8594 and R2's "heavy" = 0.7961 said nothing about which agent is more robust: different
+programs, different aggression (R1 defect 2, R2 defect A8). `ParaphraseRewriter` below is R2's
+interface over this ladder, not a second implementation.
 """
 from __future__ import annotations
 
@@ -127,3 +132,26 @@ def paraphrase(message: str, level: int, llm=None) -> str:
         return message
     except Exception:
         return message
+
+
+# --- R2's Rewriter interface over the same ladder --------------------------------------------------
+# R2's harness passes a callable object; R1 calls a function. One rewriting program, two call shapes.
+LEVELS = {"clean": 0, "scaffold": 1, "full": 2, "llm": 3}
+
+
+class ParaphraseRewriter:
+    """Deterministic per utterance: `paraphrase` seeds its RNG from the message text itself.
+
+    ⚠️ Behaviour change at the merge: R2's own rewriter was a different program. Its published stress
+    numbers (light 0.8343, heavy 0.7961) were produced by that one and do NOT carry over — re-measuring
+    both roads on this ladder is the point of the merge (04-merge-plan.md §3.2).
+    """
+
+    def __init__(self, level: str | int = "scaffold", llm=None) -> None:
+        self.level = LEVELS[level] if isinstance(level, str) else int(level)
+        assert 0 <= self.level <= 3, level
+        self.name = next(k for k, v in LEVELS.items() if v == self.level)
+        self.llm = llm
+
+    def __call__(self, message: str, turn: int) -> str:
+        return paraphrase(message, self.level, self.llm)

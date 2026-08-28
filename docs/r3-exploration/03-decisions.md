@@ -143,3 +143,28 @@ Execution than a single tuned number.
 **Kill:** R3-A23 — beat `tfidf_svd` by ≥0.01 stressed or `tfidf_svd` ships and the matrix is reported as
 a negative result. The prior from two independent measurements has to be paid for, not assumed away.
 **Status:** open.
+
+## D12 — the wider Hugging Face menu, assessed honestly
+
+**Prompted by:** the model classes worth considering are not only encoders — tagging, classification,
+sentiment and reranker models are all available. Assessed one by one against what R1 and R2 measured,
+because "available" is not "useful".
+
+| Class | Verdict | Why |
+|---|---|---|
+| **Token classification / NER (tagging)** | 🟢 **strong candidate** | R1's LLM extraction tier is what carries it from 0.7887 → 0.8594 under paraphrase — the single largest robustness contribution after the prior. A local token classifier does that job **with no network**, which matters because *"organizer policy may disable network access"*. And we can train it on free synthetic data: the simulator emits `(attribute, value)` labels for all 50,000 products. Becomes the `attribute` likelihood term's extractor. |
+| **Sequence classification (category)** | 🟢 **strong candidate** | This is level 1 stated as a supervised problem, and the labels are free: every catalog item knows its own coarse category, so the 50,000-item catalog **is** a labelled training set for "utterance → category". Likely stronger than cosine over category names, and it is a *classifier*, not a foundational LLM, so it is in scope. Measured head-to-head against the embedding resolver under R3-A27. |
+| **Cross-encoder reranker** | 🟡 **one measured shot** | Distinct from the LLM listwise reranking that two codebases measured as *harmful* — a cross-encoder is a trained relevance scorer, not a generative permutation, and it runs locally. Prior is still negative, so it gets one run behind a flag and a kill number, at the top-20 only, as a **likelihood term** rather than a final re-ordering (a reranker that overrides the posterior would break the architecture's whole claim). |
+| **Zero-shot NLI classification** | 🔴 **rejected on cost** | 1,115 candidate labels means 1,115 forward passes per utterance. The per-turn budget (R3-A11, 50 ms p95) rules it out, and the supervised classifier above is both cheaper and better-fitted. |
+| **Sentiment** | 🔴 **rejected on relevance** | The simulator emits shopping constraints (`Material: alloy`, `100% Polyester`), not opinions. There is no sentiment in this data to detect. Saying so costs one line; measuring it would cost an afternoon. |
+
+**The unifying reason the first two are attractive:** they turn the network-dependent LLM tier into
+**local weights trained on free labels**, which is simultaneously a robustness win (R3-A8, zero network
+calls), a scope win (no foundational-LLM training), and the honest use of the supervision the simulator
+hands us for free. They are folded into Phase P3, which was already the "learn from synthetic sessions"
+phase.
+
+**Every one of them still faces R3-A29 (no multi-modal) and its own kill number.** Two independent
+measurements say added model complexity has not helped on this benchmark; that prior is paid for with
+numbers, not assumed away.
+**Status:** open. Tagging + category classifier promoted into P3; cross-encoder gets one run in P5.

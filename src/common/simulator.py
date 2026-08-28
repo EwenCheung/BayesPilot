@@ -1,23 +1,25 @@
-"""Spec 3.1 — a byte-faithful COPY of the referee's own customer-simulation logic.
+"""Verbatim copies of the evaluator's customer-simulator functions.
 
-⚠️ These functions are duplicated, not imported. The evaluator imports `starter.agent`
-at module scope, so importing it back is a circular import that crashes at startup
-(IMPORTANT.md §13.1.1). `tests/test_simulator_mirror.py` proves this copy has not drifted.
+⚠️ COPIED, NOT IMPORTED, ON PURPOSE. `evaluator/local_evaluator.py` does `from starter.agent import Agent`
+at module scope, so any agent module that imports the evaluator creates a circular import and crashes at
+startup (IMPORTANT.md §13.1.1). Harness *scripts* may import the evaluator; agent code may not.
 
-Copied from techjam-conversational-search-main/evaluator/local_evaluator.py.
+These must stay byte-equivalent in behaviour to the kit. `tests/test_simulator_parity.py` (R2-A1) checks
+all 50,000 catalog rows against the real evaluator on every run, so drift is caught immediately.
 """
 from __future__ import annotations
 
 import re
 
-ALLOWED_ATTRIBUTES = {
-    "category", "material", "color", "size", "style", "brand",
-    "budget", "feature", "use_case", "other",
-}
 MATERIALS = ("cotton", "polyester", "nylon", "leather", "wool", "spandex", "silk", "rayon", "fabric")
 SEARCH_FIELDS = ("title", "features", "details", "description", "categories", "store")
 MATERIAL_RE = re.compile(r"\b(cotton|polyester|nylon|leather|wool|spandex|silk|rayon|fabric)\b", re.I)
 COLOR_RE = re.compile(r"\b(black|white|blue|red|pink|green|brown|gray|grey|purple|yellow|orange)\b", re.I)
+
+ALLOWED_ATTRIBUTES = {
+    "category", "material", "color", "size", "style", "brand",
+    "budget", "feature", "use_case", "other",
+}
 
 
 def searchable_text(product: dict) -> str:
@@ -46,6 +48,11 @@ def _clean_constraint(value: str, limit: int) -> str:
 
 
 def intent_card(product: dict, limit: int = 180) -> dict:
+    """What this product WOULD say if it were the hidden target.
+
+    Reads `features` + `details` only — never `title`, never `description`. The material/color regex does
+    scan the full corpus, but only ever yields one low-entropy word.
+    """
     title = _clean_constraint(str(product.get("title") or "product"), limit)
     candidates = [*_flatten_values(product.get("features")), *_flatten_values(product.get("details"))]
     corpus = searchable_text(product)
@@ -57,7 +64,9 @@ def intent_card(product: dict, limit: int = 180) -> dict:
         candidates.insert(1, f"color: {color.group(1).lower()}")
     if product.get("price") not in (None, ""):
         candidates.append(f"budget around ${product['price']}")
-    cleaned = list(dict.fromkeys(_clean_constraint(item, limit) for item in candidates if _clean_constraint(item, limit)))
+    cleaned = list(dict.fromkeys(
+        _clean_constraint(item, limit) for item in candidates if _clean_constraint(item, limit)
+    ))
     if not cleaned:
         cleaned = [title]
     return {
@@ -79,6 +88,12 @@ def coarse_category(values: list[str]) -> str:
 
 
 def classify_constraint(value: str) -> str:
+    """The simulator's crude keyword rule.
+
+    Measured over the 800 public-set constraints it emits: feature 404, material 302, color 60, style 19,
+    size 11, use_case 4 — and never brand, budget or category. This is why asking the semantically
+    "right" attribute is worse than asking "other" (IMPORTANT.md §4).
+    """
     lowered = value.lower()
     if "budget" in lowered or re.search(r"(?:\$|<=|under)\s*\d", lowered):
         return "budget"
