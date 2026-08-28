@@ -10,3 +10,7 @@ runs/
 # Keeping it out avoids GitHub's >50 MB warning on the public submission repo.
 assets/catalog.jsonl
 assets/catalog.jsonl.gz
+
+# Derived artifacts: regenerable via scripts/embed_all.py (~14 min, ~$0.10).
+# emb.npy alone is 98 MB and must never enter git history.
+artifacts/
