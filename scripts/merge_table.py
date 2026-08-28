@@ -16,6 +16,7 @@ CONDITIONS = (
     ("clean", {}),
     ("L1 scaffold", {"stress": 1}),
     ("L2 full", {"stress": 2}),
+    ("L3 category", {"stress": 3}),
     ("no_spec_phrase", {"ablate": "no_spec_phrase"}),
     ("no_popularity", {"ablate": "no_popularity"}),
 )

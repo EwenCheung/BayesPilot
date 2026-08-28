@@ -8,7 +8,14 @@ Levels
   0  clean          — the simulator's own text
   1  scaffold       — templates reworded, constraint payloads verbatim   (tests the parser)
   2  full           — scaffold + payloads reworded                       (tests the matcher)
-  3  llm            — a model rewrites the whole utterance, cached       (tests both, realistically)
+  3  category       — full + the CATEGORY NAME reworded                  (tests pool resolution)
+  4  llm            — a model rewrites the whole utterance, cached       (tests everything, realistically)
+
+⚠️ L3 exists because L1 and L2 have a hole: their scaffolds interpolate `{category}` verbatim, so
+`best_category` — which checks for a quoted category name first — resolved 100% of openers correctly at
+every level. `scripts/category_probe.py` measured exactly that, which made paraphrase look like a pure
+ranking problem. It is not: R1 measured 85% category accuracy under model-written paraphrase. L3 closes
+the hole without needing the network, so the number is reproducible and free.
 
 ⚠️ **This is the ONE rewriter, for all three roads.** R1 and R2 each shipped their own, which is why
 R1's L2 = 0.8594 and R2's "heavy" = 0.7961 said nothing about which agent is more robust: different
@@ -52,6 +59,35 @@ SCAFFOLDS: dict[str, tuple[str, ...]] = {
     "null_ask": ("those aren't right — ask me something specific",),
 }
 
+# Category rewording for L3. A shopper says "t-shirts"; the catalog says "Shirts T-Shirts".
+# Every rule keeps at least one content word, so the category stays recognisable — a rewrite that
+# destroys it is not paraphrase, it is a customer who changed their mind (tested).
+CATEGORY_RULES = (
+    (r"\bT-Shirts\b", "tees"), (r"\bShirts\b", "shirts"), (r"\bSweaters\b", "knitwear"),
+    (r"\bActivewear\b", "workout wear"), (r"\bSwimwear\b", "swim stuff"),
+    (r"\bAccessories\b", "accessories bits"), (r"\bNovelty\b", "novelty"),
+    (r"\bClothing\b", "clothes"), (r"\bJewelry\b", "jewellery"),
+    (r"\bWomen'?s?\b", "womens"), (r"\bMen'?s?\b", "mens"),
+    (r"\bGirls'?\b", "girls"), (r"\bBoys'?\b", "boys"),
+)
+
+
+def _reword_category(category: str, rng: random.Random) -> str:
+    """Reword a category name, keeping it recognisable. Drops a leading qualifier ~40% of the time,
+    which is the realistic failure: a shopper rarely says the full taxonomy path."""
+    out = category
+    for pattern, replacement in CATEGORY_RULES:
+        out = re.sub(pattern, replacement, out, flags=re.I)
+    words = out.split()
+    if len(words) > 2 and rng.random() < 0.4:
+        words = words[1:] if rng.random() < 0.5 else words[:-1]
+    if rng.random() < 0.5:
+        out = " ".join(words).lower()
+    else:
+        out = " ".join(words)
+    return out if out.strip() else category
+
+
 SYNONYMS = (
     (r"\bcolor\b", "colour"), (r"\bmaterial\b", "made of"), (r"\bfit type\b", "fit"),
     (r"\bdepartment\b", "for"), (r"\bsleeve type\b", "sleeves"), (r"\bclosure type\b", "closure"),
@@ -89,7 +125,7 @@ def paraphrase(message: str, level: int, llm=None) -> str:
     if level <= 0 or not message:
         return message
     try:
-        if level >= 3 and llm is not None:
+        if level >= 4 and llm is not None:
             written = llm.chat(
                 [{"role": "system", "content": "Rewrite the shopper's message casually in your own words. "
                                                "Keep every requirement, change the wording. Reply with the "
@@ -106,18 +142,21 @@ def paraphrase(message: str, level: int, llm=None) -> str:
         def payload_of(text: str) -> str:
             return _reword_payload(text, rng) if payload_level >= 2 else text
 
+        def category_of(name: str) -> str:
+            return _reword_category(name, rng) if level >= 3 else name
+
         opener = OPENER.match(message.strip())
         if opener:
             category = opener.group("category").strip()
             tail = (opener.group("tail") or "").strip()
             if not tail or "still exploring" in tail:
-                return rng.choice(SCAFFOLDS["browsing"]).format(category=category)
+                return rng.choice(SCAFFOLDS["browsing"]).format(category=category_of(category))
             key = KEY_REQ.match(opener.group("tail"))
             if key:
                 return rng.choice(SCAFFOLDS["buying"]).format(
-                    category=category, payload=payload_of(key.group("payload")))
+                    category=category_of(category), payload=payload_of(key.group("payload")))
             return rng.choice(SCAFFOLDS["override_open"]).format(
-                category=category, payload=payload_of(tail.lstrip(". ")))
+                category=category_of(category), payload=payload_of(tail.lstrip(". ")))
         override = OVERRIDE.match(message.strip())
         if override:
             return rng.choice(SCAFFOLDS["override"]).format(payload=payload_of(override.group("payload")))
@@ -136,7 +175,7 @@ def paraphrase(message: str, level: int, llm=None) -> str:
 
 # --- R2's Rewriter interface over the same ladder --------------------------------------------------
 # R2's harness passes a callable object; R1 calls a function. One rewriting program, two call shapes.
-LEVELS = {"clean": 0, "scaffold": 1, "full": 2, "llm": 3}
+LEVELS = {"clean": 0, "scaffold": 1, "full": 2, "category": 3, "llm": 4}
 
 
 class ParaphraseRewriter:
@@ -149,7 +188,7 @@ class ParaphraseRewriter:
 
     def __init__(self, level: str | int = "scaffold", llm=None) -> None:
         self.level = LEVELS[level] if isinstance(level, str) else int(level)
-        assert 0 <= self.level <= 3, level
+        assert 0 <= self.level <= 4, level
         self.name = next(k for k, v in LEVELS.items() if v == self.level)
         self.llm = llm
 
