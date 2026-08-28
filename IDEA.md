@@ -18,8 +18,8 @@ Hit@10 is already 1.000, so **all remaining headroom is MRR** (+0.075 available 
 
 # Part 0 — Idea index and track assignment
 
-**40 ideas** live in this file. Here they are in one list, then compiled into **5 parallel tracks + 1 foundation**
-you can hand to separate worktrees.
+**40 ideas** live in this file — they are *components*, not rival solutions. §0.1 indexes all of them; §0.3
+compiles them into **three genuinely rival architectures**, one per worktree.
 
 ## 0.1 The full index
 
@@ -79,252 +79,172 @@ you can hand to separate worktrees.
 
 ---
 
-## 0.2 ⚠️ Two ways to split the work — pick the right one
+## 0.2 One idea per worktree — what counts as "an idea"
 
-**Component split** (retrieval / policy / ranking / knowledge): everyone builds part of *one* system. Parallel,
-but **there is no winner to pick** — you need all of them, and you merge everything.
+The 40 items in §0.1 are **components**, not ideas. You cannot race MMR against HyDE; you would use both.
 
-**Competing-agent split** (below): every worktree builds a **complete, independently scoreable agent** that makes
-a *different bet* about what wins. Parallel, **fully independent, and you pick the best score.**
+**An idea, here, means a different answer to "what kind of problem is this?"** — a different core data structure,
+a different loop, a different failure mode. Each such idea is one worktree. Inside a worktree you are free to
+combine as many of the 40 components as you like; that is the exploration.
 
-You asked for the second. That is what §0.3 now describes. The A/B/C variants in Part I are *not* it either —
-🅱️ = 🅰️ + more and 🅲 = 🅱️ + more, so they are sequential and two people would sit waiting.
-
-**How duplication is avoided:** Track 0 ships a *complete working agent* at 0.9607. **Every track forks that and
-changes one dimension.** Nobody rebuilds the plumbing; each track starts from a system that already scores and
-pushes it in its own direction.
+⚠️ **Earlier drafts of this file got that wrong.** Tracks A/B/C/D were four *emphases of the same architecture*
+(retrieve → rank → decide), and §0.3 even said *"expect the final submission to be a merge."* If they all merge,
+there is no winner to pick. Those are superseded by the three below, which genuinely conflict.
 
 ---
 
-## 0.3 The tracks — four independent bets, one shared foundation
+## 0.3 Three rival ideas — three worktrees
 
-### Track 0 — Foundation ⛔ blocks all four, land it first (~half a day, then dissolve)
-> **Mission:** ship one complete working agent plus the harness that scores it, so every fork starts from a
-> known-good 0.9607 and every result is comparable.
+They disagree about what the agent fundamentally *is*: a filter, a ranker, or a belief.
 
-- `src/` exporting the required `Agent` — `__init__(self, catalog_path=...)` positional and defaulted
-- Port [experiments/agent_best_0.9607.py](experiments/agent_best_0.9607.py) into it
-- `src/eval/compare.py` + the run registry (Part V) + ablation flags + the paraphrase stress wrapper
-- **Freeze `src/contracts.py`** (§0.4) so the winning pieces can be merged later
+### Track 0 — Foundation ⛔ shared, land it first (~half a day)
+> **Mission:** one harness and one catalog index so all three ideas are measured identically.
 
-**Done when:** `python3 -m evaluator.local_evaluator` reproduces **0.9607** from `src/`, plus one registry row
-with a paraphrase-stressed score beside it.
+- `src/common/` — catalog loading, the parsed `SessionState`, coarse-category index, popularity table
+- `src/eval/compare.py` — run registry, ablation flags, paraphrase stress wrapper, bootstrap CI
+- Port [experiments/agent_best_0.9607.py](experiments/agent_best_0.9607.py) as `R1`'s starting point
 
----
-
-### 🅰️ Track A — Symbolic Precision
-> **The bet:** the catalog is structured data, so exact symbolic matching beats every learned method — and a
-> zero-LLM agent wins on score, latency and feasibility at once.
-
-**Build:** spec-phrase exact index · BM25 · popularity prior · LightGBM reranker · information-gain question
-selection · NQC confidence gate · **slot decay** (§4.3) · **dynamic truncation** (§4.3) · **question-logic
-self-refinement** (stop re-asking attribute types that returned nothing — Pillar III).
-**Ideas:** 1, 3, 4, 11, 12, 17–19, 28–30
-**Wins if:** it holds ≥0.95 clean *and* the paraphrase-stressed score stays respectable.
-**Dies if:** stressed score falls below 0.826 — then it is strictly worse than B and becomes the offline fallback.
-**Runtime deps:** none. No network, no models. ~4 s for 200 sessions.
-
-### 🅱️ Track B — Dense Semantic
-> **The bet:** meaning beats string matching. Embeddings plus query-side tricks survive any rewording the
-> organizer throws at the private set.
-
-**Build:** `bge-m3` blend with slot-scheduled weight · HyDE for cold Browsing turns · PRF/Rocchio for multi-turn
-accumulation · MMR gated on entropy · optional sparse+ColBERT.
-**Ideas:** 2, 5–7, 10, 13, 28
-**Wins if:** it beats A *under paraphrase stress* — that is the whole point of this bet.
-**Dies if:** it cannot clear the 0.905 blended hit@10 it starts from.
-**Runtime deps:** embeddings (cacheable to disk → runs offline).
-
-### 🅲 Track C — Knowledge Distillation
-> **The bet:** the win is *offline*. Normalise the filthy catalog once and runtime retrieval becomes easy —
-> Amazon's own COSMO/Rufus play.
-
-**Build:** one LLM pass over 50k products → normalised attribute ontology + use-case tags + doc2query expansions.
-Then structured filtering and cross-category scenario matching on top. Also owns the **synthetic session
-generator** and paraphrase augmentation.
-**Ideas:** 8, 24–27, 31, 32
-**Wins if:** clean attributes lift Browsing sessions where A and B both struggle.
-**Dies if:** the distilled layer adds nothing over raw text — measure before scaling past 5k products.
-**Runtime deps:** none at runtime (artefacts are precomputed and cached).
-
-### 🅳 Track D — LLM Reasoning
-> **The bet:** the brief literally names *"Multi-Route Retrieval → LLM Semantic Ranking"* as the required
-> pipeline. Lean into it: an LLM router, extractor and listwise judge.
-
-**Build:** LLM intent router · LLM slot extraction with regex fallback · `qwen3.6:35b` listwise rerank of top-20
-(**this is the brief's named "LLM Semantic Ranking" stage — see [IMPORTANT.md](IMPORTANT.md) §14.1**) ·
-LLM-authored customer prose · **long-term profile distillation** (Pillar III — build it, then report honestly that
-the supplied profile carries almost no signal) · adaptive re-orchestration on stalled confidence.
-**Ideas:** 14–16, 20, 22*, 32–35 (*cite, don't build)
-**Wins if:** it pushes MRR toward 1.0 *and* holds up under stress. Best demo video and Innovation narrative.
-**Dies if:** latency exceeds the organizer's timeout, or it cannot run offline. ⚠️ ~37 min sequential API time
-for 1,000 sessions.
-**Runtime deps:** live endpoint — **must degrade gracefully to A.**
+⚠️ **Do not force a shared internal pipeline.** The three ideas decompose differently — R3 has no "retrieval"
+step at all — so the only frozen seams are `SessionState`, the catalog index, and the kit's `Agent` boundary.
+See §0.4.
 
 ---
 
-### After the race
-These are **not** mutually exclusive at submission time. Score all four, then **merge the winners** — they share
-`contracts.py`, so a winning retriever from B drops into A's policy without a rewrite. Expect the final submission
-to be a merge, not a single track.
+### 🔵 R1 — Constraint Satisfaction *(the agent is a filter)*
 
-⚠️ **The one dependency:** Track D and Track C's ML ideas (31, 32) want Track C's synthetic sessions. Both can
-start on the 200 public sessions and swap in the 50k later — so it is a *nice-to-have*, not a blocker.
+> **The bet:** this is a database query, not a ranking problem. The customer states hard facts; each one
+> eliminates products. Rank only to break ties among survivors.
+
+**Core structure:** a shrinking candidate **set**.
+```
+S = all products in the stated category
+each turn:  S ← S ∩ {products matching the new constraint}
+            if |S| small or one item strictly dominates → convert
+            else ask the attribute that best splits S
+```
+
+**Strategies to explore inside this worktree:** spec-phrase exact index (1) · normalised attribute ontology (24)
+to make matching survive rewording · information-gain question selection over `S` (19) · popularity as tie-break
+(3) · LightGBM to order the survivors (12) · slot decay and un-intersection for intent override · BM25 as the
+fallback when `S` empties.
+
+**Status:** ✅ already at **0.9607** — this is the incumbent to beat.
+**Pillars:** I filter-track native (browsing weak) · II set intersection *is* accumulation · III weak.
+**Wins if:** it survives paraphrase stress. **Dies if:** stressed score < 0.826, or Browsing sessions leave `S` huge.
 
 ---
 
-## 0.4 The interface contract — freeze this before branching
+### 🟢 R2 — Retrieve & Rank *(the agent is a ranker)*
 
-Independent forks only merge cleanly if the seams were agreed up front. **Track 0 writes `src/contracts.py` and
-no track edits another track's directory.**
+> **The bet:** meaning beats matching. Score everything, order it, and let good retrieval absorb any rewording
+> the organizer applies. This is literally the pipeline the brief specifies.
+
+**Core structure:** a scored **list**.
+```
+each turn:  q ← rewrite(state)
+            candidates ← ⋃ routes(q)          # spec, bm25, dense, popularity
+            scores ← fuse(candidates)          # scheduled blend, weight = f(slots)
+            ranked ← rerank(scores)            # LightGBM → MMR → LLM listwise
+            convert when the score distribution has committed (NQC)
+```
+
+**Strategies to explore:** `bge-m3` dense (2) · HyDE for cold Browsing turns (5) · PRF/Rocchio for multi-turn
+accumulation (6) · sparse + ColBERT (7) · doc2query (8) · scheduled blend vs RRF (10, 11) · LightGBM (12) ·
+MMR gated on entropy (13) · LLM listwise rerank (14) — the brief's named *"LLM Semantic Ranking"* stage ·
+E2Rank (15) · cross-encoder (16) · NQC (18).
+
+**Status:** ✅ paraphrase-proof floor **0.826** measured.
+**Pillars:** I is the brief verbatim · II via query rewriting · III via weight scheduling. All four covered.
+**Wins if:** it beats R1 *under stress*. **Dies if:** MRR stalls — a ranker that never commits caps out.
+
+---
+
+### 🟣 R3 — Bayesian Belief *(the agent is a posterior)*
+
+> **The bet:** ranking and asking are the same problem. Maintain a probability distribution over all 50,000
+> products; every utterance is evidence; the best question is the one that most reduces entropy; convert when
+> the distribution peaks.
+
+**Core structure:** a **posterior** over the catalog.
+```
+P₀(item) ∝ popularity                          # the 570× target skew IS a prior
+each turn:  P(item) ∝ P(item) · L(utterance | item)
+            ask argmax_a  H(P) − 𝔼_r[H(P | a,r)]      # expected information gain
+            convert when H(P) < threshold
+```
+
+**Why this is elegant:** it subsumes the other two. Hard 0/1 likelihood → R1. Read the posterior as a score → R2.
+And it answers *ask-vs-convert* natively — no gate, no magic turn-3 deadline — because entropy is the confidence.
+Every measurement we have slots in: popularity is the prior, exact-match and dense similarity are likelihood terms.
+
+**Strategies to explore:** popularity as prior (3) · exact-match and dense as competing likelihood models (1, 2) ·
+expected information gain (19) · BED-LLM for question proposal (20) · EVOI/bandits (21) · Platt calibration of
+the likelihood (30) · long-term profile as a prior update (Pillar III, natively).
+
+**Status:** not built. Highest ceiling, highest risk.
+**Pillars:** all four fall out of one mechanism — the cleanest Innovation story available to us.
+**Wins if:** MRR approaches 1.0 *and* MTTC drops, because entropy converts at exactly the right moment.
+**Dies if:** the likelihood model is mis-specified and the posterior confidently backs the wrong item.
+⚠️ Cost check first: a 50,000-element vector update per turn is trivial; the EIG expectation over candidate
+answers is the part to keep cheap.
+
+---
+
+### Scoring the race
+All three implement the same `Agent` and run the same harness. Compare on **clean score, paraphrase-stressed
+score, and the four scenario breakdowns** — a winner on clean alone has not won. Expect them to fail differently:
+R1 on Browsing, R2 on precision, R3 on calibration. **That divergence is the useful output**, whichever wins.
+
+---
+
+## 0.4 What is shared, and what is not
+
+⚠️ **Do not impose a common internal pipeline.** R3 has no retrieval stage; forcing `recall/rerank/decide` on it
+would flatten the very difference you are trying to measure. Freeze only these:
 
 ```python
-# src/contracts.py — frozen by Track 0 before any branch is cut
+# src/common/contracts.py — Track 0 freezes this; the three ideas share nothing else
 from dataclasses import dataclass
 
 @dataclass
 class SessionState:
     turn: int
-    category: str | None                    # coarse category, once known
-    slots: dict[str, list[str]]             # attribute -> confirmed values
-    slot_age: dict[str, int]                # turns since each slot was confirmed  (slot decay)
-    disclosed: set[str]                     # raw constraint strings already revealed
-    history: list[str]                      # customer utterances, in order
-    profile: dict                           # anonymized user_profile
-    long_term: dict                         # cross-session distilled preferences
+    category: str | None                  # coarse category, once known
+    slots: dict[str, list[str]]           # attribute -> confirmed values
+    slot_age: dict[str, int]              # turns since confirmed  (slot decay, §4.3)
+    disclosed: set[str]                   # raw constraint strings already revealed
+    history: list[str]                    # customer utterances, in order
+    profile: dict                         # anonymized user_profile
+    long_term: dict                       # distilled cross-session preferences (Pillar III)
 
-@dataclass
-class Candidate:
-    asin: str
-    route_scores: dict[str, float]          # 'spec' | 'dense' | 'bm25' | 'pop' -> raw score
-
-@dataclass
-class Ask:     attribute: str | None        # one of the 10 allowed, or None
-@dataclass
-class Convert: pass
-
-# recall(state, k)            -> list[Candidate]
-# rerank(state, cands)        -> list[str]
-# decide(state, ranked, conf) -> Ask | Convert
+# Also shared (expensive, identical for everyone):
+#   CatalogIndex  — products, coarse-category map, popularity table, spec-phrase table
+#   parse(msg, state) -> SessionState     — utterance → slots, so all three see the same input
+#   the eval harness + run registry
+#
+# NOT shared: how each idea stores candidates, scores them, or decides to convert.
 ```
+
+Each worktree owns `src/r1/`, `src/r2/`, `src/r3/` and touches nothing else.
 
 ## 0.5 Worktree setup
 
 ```bash
 # after Track 0 lands on main
-git worktree add ../track-a  track/a-symbolic
-git worktree add ../track-b  track/b-dense
-git worktree add ../track-c  track/c-knowledge
-git worktree add ../track-d  track/d-llm
+git worktree add ../r1-constraint  idea/r1-constraint
+git worktree add ../r2-rank        idea/r2-rank
+git worktree add ../r3-bayesian    idea/r3-bayesian
 ```
 
-Each worktree runs the identical harness and appends to a shared `runs/registry.jsonl` on `main`.
-**Every row must carry a clean score, a paraphrase-stressed score, and the four scenario breakdowns** — otherwise
-you cannot tell which bet actually won.
+Each runs the identical harness and appends to `runs/registry.jsonl` on `main`.
+
+**If you only have capacity for two:** run **R1 and R3**. They are the furthest apart — a hard filter versus a
+soft posterior — so the comparison is most informative, and R2's best components (dense blend, LLM rerank) can be
+folded into whichever wins as likelihood terms or tie-breakers.
 
 ---
 
-# Part I — Three explorations
-
-Three coherent systems, each with a hypothesis that can be falsified, each ownable in its own worktree. They are
-not variations on a theme — they disagree about what actually wins this competition.
-
-```bash
-git worktree add ../track4-A variant/a-deterministic
-git worktree add ../track4-B variant/b-hybrid
-git worktree add ../track4-C variant/c-agentic
-```
-
----
-
-## 🅰️ Deterministic Precision — no LLM at runtime
-
-> **Hypothesis:** the simulator is invertible enough that a well-engineered zero-LLM system wins on score,
-> latency and feasibility simultaneously, and the LLM is a liability rather than an asset.
-
-**Build:** spec-phrase exact index + BM25 + popularity prior + LightGBM reranker + information-gain question
-selection + NQC confidence gate.
-
-**Starting point:** [experiments/agent_best_0.9607.py](experiments/agent_best_0.9607.py) already does a crude
-version of this. Port it into a clean `src/`, then replace its two magic numbers with principled criteria (Part II §C).
-
-**Why it might win:** it is the only variant guaranteed to run if the organizer disables the network. ~4 s for all
-200 sessions. Trivially reproducible. Feasibility & Practicality is 15% of judging and this maxes it.
-
-**Why it might lose:** paraphrase-fragile, and a thin Innovation story — it is essentially a very good lookup.
-
-**Kill criterion:** if the paraphrase stress harness drops it below 0.826, it is strictly worse than 🅱️ and
-becomes the fallback path rather than a candidate.
-
----
-
-## 🅱️ Hybrid Semantic — dense retrieval + distilled knowledge
-
-> **Hypothesis:** a blended dense route and an offline-distilled attribute layer buy paraphrase robustness
-> *without* giving up deterministic precision — so we score like 🅰️ on the clean set and survive a rewritten
-> private set.
-
-**Build:** 🅰️ plus —
-- **Scheduled dense+popularity blend.** `bge-m3` embeddings, weight `w` scheduled on confirmed-slot count.
-  This is the measured 0.826 floor and it is the load-bearing component.
-- **COSMO-style offline distillation** — one LLM pass over 50k products producing three artefacts at once:
-  normalised attributes (kills `"Material:alloy"` vs `"100% Polyester"` vs `"Textile"`), use-case tags
-  (`"good for winter hiking"`), and doc2query expansions.
-- **HyDE on cold Browsing turns** — have the LLM write the product description the customer is describing, embed
-  *that*. Aimed squarely at our worst measured number (category-only dense retrieval, hit@10 0.185).
-- **LLM slot extraction** with regex fallback.
-- **MMR diversity** gated on entropy (Part II §B).
-
-**Why it might win:** it is a genuinely good search system, it fills the brief's four pillars honestly, and its
-robustness is measured rather than asserted.
-
-**Why it might lose:** most moving parts, so most ways to be subtly broken.
-
-**Kill criterion:** if the distillation and HyDE together fail to beat the plain blend on Browsing sessions, cut
-them and 🅱️ collapses back toward 🅰️ plus embeddings.
-
-**→ My pick for the primary submission.**
-
----
-
-## 🅲 Agentic Reasoning — full LLM cascade
-
-> **Hypothesis:** an LLM Router and Judge push MRR toward 1.0 and produce conversation quality that wins the
-> qualitative 65% of judging, which the score alone cannot.
-
-**Build:** 🅱️ plus an LLM Router (buying/browsing classification, route weighting), `qwen3.6:35b` listwise
-re-rank of the top 20, LLM-authored customer-facing prose, and adaptive re-orchestration when confidence stalls.
-
-**Why it might win:** best demo video, strongest Innovation narrative, highest MRR ceiling.
-
-**Why it might lose:** ⚠️ **wall-clock and network dependence.** One rerank per turn over 1,000 sessions × ~2.6
-turns ≈ **~37 min of sequential API time**, and the evaluator loop cannot be parallelised. Every call bets the
-endpoint is reachable during official scoring.
-
-**Expectation to set now:** 193/200 sessions are already rank-1 in the clean condition, so **expect little
-clean-set gain.** Build it for robustness and narrative. If it moves the clean score a lot, suspect the harness
-before celebrating.
-
-**Kill criterion:** if latency exceeds whatever timeout the organizer imposes, swap the LLM reranker for E2Rank
-(listwise quality at embedding cost) or drop to 🅱️.
-
----
-
-## The merged north star
-
-One codebase, three profiles, config-selected:
-
-```
-🅱️ ships  ·  🅲's LLM Judge fires only when confidence is low  ·  🅰️ is the guaranteed offline path
-```
-
-Uncertainty-gating the LLM keeps both the wall-clock and — more importantly — the *dependence on a reachable
-endpoint* rare. The story *"excellent with a model, still strong without one"* is worth more to judges than any
-single number.
-
----
-
-# Part II — The component menu
+# Part I — The component menu
 
 Ideas each variant can draw on. Effort · gain · risk.
 
@@ -439,11 +359,11 @@ filter track to the dense track.
 
 ---
 
-# Part III — Open questions
+# Part II — Open questions
 
 1. **Does the LLM reranker add anything on top of the blend?** Its +0.19 MRR was measured on *popularity-ordered*
    candidates, before the dense blend existed. The blend independently lifts the same floor to 0.826. **The two
-   gains may overlap — do not add them.** Cheap, high-value experiment; run it before budgeting effort on 🅲.
+   gains may overlap — do not add them.** Cheap, high-value experiment; run it before R2 invests in LLM reranking.
 2. **Which offline encoder?** `bge-m3` local vs `Qwen3-Embedding-0.6B` (current MTEB leader) vs BLaIR (pretrained
    on this exact dataset). One afternoon on the §12.2 harness. The local path may beat the API path.
 3. **How far do we lean on inversion?** Recommendation: keep it as one route behind the blend, and report the
@@ -454,30 +374,39 @@ filter track to the dense track.
 
 ---
 
-# Part IV — Suggested build order
+# Part III — Suggested build order
+
+**Phase 0 — shared (blocks everything, ~half a day)**
 
 | # | Task | Why |
 |---|---|---|
-| 1 | Harness: `compare.py`, ablation flags, run registry (Part V) | Nothing is measurable without it |
-| 2 | Port `agent_best_0.9607.py` into a clean `src/` | Locks in the floor |
-| 3 | Full 50k `bge-m3` embeddings + scheduled blend | Reproduces the 0.826 floor — this is the insurance |
-| 4 | Synthetic session generator (§D) | Unblocks every ML idea |
-| 5 | Paraphrase stress harness | Tells us how much of §D we actually need |
-| 6 | LightGBM reranker | Biggest MRR win per hour |
-| 7 | NQC gate + information-gain questions | The research contribution |
-| 8 | COSMO-style distillation | Paraphrase insurance + Browsing |
-| 9 | HyDE on cold Browsing turns | Targets our worst number (0.185) |
-| 10 | MMR gated on entropy | Fills an explicit brief requirement |
-| 11 | LLM listwise re-rank, uncertainty-gated | Insurance, not a headline |
-| 12 | **Local-weights offline path** | ⚠️ Disqualification risk — must not slide to the end |
-| 13 | Write-up, ablation table, demo video | 65% of the marks |
+| 1 | `src/common/`: catalog index, `SessionState`, `parse()` | All three ideas must see identical input |
+| 2 | `src/eval/compare.py`: registry, ablations, **paraphrase stress**, bootstrap CI | Without it the race has no referee |
+| 3 | Port `agent_best_0.9607.py` as R1's seed | Gives the race an incumbent to beat on day one |
+| 4 | Full 50k `bge-m3` embeddings, cached | R2 needs them; R3 wants them as a likelihood term |
 
-⚠️ **Item 12 is not optional and must not be last.** Every LLM stage needs a working no-network implementation
-from day one, or you discover too late that the architecture assumed a reachable endpoint.
+⚠️ **Build the paraphrase harness in Phase 0, not later.** It is the referee: a winner on the clean set alone
+tells you nothing about the private set.
 
----
+**Phase 1 — the race (parallel worktrees)**
 
-# Part V — How to run and compare
+| Worktree | First move | Then |
+|---|---|---|
+| 🔵 R1 | Normalised attributes so matching survives rewording | Info-gain question selection over the surviving set |
+| 🟢 R2 | Scheduled dense+popularity blend (the 0.826 floor) | HyDE for cold Browsing, then LightGBM, then LLM rerank |
+| 🟣 R3 | Posterior = popularity prior × exact-match likelihood | EIG question selection, then entropy-based conversion |
+
+**Phase 2 — converge**
+
+| # | Task |
+|---|---|
+| 1 | Score all three: clean, stressed, four scenario breakdowns, bootstrap CI |
+| 2 | Fold the losers' best components into the winner |
+| 3 | Cover any pillar the winner leaves thin — see [IMPORTANT.md](IMPORTANT.md) §14 |
+| 4 | **Local-weights offline path** ⚠️ never let this slide to the end |
+| 5 | Write-up with the ablation table, demo video, Devpost |
+
+# Part IV — How to run and compare
 
 ## Setup
 ```bash
@@ -538,7 +467,7 @@ A 0.02 gap is one or two sessions changing rank.
 
 ---
 
-# Part VI — Reading list
+# Part V — Reading list
 
 ### Load-bearing
 - **Is Decision Tree All You Need? (FacT-CRS)** — a tree beats deep-RL CRS; info-gain splitting; the two stopping
@@ -588,14 +517,20 @@ A 0.02 gap is one or two sessions changing rank.
 
 ---
 
-# Part VII — Recommendation
+# Part VI — Recommendation
 
-**Ship 🅱️.** Cascade architecture: five recall routes → scheduled dense+popularity blend (the 0.826 floor, weight
-scheduled on slot count) → LightGBM rank → entropy-gated MMR and uncertainty-gated LLM re-rank. Policy by
-**information gain** for what to ask and **NQC** for when to convert, replacing both magic numbers with standard
-practice. Knowledge from one COSMO-style offline pass producing normalised attributes, use-case tags and doc2query
-expansions. 🅰️ stays the guaranteed offline fallback; 🅲's Judge is an uncertainty-gated escalation on top.
+**Race R1 against R3, and treat R2 as a component library for whichever wins.**
 
-Publish the ablation table including `no_spec_phrase` = 0.826. Being the team that found the generator was
-invertible, **measured exactly what it was worth, and built a system that stands up without it** is a far better
-story than the highest number.
+R1 is the incumbent at 0.9607 and is the only idea that already works. R3 is the only one that could beat it on
+*mechanism* rather than on tuning — it answers ranking and ask-vs-convert with a single object, which is both the
+cleanest Innovation story and the most direct route to the MRR headroom (+0.075, where all remaining points are).
+R2's pieces — the dense blend that measured the 0.826 floor, HyDE, the LLM ranking stage the brief names — drop
+into either winner as likelihood terms or tie-breakers. Run R2 as its own worktree only if you have the people.
+
+Whatever wins, publish the ablation table including `no_spec_phrase` = 0.826. Being the team that found the
+generator was invertible, **measured exactly what it was worth, and built something that stands up without it**
+is a far better story than the highest number.
+
+⚠️ **Report the losers too.** Three architectures measured on the same harness, with their different failure
+modes named (R1 on Browsing, R2 on precision, R3 on calibration), is a stronger Technical Execution and Problem
+Insight exhibit than one tuned number with no alternatives explored.
