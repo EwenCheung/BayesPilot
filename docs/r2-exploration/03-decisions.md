@@ -60,3 +60,54 @@ the **agent**, never the evaluator, so the kit stays untouched and hits remain e
 
 `full` is deliberately harsher than anything the organizer is likely to do — it is a lower bound, not a
 prediction.
+
+---
+
+### D6 — The lexical index must not iterate a set and truncate ⚠️ bug found by a test
+**Symptom.** The same configuration scored 0.9578 in one process and 0.9566 in the next.
+
+**Cause.** `LexicalRoute` built each document's token set and kept `list(tokens)[:64]`. Python salts
+string hashing per interpreter, so set iteration order — and therefore *which* 64 tokens survived —
+differed on every run.
+
+**Fix.** Keep the `cap` rarest tokens by IDF: deterministic, and it drops the high-frequency tokens that
+carry least discrimination anyway. `tests/test_routes.py` now runs the index build in two subprocesses
+and asserts the output is identical.
+
+**Why it matters beyond the bug.** A harness that reports a different number for the same code cannot
+referee a race. This was found because a reference number failed to reproduce, which is the whole reason
+R2-A0 pins the harness to two known values before trusting it.
+
+---
+
+### D7 — An "exactness step" for full constraint coverage: proposed, measured, REJECTED
+**Hypothesis.** Satisfying every stated constraint exactly is qualitatively different from satisfying
+most, and a purely additive score cannot express that. Adding a bonus when a candidate matched all
+constraints exactly should fix the one session R2 missed.
+
+**Result.** It lost in 8 of 8 configurations (0.9616 → 0.9589 at the then-current schedule) and did not
+fix the missed session. Reverted; the code is gone, the finding stays here.
+
+**What was actually wrong.** The missed session's target matched all four constraints exactly *and* was
+rank 1 by popularity among the 20 products that did — so it was never a coverage problem. Twenty
+candidates tied on spec, and the tie was being broken by the dense route, which is close to
+uninformative between products that satisfy identical specs. See D8.
+
+---
+
+### D8 — 🔑 Popularity must stay STRONG even with a full constraint card
+**The initial schedule was wrong in a way worth naming.** It decayed popularity from 1.00 to 0.32 as
+slots accumulated, on the intuitive theory that hard evidence should take over from a prior. Measured
+across 23 configurations, raising it back to 2.5 moved the score from **0.9616 to 0.9707**.
+
+**Why.** Once every stated constraint is matched, dozens of catalog products tie exactly — the
+constraints are low-entropy strings like `"Imported"` or `"100% Polyester"` that hundreds of products
+share. At that point popularity is not a tiebreak of convenience, it is the only route still carrying
+information about which of the tied candidates is the answer, because the targets are drawn from a
+5-core split and are ~570x more reviewed than the catalog median (IMPORTANT.md §5).
+
+The generalisable form: **a prior is most valuable exactly where the evidence stops discriminating**,
+which is the opposite of the schedule intuition says to build.
+
+The optimum is a broad plateau (0.969–0.971 across a 4x range of both weights), not a peak — evidence
+that this is not a knife-edge fit to 200 sessions.

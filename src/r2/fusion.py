@@ -31,9 +31,53 @@ SCHEDULE: dict[int, tuple[float, float, float, float]] = {
 }
 
 
+# ⚠️ The schedule above is tuned WITH exact matching available, and that assumption turned out to be
+# load-bearing: with the spec route ablated the same weights score 0.7442, barely above the
+# popularity-only floor, because a dominant popularity weight swamps the two routes that still have
+# something to say.
+#
+# So the Router keys on evidence QUALITY, not only on slot count. When no candidate matches any stated
+# constraint exactly we are either in a paraphrased session or looking at constraints the catalog does
+# not phrase our way; either way the exact-match prior has nothing to contribute and the semantic routes
+# should lead. This is PROBLEM.md Pillar III "runtime workflow re-orchestration" as a real mechanism
+# rather than a gesture: the agent notices a strategy has stopped working and changes strategy.
+# Tuned jointly on the two robustness conditions, which pull in OPPOSITE directions and so cannot both
+# be maximised:
+#
+#   condition            best profile        its score   at the chosen profile
+#   no_spec_phrase       popularity 1.5      0.8478      0.8315
+#   stressed:full        popularity 0.45     0.8065      0.7961
+#
+# no_spec_phrase keeps clean template text and only loses exact matching, so the popularity prior is
+# still sharp. Stressed text also mangles the constraint strings, so the semantic routes have to carry
+# more. Chosen by best WORST case rather than best average — this profile is insurance, and insurance is
+# judged on its bad day.
+PARAPHRASE_SCHEDULE: dict[int, tuple[float, float, float, float]] = {
+    0: (1.00, 0.00, 0.20, 0.20),
+    1: (0.90, 0.80, 0.80, 0.98),
+    2: (0.85, 0.90, 0.90, 1.22),
+    3: (0.80, 1.00, 1.00, 1.40),
+}
+
+# A candidate matching even one constraint exactly scores at least 1/n_constraints, while partial token
+# credit is capped at partial_credit (0.55) of that. This threshold sits between the two regimes.
+EXACT_EVIDENCE_THRESHOLD = 0.60
+
+
 def weights_for(n_slots: int, ablations: frozenset[str] = frozenset(),
-                schedule: dict | None = None) -> dict[str, float]:
-    popularity, spec, lexical, dense = (schedule or SCHEDULE)[min(n_slots, 3)]
+                schedule: dict | None = None,
+                spec_support: float | None = None) -> dict[str, float]:
+    """Route weights for this turn.
+
+    `spec_support` is the best spec-phrase score across the candidate pool — the Router's read on
+    whether exact matching is working at all in this session. Pass None to disable the adaptive switch
+    (that is the `no_adaptive` ablation).
+    """
+    table = schedule or SCHEDULE
+    if (spec_support is not None and n_slots > 0
+            and spec_support < EXACT_EVIDENCE_THRESHOLD and table is SCHEDULE):
+        table = PARAPHRASE_SCHEDULE
+    popularity, spec, lexical, dense = table[min(n_slots, 3)]
     weights = {"popularity": popularity, "spec_phrase": spec,
                "lexical": lexical, "dense": dense}
     for route in ablations:

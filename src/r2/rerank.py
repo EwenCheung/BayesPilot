@@ -20,6 +20,8 @@ from __future__ import annotations
 import json
 import os
 import re
+import time
+import urllib.error
 import urllib.request
 
 MODEL = "qwen3.6:35b"  # pinned explicitly: `default`, `test` and `ornith1.0:35b` are all ALIASES that
@@ -28,10 +30,14 @@ RANK_RE = re.compile(r"\[(\d+)\]")
 
 
 class LlmReranker:
-    def __init__(self, index, model: str = MODEL, timeout: int = 60) -> None:
+    def __init__(self, index, model: str = MODEL, timeout: int = 60,
+                 retries: int = 5, backoff: float = 1.5) -> None:
         self.index = index
         self.model = model
         self.timeout = timeout
+        self.retries = retries
+        self.backoff = backoff
+        self.rate_limited = 0
         self.api = os.environ.get("SOCLAAS_BASE_URL", "")
         self.key = os.environ.get("SOCLAAS_API_KEY", "")
         self.calls = 0
@@ -63,23 +69,38 @@ class LlmReranker:
             "messages": [{"role": "user", "content": prompt}],
             "max_tokens": 400, "temperature": 0,
         }).encode()
-        try:
-            request = urllib.request.Request(
-                self.api + "/chat/completions", body,
-                {"Authorization": "Bearer " + self.key, "Content-Type": "application/json"},
-            )
-            data = json.load(urllib.request.urlopen(request, timeout=self.timeout))
-            choice = data["choices"][0]
-            content = choice["message"].get("content")
-            assert content, f"empty content (finish_reason={choice.get('finish_reason')})"
-            order = [int(x) for x in RANK_RE.findall(content)]
-            assert order, "no ranking parsed from a non-empty response"
+        # Retry only on rate limiting. A shared endpoint returns 429 in bursts, and without backoff
+        # the failure count measures contention rather than the reranker.
+        order = None
+        for attempt in range(self.retries):
+            try:
+                request = urllib.request.Request(
+                    self.api + "/chat/completions", body,
+                    {"Authorization": "Bearer " + self.key, "Content-Type": "application/json"},
+                )
+                data = json.load(urllib.request.urlopen(request, timeout=self.timeout))
+                choice = data["choices"][0]
+                content = choice["message"].get("content")
+                assert content, f"empty content (finish_reason={choice.get('finish_reason')})"
+                order = [int(x) for x in RANK_RE.findall(content)]
+                assert order, "no ranking parsed from a non-empty response"
 
-            usage = data.get("usage") or {}
-            self.prompt_tokens += int(usage.get("prompt_tokens") or 0)
-            self.completion_tokens += int(usage.get("completion_tokens") or 0)
-            self.calls += 1
-        except Exception:
+                usage = data.get("usage") or {}
+                self.prompt_tokens += int(usage.get("prompt_tokens") or 0)
+                self.completion_tokens += int(usage.get("completion_tokens") or 0)
+                self.calls += 1
+                break
+            except urllib.error.HTTPError as exc:
+                if exc.code == 429 and attempt < self.retries - 1:
+                    self.rate_limited += 1
+                    time.sleep(self.backoff * (2 ** attempt))
+                    continue
+                self.failures += 1
+                return ranked
+            except Exception:
+                self.failures += 1
+                return ranked
+        if order is None:
             self.failures += 1
             return ranked
 

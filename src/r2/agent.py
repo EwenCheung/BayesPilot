@@ -36,7 +36,7 @@ class Agent:
     def __init__(self, catalog_path: str | Path = "data/catalog.jsonl", *,
                  dense: str = "auto", ablations: tuple[str, ...] = (),
                  slot_decay: float = 0.15, fuse: str = "blend",
-                 use_mmr: bool = False, rerank: bool = False,
+                 use_mmr: bool = False, rerank: bool = False, no_adaptive: bool = False,
                  ladder: tuple = policy.DEPTH_LADDER, deadline: int = policy.DEADLINE,
                  schedule: dict | None = None, partial_credit: float = 0.55,
                  index: CatalogIndex | None = None, dense_backend=None,
@@ -51,6 +51,7 @@ class Agent:
         self.ladder = ladder
         self.deadline = deadline
         self.use_mmr = use_mmr
+        self.no_adaptive = no_adaptive
         self.schedule = schedule or fusion.SCHEDULE
         self.llm_call_failures = 0
 
@@ -120,7 +121,17 @@ class Agent:
             return [], {}
         query = self._query(state)
         scores = {route.name: route.score(query, candidates) for route in self.routes}
-        weights = fusion.weights_for(query.n_slots, self.ablations, self.schedule)
+        # The Router's read on whether exact matching is working this session. Drives the adaptive
+        # switch to the paraphrase weight profile (src/r2/fusion.py).
+        spec = scores.get("spec_phrase") or {}
+        # "Is exact matching contributing anything?" — a route that is switched off contributes
+        # nothing by definition, so the ablation must read as zero support, not as high support that
+        # happens to be multiplied by a zero weight.
+        spec_support = None
+        if not self.no_adaptive:
+            spec_support = (0.0 if "no_spec_phrase" in self.ablations
+                            else max(spec.values(), default=0.0))
+        weights = fusion.weights_for(query.n_slots, self.ablations, self.schedule, spec_support)
         fuser = fusion.rrf if self.fuse_name == "rrf" else fusion.blend
         fused = fuser(scores, candidates, weights)
         ranked = fusion.order(fused, self.index, query)

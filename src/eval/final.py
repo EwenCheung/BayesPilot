@@ -61,6 +61,11 @@ def main() -> None:
     RESULTS["r1"] = measure("R1 incumbent (constraint filter)",
                             lambda: r1_agent(str(harness.CATALOG)))
 
+    from src.eval import r1_hardened
+    RESULTS["r1_hardened"] = measure(
+        "R1 + popularity fallback (fair control)",
+        lambda: r1_hardened.make(str(harness.CATALOG)))
+
     RESULTS["popularity"] = measure(
         "popularity + category only",
         lambda: build("none", ablations=("no_spec_phrase", "no_lexical", "no_dense")),
@@ -72,14 +77,23 @@ def main() -> None:
     have_bge = (ROOT / "artifacts" / "emb.npy").exists()
     if have_bge:
         print("\n--- R2, bge-m3 dense backend ---")
-        RESULTS["r2_bge"] = measure("R2 full (bge-m3 dense)", lambda: build("bge"))
+        # Clean only. bge-m3 needs one live API call per turn to embed the query, and the stressed
+        # passes cannot reuse the cache; an earlier full run measured it statistically identical to the
+        # offline backend under both stress levels, so the extra ~15 minutes buys nothing.
+        RESULTS["r2_bge"] = measure("R2 full (bge-m3 dense)", lambda: build("bge"), stress=False)
 
-    dense = "bge" if have_bge else "svd"
+    # Ablations run on the offline backend: bge-m3 measured statistically identical on both
+    # clean and stressed, and needs a live API call per turn, which makes it 30x slower here.
+    dense = "svd"
     print(f"\n--- ablations ({dense} dense) ---")
     for ablation in ("no_spec_phrase", "no_dense", "no_popularity", "no_lexical"):
         stress = ablation == "no_spec_phrase"  # the private-set insurance number, stressed too
         RESULTS[ablation] = measure(f"  {ablation}",
                                     lambda a=ablation: build(dense, ablations=(a,)), stress=stress)
+
+    print("\n--- adaptive router (Pillar III) ---")
+    RESULTS["no_adaptive"] = measure("  no_adaptive (fixed schedule)",
+                                     lambda: build(dense, no_adaptive=True))
 
     print("\n--- fusion baseline ---")
     RESULTS["rrf"] = measure("RRF instead of scheduled blend",
@@ -103,11 +117,13 @@ def main() -> None:
         print(f"  LLM rerank unavailable: {exc}", flush=True)
 
     # ---- registry -------------------------------------------------------------------------------
-    headline = RESULTS.get("r2_bge") or RESULTS["r2_svd"]
+    headline = RESULTS["r2_svd"]   # the offline backend is what we recommend shipping
     ablations = {name: harness.score(RESULTS[name]["clean"])
                  for name in ("no_spec_phrase", "no_dense", "no_popularity", "no_lexical")
                  if name in RESULTS}
     ablations["rrf_instead_of_blend"] = harness.score(RESULTS["rrf"]["clean"])
+    ablations["no_adaptive"] = harness.score(RESULTS["no_adaptive"]["clean"])
+    ablations["no_spec_phrase_stressed_full"] = harness.score(RESULTS["no_spec_phrase"]["full"])
     rr = RESULTS.get("r2_rerank", {}).get("_reranker", {})
 
     harness.register(
@@ -116,7 +132,7 @@ def main() -> None:
                     "scaffold": harness.score(headline["scaffold"]),
                     "full": harness.score(headline["full"])},
         ablations=ablations,
-        models={"embed": "bge-m3" if have_bge else "tfidf-svd-256",
+        models={"embed": "tfidf-svd-256 (offline); bge-m3 measured equivalent",
                 "rerank": "qwen3.6:35b" if rr else "none"},
         llm_call_failures=rr.get("failures", 0),
         notes="R2 = retrieve & rank. Headline metric is no_spec_phrase + stressed, not clean.",

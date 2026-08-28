@@ -232,3 +232,37 @@ clean set alone tells us nothing about the private set.
 5. **Pin explicit model IDs**, never aliases (`default`, `test`, `ornith1.0:35b` are all aliases).
 6. `ask_attribute: "other"` is the simulator's wildcard; `null` reveals nothing.
 7. 200 sessions is small — **a 0.02 score gap is noise.** Bootstrap before declaring a winner.
+
+---
+
+## Spec-driven development — binding when working on a road
+
+**Read the road's spec before writing code, and update it when a measurement changes a decision.**
+
+| Road | Spec |
+|---|---|
+| 🟢 **R2** Retrieve & Rank | [docs/r2-exploration/](../docs/r2-exploration/) — [00-r2-spec.md](../docs/r2-exploration/00-r2-spec.md) (the bet, architecture, kill criteria) · [01-contracts.md](../docs/r2-exploration/01-contracts.md) (frozen seams, shared with R1/R3) · [02-acceptance.md](../docs/r2-exploration/02-acceptance.md) (`R2-A0..A10`) · [03-decisions.md](../docs/r2-exploration/03-decisions.md) (ADR log) |
+
+The loop, in order, no steps skipped:
+
+1. **Spec first.** Add or amend the entry in `00`/`01`, and give it an acceptance ID in `02` with the
+   number it must hit and the test that proves it.
+2. **Test second.** Write the test naming that ID in its docstring. Watch it fail *for the right reason*
+   before writing any implementation.
+3. **Implement third.** Minimum code that makes the test pass.
+4. **Measure fourth.** Gates run the real evaluator; append a row to `runs/registry.jsonl`.
+5. **Record.** When a measurement changes a decision — including reversing one — append to `03-decisions.md`.
+   A rejected idea with its number is worth more than a silent deletion.
+
+```bash
+python3 -m unittest discover tests   # fast: parity, state, routes, contract (~60s)
+python3 -m unittest tests.test_gates # slow: real evaluator runs
+python3 -m src.eval.final            # the full comparison + registry rows
+```
+
+⚠️ **Do not tune on the clean public-set score.** It is 200 sessions and a 0.02 gap is noise. A change is
+real only if it survives the bootstrap CI, and R2 is judged on its **stressed** and **`no_spec_phrase`**
+numbers — the clean score is sanity, not the point.
+
+⚠️ **The harness never writes to `starter/agent.py`.** It imports the evaluator's own `evaluate()` and
+injects our agent. If you find yourself copying a file over the starter, you are using the wrong tool.
