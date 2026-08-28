@@ -1,0 +1,465 @@
+<title>R2 Retrieve and Rank</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chivo:ital,wght@0,400;0,600;0,800;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap">
+
+<style>
+:root{
+  --ground:#F3F5F2; --surface:#FFFFFF; --surface-2:#EAEEE9;
+  --ink:#12161A; --ink-2:#3D474E; --muted:#65707A;
+  --rule:#D7DDD6; --rule-2:#C3CBC2;
+  --r2:#0E6B58; --r2-soft:#D3E7E0;
+  --r1:#A8382A; --r1-soft:#F2DAD5;
+  --neutral-line:#8D9A93;
+  --warn:#8A6A17;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#0E1211; --surface:#161B19; --surface-2:#1E2523;
+    --ink:#E9EDEA; --ink-2:#BCC5BF; --muted:#8E9A93;
+    --rule:#2A322F; --rule-2:#3A443F;
+    --r2:#54C4A6; --r2-soft:#173A32;
+    --r1:#E58472; --r1-soft:#3A1F1A;
+    --neutral-line:#6F7C76;
+    --warn:#D3AC4E;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0E1211; --surface:#161B19; --surface-2:#1E2523;
+  --ink:#E9EDEA; --ink-2:#BCC5BF; --muted:#8E9A93;
+  --rule:#2A322F; --rule-2:#3A443F;
+  --r2:#54C4A6; --r2-soft:#173A32;
+  --r1:#E58472; --r1-soft:#3A1F1A;
+  --neutral-line:#6F7C76;
+  --warn:#D3AC4E;
+}
+
+*{box-sizing:border-box;}
+body{
+  background:var(--ground); color:var(--ink);
+  font-family:"Source Serif 4",Georgia,serif; font-size:17px; line-height:1.62;
+  margin:0; padding:0 20px 96px;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:860px;margin:0 auto;}
+.prose{max-width:65ch;}
+
+h1,h2,h3,.label,.stat-v,table,.mono{font-family:Chivo,"Helvetica Neue",Arial,sans-serif;}
+h1{font-size:clamp(2.1rem,5.4vw,3.05rem);font-weight:800;letter-spacing:-.025em;line-height:1.05;
+   text-wrap:balance;margin:0 0 .35em;}
+h2{font-size:1.42rem;font-weight:700;letter-spacing:-.012em;margin:0 0 .2em;text-wrap:balance;}
+h3{font-size:1.02rem;font-weight:600;letter-spacing:-.005em;margin:0 0 .3em;}
+p{margin:0 0 1em;}
+a{color:var(--r2);}
+strong{font-weight:600;}
+code,.mono{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:.87em;
+  font-variant-numeric:tabular-nums;}
+
+.label{font-size:.685rem;font-weight:600;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--muted);}
+
+header{padding:72px 0 0;border-bottom:1px solid var(--rule);margin-bottom:44px;}
+.eyebrow{display:flex;gap:12px;align-items:baseline;margin-bottom:20px;flex-wrap:wrap;}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--r2);display:inline-block;}
+.deck{font-size:1.14rem;color:var(--ink-2);max-width:60ch;margin:0 0 34px;}
+
+section{margin:0 0 56px;}
+section > .label{display:block;margin-bottom:10px;}
+
+/* verdict */
+.verdict{display:grid;grid-template-columns:repeat(auto-fit,minmax(178px,1fr));gap:1px;
+  background:var(--rule);border:1px solid var(--rule);border-radius:3px;overflow:hidden;margin:0 0 14px;}
+.stat{background:var(--surface);padding:20px 20px 18px;display:flex;flex-direction:column;gap:5px;}
+.stat-v{font-size:2.05rem;font-weight:800;letter-spacing:-.03em;line-height:1;
+  font-variant-numeric:tabular-nums;font-family:"JetBrains Mono",monospace;}
+.stat-n{font-size:.79rem;color:var(--muted);line-height:1.4;}
+.v-r2{color:var(--r2);} .v-r1{color:var(--r1);}
+
+/* chart */
+figure{margin:0 0 12px;}
+.chartbox{background:var(--surface);border:1px solid var(--rule);border-radius:3px;
+  padding:22px 20px 14px;overflow-x:auto;}
+svg{display:block;width:100%;height:auto;min-width:520px;}
+figcaption{font-size:.87rem;color:var(--muted);margin-top:12px;max-width:62ch;}
+
+/* tables */
+.tablebox{overflow-x:auto;border:1px solid var(--rule);border-radius:3px;background:var(--surface);}
+table{border-collapse:collapse;width:100%;font-size:.845rem;min-width:520px;}
+th,td{text-align:right;padding:9px 14px;border-bottom:1px solid var(--rule);white-space:nowrap;
+  font-variant-numeric:tabular-nums;}
+th{font-weight:600;font-size:.685rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);
+  background:var(--surface-2);border-bottom:1px solid var(--rule-2);}
+td:first-child,th:first-child{text-align:left;white-space:normal;min-width:230px;
+  font-family:"Source Serif 4",serif;font-size:.95rem;}
+tbody tr:last-child td{border-bottom:none;}
+.num{font-family:"JetBrains Mono",monospace;}
+tr.hero td{background:var(--r2-soft);font-weight:600;}
+tr.bad td{background:var(--r1-soft);}
+tr.sub td:first-child{padding-left:32px;color:var(--muted);font-style:italic;}
+.tag{display:inline-block;font-family:Chivo,sans-serif;font-size:.6rem;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;padding:2px 7px;border-radius:2px;
+  background:var(--surface-2);color:var(--muted);border:1px solid var(--rule-2);margin-left:8px;
+  vertical-align:1px;}
+.tag.win{background:var(--r2-soft);color:var(--r2);border-color:transparent;}
+.tag.die{background:var(--r1-soft);color:var(--r1);border-color:transparent;}
+
+/* callouts */
+.note{border-left:3px solid var(--rule-2);padding:2px 0 2px 18px;margin:0 0 20px;
+  color:var(--ink-2);max-width:62ch;}
+.note.key{border-left-color:var(--r2);}
+.note.warn{border-left-color:var(--warn);}
+
+/* pipeline */
+.pipe{background:var(--surface);border:1px solid var(--rule);border-radius:3px;padding:20px;
+  overflow-x:auto;margin:0 0 14px;}
+.pipe pre{margin:0;font-family:"JetBrains Mono",monospace;font-size:.78rem;line-height:1.85;
+  color:var(--ink-2);white-space:pre;}
+
+/* findings */
+.finding{border-top:1px solid var(--rule);padding:20px 0 0;margin:0 0 20px;}
+.finding .label{display:block;margin-bottom:7px;}
+.finding p{max-width:62ch;margin-bottom:0;}
+.finding p + p{margin-top:.7em;}
+
+.repro{background:var(--surface);border:1px solid var(--rule);border-radius:3px;padding:18px 20px;
+  overflow-x:auto;}
+.repro pre{margin:0;font-family:"JetBrains Mono",monospace;font-size:.79rem;line-height:1.8;
+  color:var(--ink-2);white-space:pre;}
+.repro .c{color:var(--muted);}
+
+footer{border-top:1px solid var(--rule);padding-top:20px;color:var(--muted);font-size:.83rem;}
+</style>
+
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">
+    <span class="dot"></span>
+    <span class="label">Road R2 of three · TechJam Track 4</span>
+  </div>
+  <h1>The agent is a ranker</h1>
+  <p class="deck">R2 scores everything, orders it, and ships the top of the list. It matches the
+  incumbent on the clean benchmark — and it is the only one of the two still standing when the
+  customer's words are reworded.</p>
+</header>
+
+<section>
+  <span class="label">Verdict</span>
+  <div class="verdict">
+    <div class="stat">
+      <span class="stat-v v-r2">0.9707</span>
+      <span class="stat-n">Clean TechnicalScore.<br>R1 incumbent: 0.9607</span>
+    </div>
+    <div class="stat">
+      <span class="stat-v v-r2">0.7961</span>
+      <span class="stat-n">Under heavy paraphrase.<br>R1: <span class="mono">0.0000</span></span>
+    </div>
+    <div class="stat">
+      <span class="stat-v v-r2">0.8315</span>
+      <span class="stat-n">With inversion switched off — the private-set insurance number</span>
+    </div>
+    <div class="stat">
+      <span class="stat-v">0</span>
+      <span class="stat-n">Network calls required. The offline backend measured equal to the API one</span>
+    </div>
+  </div>
+  <p class="note">All four measured end-to-end through the official evaluator on the 200 public
+  sessions, with the competition kit byte-identical to upstream.</p>
+</section>
+
+<section class="prose">
+  <span class="label">What R2 is</span>
+  <h2>Meaning beats matching</h2>
+  <p>The three roads disagree about what kind of problem this is. <strong>R1 says it is a database
+  query</strong>: the customer states facts, each fact eliminates products, and you intersect sets until
+  one item survives. <strong>R2 says it is a ranking problem</strong>: score every candidate by how well
+  it explains what the customer said, sort, and take ten.</p>
+  <p>The difference is not cosmetic, and it shows up in exactly one place — what happens when a
+  constraint is worded differently than the catalog words it. R1's set intersection returns
+  <em>nothing</em>: one changed character and the match is gone. R2's scored overlap returns a smaller
+  number. One fails off a cliff, the other down a slope.</p>
+  <div class="pipe"><pre>user message
+    │
+    ├─ parse ──────────────► slots · slot age · disclosed · asked · barren
+    │
+    ├─ popularity   log(rating_number)         paraphrase-proof
+    ├─ spec-phrase  soft phrase + token overlap  precise, paraphrase-fragile
+    ├─ lexical      IDF-weighted overlap        keyword surface
+    └─ dense        TF-IDF→SVD  |  bge-m3       semantic
+    │
+    ├─ fuse ───────────────► scheduled blend, weights = f(slots, evidence quality)
+    ├─ rerank ─────────────► LLM listwise, escalation only
+    └─ judge ──────────────► confidence → how DEEP to ship, or ask "other"</pre></div>
+</section>
+
+<section>
+  <span class="label">The race</span>
+  <h2>A cliff and a slope</h2>
+  <figure>
+    <div class="chartbox">
+      <svg viewBox="0 0 720 372" role="img" aria-label="TechnicalScore for R1 and R2 across clean, lightly paraphrased and heavily paraphrased conditions. R2 declines from 0.97 to 0.80; R1 falls from 0.96 to zero.">
+        <!-- grid -->
+        <g stroke="var(--rule)" stroke-width="1">
+          <line x1="92" y1="30" x2="672" y2="30"/>
+          <line x1="92" y1="100" x2="672" y2="100"/>
+          <line x1="92" y1="170" x2="672" y2="170"/>
+          <line x1="92" y1="240" x2="672" y2="240"/>
+          <line x1="92" y1="310" x2="672" y2="310"/>
+        </g>
+        <g fill="var(--muted)" font-family="JetBrains Mono, monospace" font-size="10.5" text-anchor="end">
+          <text x="82" y="34">1.00</text><text x="82" y="104">0.75</text>
+          <text x="82" y="174">0.50</text><text x="82" y="244">0.25</text>
+          <text x="82" y="314">0.00</text>
+        </g>
+
+        <!-- reference lines -->
+        <line x1="92" y1="116.3" x2="672" y2="116.3" stroke="var(--neutral-line)"
+              stroke-width="1.5" stroke-dasharray="3 4"/>
+        <text x="668" y="111" fill="var(--neutral-line)" font-family="Chivo, sans-serif"
+              font-size="10.5" text-anchor="end">popularity + category floor · 0.6919</text>
+
+        <line x1="92" y1="280.1" x2="672" y2="280.1" stroke="var(--neutral-line)"
+              stroke-width="1.5" stroke-dasharray="3 4"/>
+        <text x="668" y="275" fill="var(--neutral-line)" font-family="Chivo, sans-serif"
+              font-size="10.5" text-anchor="end">shipped BM25 starter · 0.1067</text>
+
+        <!-- R2 -->
+        <polyline points="150,38.2 400,76.4 650,87.1" fill="none" stroke="var(--r2)"
+                  stroke-width="2.75" stroke-linejoin="round" stroke-linecap="round"/>
+        <!-- R1 hardened -->
+        <polyline points="150,42.5 400,302.4 650,302.4" fill="none" stroke="var(--r1)"
+                  stroke-width="1.75" stroke-dasharray="5 4" stroke-linecap="round" opacity="0.75"/>
+        <!-- R1 -->
+        <polyline points="150,41.0 400,310 650,310" fill="none" stroke="var(--r1)"
+                  stroke-width="2.75" stroke-linejoin="round" stroke-linecap="round"/>
+
+        <g stroke="var(--surface)" stroke-width="2.5">
+          <circle cx="150" cy="38.2" r="5" fill="var(--r2)"/>
+          <circle cx="400" cy="76.4" r="5" fill="var(--r2)"/>
+          <circle cx="650" cy="87.1" r="5" fill="var(--r2)"/>
+          <circle cx="150" cy="41.0" r="5" fill="var(--r1)"/>
+          <circle cx="400" cy="310" r="5" fill="var(--r1)"/>
+          <circle cx="650" cy="310" r="5" fill="var(--r1)"/>
+        </g>
+
+        <g font-family="JetBrains Mono, monospace" font-size="11.5" font-weight="600">
+          <text x="150" y="24" fill="var(--r2)" text-anchor="middle">0.9707</text>
+          <text x="412" y="72" fill="var(--r2)">0.8343</text>
+          <text x="640" y="79" fill="var(--r2)" text-anchor="end">0.7961</text>
+          <text x="412" y="327" fill="var(--r1)">0.0000</text>
+          <text x="640" y="327" fill="var(--r1)" text-anchor="end">0.0000</text>
+        </g>
+
+        <g font-family="Chivo, sans-serif" font-size="11.5" font-weight="600">
+          <text x="176" y="46" fill="var(--r2)">R2 · ranker</text>
+          <text x="176" y="62" fill="var(--r1)">R1 · filter</text>
+          <text x="176" y="297" fill="var(--r1)" opacity="0.8" font-weight="400"
+                font-size="10.5">R1 + popularity fallback · 0.0273</text>
+        </g>
+
+        <g fill="var(--muted)" font-family="Chivo, sans-serif" font-size="11.5" text-anchor="middle">
+          <text x="150" y="340">clean templates</text>
+          <text x="400" y="340">carrier reworded</text>
+          <text x="650" y="340">carrier + constraints reworded</text>
+          <text x="150" y="356" font-size="10" opacity=".75">as shipped</text>
+          <text x="400" y="356" font-size="10" opacity=".75">stress: scaffold</text>
+          <text x="650" y="356" font-size="10" opacity=".75">stress: full</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption>Both agents run through the identical harness and the identical rewriter. The rewriter
+    wraps the <em>agent</em>, never the evaluator — the labels, the scoring and the exact-code hit check
+    are untouched.</figcaption>
+  </figure>
+
+  <div class="note warn"><p><strong>The fair-control result is the one that matters.</strong> R1 scores
+  exactly zero partly because it has no fallback: when its regex misses, it ships an empty list every
+  turn of every session. That is a missing guard, not an architecture. So we added the guard — fall back
+  to the popularity prior, the same one R2 uses — and re-ran. It recovers to
+  <span class="mono">0.0273</span>. The collapse survives the fix, which is what makes it a finding
+  about filters rather than a bug report about one file.</p></div>
+</section>
+
+<section>
+  <span class="label">Scoreboard</span>
+  <h2>Every number, one harness</h2>
+  <div class="tablebox">
+  <table>
+    <thead><tr><th>Variant</th><th>Hit@10</th><th>MRR</th><th>MTTC</th><th>Score</th></tr></thead>
+    <tbody>
+      <tr class="hero"><td>R2 — full, offline backend <span class="tag win">ships</span></td>
+        <td class="num">1.000</td><td class="num">0.9746</td><td class="num">2.08</td><td class="num">0.9707</td></tr>
+      <tr class="sub"><td>stressed · carrier reworded</td>
+        <td class="num">0.865</td><td class="num">0.8298</td><td class="num">3.35</td><td class="num">0.8343</td></tr>
+      <tr class="sub"><td>stressed · everything reworded</td>
+        <td class="num">0.845</td><td class="num">0.7569</td><td class="num">3.67</td><td class="num">0.7961</td></tr>
+      <tr><td>R2 — full, <span class="mono">bge-m3</span> dense</td>
+        <td class="num">0.995</td><td class="num">0.9746</td><td class="num">2.12</td><td class="num">0.9676</td></tr>
+      <tr><td>R1 incumbent — constraint filter</td>
+        <td class="num">1.000</td><td class="num">0.9750</td><td class="num">2.59</td><td class="num">0.9607</td></tr>
+      <tr class="bad sub"><td>stressed · either level</td>
+        <td class="num">0.000</td><td class="num">0.0000</td><td class="num">11.00</td><td class="num">0.0000</td></tr>
+      <tr><td>R1 + popularity fallback <span class="tag">fair control</span></td>
+        <td class="num">1.000</td><td class="num">0.9543</td><td class="num">2.55</td><td class="num">0.9553</td></tr>
+      <tr class="bad sub"><td>stressed · either level</td>
+        <td class="num">0.035</td><td class="num">0.0103</td><td class="num">10.66</td><td class="num">0.0273</td></tr>
+      <tr><td>RRF instead of the scheduled blend</td>
+        <td class="num">0.940</td><td class="num">0.7884</td><td class="num">3.20</td><td class="num">0.8625</td></tr>
+      <tr><td>Popularity + category only</td>
+        <td class="num">0.815</td><td class="num">0.4981</td><td class="num">4.25</td><td class="num">0.6919</td></tr>
+      <tr><td>Shipped BM25 starter</td>
+        <td class="num">0.125</td><td class="num">0.0680</td><td class="num">9.81</td><td class="num">0.1067</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="note">R2 beats R1 by <span class="mono">0.0100</span> on the clean set, but the bootstrap
+  intervals overlap — R2 <span class="mono">[0.9630, 0.9774]</span>, R1
+  <span class="mono">[0.9543, 0.9666]</span> over 1,000 resamples. <strong>The clean result is a
+  tie.</strong> The race is decided by the rows underneath it.</p>
+</section>
+
+<section>
+  <span class="label">Ablations</span>
+  <h2>What each route is actually worth</h2>
+  <div class="tablebox">
+  <table>
+    <thead><tr><th>Route removed</th><th>Score</th><th>Δ</th><th>Reading</th></tr></thead>
+    <tbody>
+      <tr><td>— none (full R2)</td><td class="num">0.9707</td><td class="num">—</td><td style="text-align:left;white-space:normal">baseline</td></tr>
+      <tr class="hero"><td>spec-phrase <span class="tag win">the insurance number</span></td>
+        <td class="num">0.8315</td><td class="num">−0.1392</td>
+        <td style="text-align:left;white-space:normal">what we score if inversion is worthless</td></tr>
+      <tr><td>popularity</td><td class="num">0.9318</td><td class="num">−0.0389</td>
+        <td style="text-align:left;white-space:normal">the most valuable non-inversion route</td></tr>
+      <tr><td>dense</td><td class="num">0.9657</td><td class="num">−0.0050</td>
+        <td style="text-align:left;white-space:normal">small on clean; earns its place under stress</td></tr>
+      <tr><td>lexical</td><td class="num">0.9708</td><td class="num">+0.0001</td>
+        <td style="text-align:left;white-space:normal">contributes nothing on the clean set</td></tr>
+      <tr><td>adaptive router</td><td class="num">0.9707</td><td class="num">0.0000</td>
+        <td style="text-align:left;white-space:normal">free on clean, worth +0.079 ablated</td></tr>
+      <tr><td>+ LLM listwise rerank <span class="tag">added, not removed</span></td>
+        <td class="num">0.9642</td><td class="num">−0.0065</td>
+        <td style="text-align:left;white-space:normal">318 of 386 calls failed — see below</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="note key"><p><strong>0.8315 is the number to carry into the private set.</strong> The
+  project docs had it as an estimate of ~0.826, computed offline from an oracle query over a
+  public-set-derived pool, with the turn count assumed. This is the first time it has been measured
+  end-to-end: real elicitation, real turns, real evaluator. The estimate held up.</p></div>
+</section>
+
+<section>
+  <span class="label">What we got wrong</span>
+  <h2>Three reversals worth keeping</h2>
+
+  <div class="finding">
+    <span class="label">Reversal 01 · the schedule</span>
+    <h3>A prior matters most where the evidence stops discriminating</h3>
+    <p>The first weight schedule decayed popularity from 1.0 to 0.32 as constraints accumulated — the
+    intuitive move, since hard evidence ought to take over from a prior. Raising it back to 2.5 was worth
+    <span class="mono">+0.0091</span>, from 0.9616 to 0.9707.</p>
+    <p>The reason is structural. Once every stated constraint is matched, dozens of products tie exactly,
+    because the constraints are low-entropy strings like <code>Imported</code> or
+    <code>100% Polyester</code> that hundreds of products share. At that moment popularity is not a
+    tiebreak of convenience — it is the only route still carrying information about which of the tied
+    candidates is the answer.</p>
+  </div>
+
+  <div class="finding">
+    <span class="label">Reversal 02 · the exactness step</span>
+    <h3>A well-argued fix that lost in 8 of 8 configurations</h3>
+    <p>One session was missed, so we added a bonus for candidates matching <em>every</em> constraint
+    exactly, reasoning that full coverage is qualitatively different from near coverage. It scored worse
+    everywhere and did not fix the session. Diagnosis afterwards: that target already matched all four
+    constraints <em>and</em> was the most-reviewed of the twenty products that did. It was never a
+    coverage problem — it was the tie-break, which is Reversal 01. The code is gone; the finding stayed.</p>
+  </div>
+
+  <div class="finding">
+    <span class="label">Reversal 03 · the tuning trap</span>
+    <h3>Tuning on the clean score quietly wrecked the insurance number</h3>
+    <p>The weights that maximised the clean score assumed exact matching works. With the spec route
+    switched off, those same weights scored <span class="mono">0.7442</span> — barely above the
+    do-nothing popularity floor — because a dominant popularity weight swamped the two routes that still
+    had something to say.</p>
+    <p>The fix is the adaptive router: read whether exact matching is firing at all this turn, and switch
+    weight profiles when it is not. That is <span class="mono">0.7442 → 0.8315</span>, and it costs
+    <span class="mono">0.005</span> of stressed score. It is also the first thing in this build that
+    genuinely earns the brief's "runtime workflow re-orchestration" — the agent detects that a strategy
+    has stopped working and changes strategy.</p>
+  </div>
+</section>
+
+<section>
+  <span class="label">Two more results</span>
+  <h2>Things that cost nothing, and things that cost nothing to skip</h2>
+  <p class="prose"><strong>The offline dense backend is free.</strong> TF-IDF→SVD built from the catalog
+  at startup scored <span class="mono">0.9707</span>; <span class="mono">bge-m3</span>, with all 50,000
+  products embedded through the API, scored <span class="mono">0.9676</span>. Statistically identical.
+  The API path costs a per-turn network call, a 98 MB artifact and a live-endpoint dependency during
+  official scoring, and buys nothing measurable. <strong>R2 ships with no network requirement at all.</strong></p>
+  <p class="prose"><strong>The scheduled blend beats RRF decisively</strong> —
+  <span class="mono">0.9707</span> against <span class="mono">0.8625</span> — confirming the project's
+  earlier finding on a completely different pipeline. RRF throws away score <em>magnitude</em>, and
+  popularity here is a strength signal, not merely an ordering.</p>
+</section>
+
+<section>
+  <span class="label">The LLM stage</span>
+  <h2>An 82% failure rate cost 0.0065</h2>
+  <p class="prose">The brief names "Multi-Route Retrieval → LLM Semantic Ranking" as the required
+  pipeline, so the stage is built: <span class="mono">qwen3.6:35b</span>, listwise over the top 20,
+  called only as an escalation when the deterministic path is unsure. Measured, it scored
+  <span class="mono">0.9642</span> — slightly <em>worse</em> than leaving it out.</p>
+  <p class="prose">That measurement is not clean, and saying so is the point. A second session on this
+  machine was working the R1 road against the same shared endpoint and saturating its rate limit: 318 of
+  386 calls returned HTTP 429. A direct probe confirmed the endpoint refuses after two requests. The
+  reranker's own merits are therefore <strong>unmeasured</strong>.</p>
+  <div class="note key"><p><strong>But the run established something better than it set out to.</strong>
+  With more than four in five model calls failing, the agent lost <span class="mono">0.0065</span>. That
+  is the escalation-only design behaving exactly as designed — the model is consulted only when the
+  deterministic ranking is unsure, and a failed call returns the original order untouched. <strong>The
+  LLM is a bonus, never a dependency.</strong> "What happens if the endpoint is down during official
+  scoring" is now a measured answer rather than a hopeful one.</p></div>
+  <p class="prose">It also vindicated the instrumentation. The project has already recorded one occasion
+  where 60 silently-failed calls were scored as "the model doesn't help" — a confidently wrong conclusion
+  that survived for days. Here every call site asserts on a parsed non-empty result and counts failures,
+  so the contention was visible in the same line as the score.</p>
+</section>
+
+<section>
+  <span class="label">Honest limits</span>
+  <h2>What this does not prove</h2>
+  <p class="prose">The stress rewriter is rule-based and deliberately harsher than anything the organizer
+  is likely to ship — token reordering, synonym substitution and case changes inside the constraint
+  strings. It is a lower bound on robustness, not a prediction, and R2's advantage under it is a claim
+  about <em>shape</em> of failure, not a forecast of the private-set score.</p>
+  <p class="prose">The weight schedule was tuned on 200 sessions. The optimum is a broad plateau rather
+  than a peak, which is evidence against a knife-edge fit, but it is still 200 sessions. And the two
+  robustness conditions pull in opposite directions: the profile was chosen on best worst-case, which
+  costs about <span class="mono">0.01</span> against optimising for either one alone.</p>
+  <p class="prose">Finally, R2 still leans on inversion for its clean score. The honest way to report
+  this build is both numbers together — <span class="mono">0.9707</span> with the spec-phrase route and
+  <span class="mono">0.8315</span> without it.</p>
+</section>
+
+<section>
+  <span class="label">Reproduce</span>
+  <h2>Every number in this page</h2>
+  <div class="repro"><pre><span class="c"># worktree: idea/r2-rank</span>
+python3 -m unittest discover tests   <span class="c"># 38 fast tests: parity, state, routes, contract</span>
+python3 -m unittest tests.test_gates <span class="c"># calibration: starter 0.10671, R1 0.9607</span>
+python3 -m src.eval.final            <span class="c"># the full table above + runs/registry.jsonl</span></pre></div>
+  <p class="note">The harness imports the evaluator's own <code>evaluate()</code> and injects our agent
+  rather than overwriting <code>starter/agent.py</code>, so the competition kit stays provably
+  byte-identical to upstream. It is calibrated against two independently known numbers before any R2
+  result is trusted.</p>
+</section>
+
+<footer>
+  200 public sessions · official evaluator, unmodified · kit verified pristine ·
+  spec and acceptance criteria in <span class="mono">docs/r2-exploration/</span>
+</footer>
+
+</div>
