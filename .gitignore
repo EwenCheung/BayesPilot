@@ -1,0 +1,12 @@
+.env
+__pycache__/
+*.py[cod]
+.DS_Store
+CLAUDE.local.md
+results.json
+runs/
+
+# Catalog: 76 MB, re-downloadable from the official release and verified by assets/SHA256SUMS.
+# Keeping it out avoids GitHub's >50 MB warning on the public submission repo.
+assets/catalog.jsonl
+assets/catalog.jsonl.gz
