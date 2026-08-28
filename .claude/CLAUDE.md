@@ -135,29 +135,100 @@ reader six months from now needs the reasoning, not a restatement of the diff.
 
 ## Project context
 
-**TikTok TechJam 2026, Track 4 — Shopping Copilot.** Build a multi-turn conversational shopping agent that
-finds a hidden target product in a frozen 50,000-item Amazon clothing catalog within 10 turns. Scored by
-`TechnicalScore = 0.50·HitRate@10 + 0.30·MRR + 0.20·Efficiency` on 800 private sessions.
+**TikTok TechJam 2026, Track 4 — Shopping Copilot.** Build a multi-turn conversational shopping agent that finds
+a hidden target product in a frozen 50,000-item Amazon clothing catalog within **10 turns**.
 
-- Official kit (read-only, keep byte-identical to upstream): `techjam-conversational-search-main/`
-- Problem statement: [docs/PROBLEM.md](../docs/PROBLEM.md)
-- Baselines: BM25 starter `0.1067` · paraphrase-proof floor `0.826` · our prototype `0.9607` · max `0.9922`
-- ⚠️ Judge new ideas against **0.826**, never against 0.1067.
+```
+TechnicalScore = 0.50·HitRate@10 + 0.30·MRR + 0.20·Efficiency
+Efficiency     = clip((11 − MTTC) / 10, 0, 1)
+```
+Scored on 800 private sessions. ⚠️ TechnicalScore is only *an input to* the 35% Technical Execution criterion —
+the other 65% is Innovation, Impact, Feasibility and Presentation.
 
-### Reference docs (update these when a measurement changes a recommendation)
+### Where everything lives
 
-- **[IMPORTANT.md](../IMPORTANT.md)** — verified facts, exact numbers, traps, measurements (§12), errors &
-  learnings (§13), PROBLEM.md requirement audit (§14). **Authoritative — read before writing code or quoting
-  a number.** Where it disagrees with anything else, it wins.
-- **[REPORT.md](../REPORT.md)** — the narrative: why the task works the way it does and what we found.
-  Read when deciding *direction*, not for every small task.
-- **[IDEA.md](../IDEA.md)** — proposals only: the 40-idea index, the four competing tracks (§0.3), and the
-  frozen interface contract (§0.4). Read before starting a track.
-- [experiments/](../experiments/) — runnable scripts behind every number in IMPORTANT.md §12.
+| What | Path | Notes |
+|---|---|---|
+| **Problem statement** | [docs/PROBLEM.md](../docs/PROBLEM.md) | Official brief: four pillars, scope, limits, deliverables, judging |
+| **Official kit** | [techjam-conversational-search-main/](../techjam-conversational-search-main/) | ⚠️ **Read-only.** Keep byte-identical to upstream or local scores are unverifiable |
+| ├ evaluator + simulator | `…/evaluator/local_evaluator.py` | 312 lines. **This is both the referee and the simulated customer** |
+| ├ weak starter | `…/starter/agent.py` | BM25/FTS5, scores 0.1067. Restore after every test |
+| ├ 200 dev sessions | `…/data/public_set.jsonl` | 80 buying / 80 browsing / 30 override / 10 boundary |
+| ├ rules | `…/docs/competition_specification.md`, `…/docs/submission_rules.md` | |
+| └ contracts | `…/docs/agent_api_contract.json`, `…/docs/evaluation_config.json` | |
+| **Catalog** | `assets/catalog.jsonl` | 50,000 products, 58 MB, **gitignored** — re-download from the release, verify with `assets/SHA256SUMS` |
+| **Dataset docs** | [docs/AmazonReviews2023.md](../docs/AmazonReviews2023.md) | Field dictionary for Amazon Reviews 2023 |
+| **Academic toolkit** | [AmazonReviews2023/](../AmazonReviews2023/) | Upstream McAuley Lab repo (MIT): BLaIR, Amazon-C4, ESCI. Reference only |
+| **Experiments** | [experiments/](../experiments/) | Runnable scripts behind every number in IMPORTANT.md §12 |
 
-### Non-obvious traps (full list in IMPORTANT.md §13)
+**Setup before anything runs:** `cp assets/catalog.jsonl techjam-conversational-search-main/data/catalog.jsonl`
+Models: `set -a && . ./.env && set +a` (`SOCLAAS_API_KEY`, `SOCLAAS_BASE_URL`; `.env` is gitignored — never commit it).
 
-- `Agent.__init__(self, catalog_path=...)` is positional and undocumented — the evaluator calls it that way.
-- **Never import from `evaluator.local_evaluator`** — it imports `starter.agent`, so it is a circular import.
-- Restore the pristine starter after testing; the kit must stay byte-identical to upstream.
-- Every LLM call must assert on a parsed non-empty result — some models fail silently with `content: None`.
+### Reference docs — read before writing code
+
+- **[IMPORTANT.md](../IMPORTANT.md)** — **authoritative on facts.** Evaluator mechanics, the simulator-inversion
+  finding, the popularity leak, **§12 measurements**, **§13 errors & learnings**, **§14 PROBLEM.md requirement
+  audit**. Where any doc disagrees with it on a number or a rule, it wins.
+- **[REPORT.md](../REPORT.md)** — the narrative: what the problem is and what we found. Read for *direction*.
+- **[IDEA.md](../IDEA.md)** — proposals only: the 40-component index, the three exploration roads (§0.3), the
+  shared contract (§0.4). Read before starting a road.
+
+### Baselines — judge every idea against these
+
+| | Score | |
+|---|---|---|
+| Shipped BM25 starter | `0.1067` | never compare against this |
+| Popularity + category only | `0.7133` | ignores everything the customer says |
+| **Paraphrase-proof floor** | **`0.826`** | ⚠️ **this is the bar** — blended dense + popularity, no template matching |
+| Our prototype | `0.9607` | `experiments/agent_best_0.9607.py`, incumbent to beat |
+| Theoretical maximum | `0.9922` | MTTC floors at 1.39 because override sessions cannot convert before turn 3 |
+
+All remaining headroom is **MRR** (+0.075 available vs +0.012 from speed). Hit@10 is already 1.000.
+
+---
+
+## The three exploration roads
+
+The agent can be conceived three ways. Each is one worktree. Full detail in [IDEA.md](../IDEA.md) §0.3.
+
+| Road | The agent is… | Core structure | Fails on |
+|---|---|---|---|
+| 🔵 **R1** Constraint Satisfaction | a **filter** | shrinking candidate *set* — intersect, convert when it collapses | Browsing; paraphrase |
+| 🟢 **R2** Retrieve & Rank | a **ranker** | scored *list* — fuse routes, order, take 10 | precision; never fully commits |
+| 🟣 **R3** Bayesian Fusion = R1 + R2 | a **posterior** | `P(item) ∝ prior × Π likelihoods` — R1's matches and R2's scores as evidence terms | calibration; confidently wrong |
+
+**Sequencing: R1 ∥ R2 in parallel, then R3 reuses both.** R3 is not a third guess — it is the principled merge:
+popularity becomes the prior, R1's exact matching and R2's dense similarity become likelihood terms, and entropy
+replaces the hand-tuned confidence gate. It cannot start until R1 and R2 have produced components to fuse.
+
+### When to suggest a worktree
+
+**Do suggest** splitting into a worktree when two approaches genuinely conflict — different data structure,
+different loop, different failure mode — and we want both measured rather than argued about. Say which road it
+belongs to and what would make it win or die.
+
+**Do not** suggest one for a variation that will obviously be merged anyway (a different fusion weight, one extra
+retrieval route, a prompt tweak). Those are flags and ablations inside an existing road, not new roads.
+
+```bash
+git worktree add ../r1-constraint idea/r1-constraint   # parallel
+git worktree add ../r2-rank       idea/r2-rank         # parallel
+git worktree add ../r3-bayesian   idea/r3-bayesian     # after R1 and R2
+```
+Every worktree runs the identical harness and appends to `runs/registry.jsonl` on `main`.
+**A row without a paraphrase-stressed score and the four scenario breakdowns does not count** — a winner on the
+clean set alone tells us nothing about the private set.
+
+---
+
+## Non-obvious traps (full list in [IMPORTANT.md](../IMPORTANT.md) §13)
+
+1. `Agent.__init__(self, catalog_path=...)` is **positional and undocumented** — the evaluator calls it that way.
+2. **Never import from `evaluator.local_evaluator`** — it imports `starter.agent`, so it is a circular import and
+   crashes at startup. Copy the functions instead.
+3. **Restore the pristine starter after testing.** Re-diff the kit against upstream before any reported score.
+4. **Every LLM call must assert on a parsed non-empty result** — some models return `content: None` while burning
+   the full token budget, and a silent failure looks exactly like a model that is not helping.
+5. **Pin explicit model IDs**, never aliases (`default`, `test`, `ornith1.0:35b` are all aliases).
+6. `ask_attribute: "other"` is the simulator's wildcard; `null` reveals nothing.
+7. 200 sessions is small — **a 0.02 score gap is noise.** Bootstrap before declaring a winner.

@@ -16,6 +16,50 @@ Hit@10 is already 1.000, so **all remaining headroom is MRR** (+0.075 available 
 
 ---
 
+---
+
+# How to start
+
+**Three exploration roads. R1 and R2 run in parallel; R3 fuses them afterwards.**
+
+```
+        ┌──────────────────────────┐
+        │  Phase 0 — shared setup  │   harness · catalog index · paraphrase stress · embeddings
+        └────────────┬─────────────┘
+                     │
+         ┌───────────┴───────────┐
+         ▼                       ▼
+   🔵 R1 filter            🟢 R2 ranker          ← parallel worktrees, race them
+   candidate set           scored list
+         └───────────┬───────────┘
+                     ▼
+              🟣 R3 posterior                    ← starts after both; reuses their parts
+        prior × R1-likelihood × R2-likelihood
+```
+
+| Road | One line | When |
+|---|---|---|
+| 🔵 **R1** | The agent is a **filter** — shrink a candidate set until one item survives. | now, parallel |
+| 🟢 **R2** | The agent is a **ranker** — score everything, order it, take the top 10. | now, parallel |
+| 🟣 **R3** | The agent is a **posterior** — R1 and R2 become evidence terms in one belief. | after both |
+
+**Why R3 waits:** it is not a third guess, it is the *principled merge*. Popularity becomes the prior, R1's exact
+matching and R2's dense similarity become likelihood terms, and entropy replaces the hand-tuned confidence gate.
+It has nothing to fuse until R1 and R2 exist — so building it first would mean building them badly, twice.
+
+```bash
+# Phase 0 lands on main first
+git worktree add ../r1-constraint idea/r1-constraint
+git worktree add ../r2-rank       idea/r2-rank
+# after R1 and R2 have results:
+git worktree add ../r3-bayesian   idea/r3-bayesian
+```
+
+Each road is free to combine as many of the 40 components in §0.1 as it wants — that is the exploration.
+Detail in [§0.3](#03-three-exploration-roads).
+
+---
+
 # Part 0 — Idea index and track assignment
 
 **40 ideas** live in this file — they are *components*, not rival solutions. §0.1 indexes all of them; §0.3
@@ -93,9 +137,10 @@ there is no winner to pick. Those are superseded by the three below, which genui
 
 ---
 
-## 0.3 Three rival ideas — three worktrees
+## 0.3 Three exploration roads
 
 They disagree about what the agent fundamentally *is*: a filter, a ranker, or a belief.
+**R1 and R2 are rivals and run in parallel. R3 fuses them and runs after.**
 
 ### Track 0 — Foundation ⛔ shared, land it first (~half a day)
 > **Mission:** one harness and one catalog index so all three ideas are measured identically.
@@ -159,11 +204,11 @@ E2Rank (15) · cross-encoder (16) · NQC (18).
 
 ---
 
-### 🟣 R3 — Bayesian Belief *(the agent is a posterior)*
+### 🟣 R3 — Bayesian Fusion = R1 + R2 *(the agent is a posterior)* — **starts after both**
 
-> **The bet:** ranking and asking are the same problem. Maintain a probability distribution over all 50,000
-> products; every utterance is evidence; the best question is the one that most reduces entropy; convert when
-> the distribution peaks.
+> **The bet:** R1 and R2 are not really rivals — they are two kinds of evidence about the same question, and the
+> right way to combine them is a posterior. Ranking and asking then become one problem: every utterance is
+> evidence, the best question is the one that most reduces entropy, and you convert when the distribution peaks.
 
 **Core structure:** a **posterior** over the catalog.
 ```
@@ -173,15 +218,24 @@ each turn:  P(item) ∝ P(item) · L(utterance | item)
             convert when H(P) < threshold
 ```
 
-**Why this is elegant:** it subsumes the other two. Hard 0/1 likelihood → R1. Read the posterior as a score → R2.
-And it answers *ask-vs-convert* natively — no gate, no magic turn-3 deadline — because entropy is the confidence.
-Every measurement we have slots in: popularity is the prior, exact-match and dense similarity are likelihood terms.
+**Why it reuses rather than replaces:** R1 and R2 drop straight in as terms.
+
+| From | Becomes |
+|---|---|
+| popularity prior (the 570× target skew) | `P₀(item)` — the prior |
+| R1's exact constraint matching | a sharp likelihood `L₁(utterance \| item)` |
+| R2's dense similarity + fused route scores | a soft likelihood `L₂(utterance \| item)` |
+| R1's information-gain question selection | the EIG objective, now exact over a real distribution |
+| R1's confidence gate + R2's NQC | replaced by one number: entropy of `P` |
+
+Set `L₁` hard 0/1 and you recover R1. Read the posterior as a score and you recover R2. **Nothing built in the
+first two worktrees is thrown away** — which is exactly why R3 goes last.
 
 **Strategies to explore:** popularity as prior (3) · exact-match and dense as competing likelihood models (1, 2) ·
 expected information gain (19) · BED-LLM for question proposal (20) · EVOI/bandits (21) · Platt calibration of
 the likelihood (30) · long-term profile as a prior update (Pillar III, natively).
 
-**Status:** not built. Highest ceiling, highest risk.
+**Status:** not built, and **cannot start until R1 and R2 produce components to fuse.** Highest ceiling.
 **Pillars:** all four fall out of one mechanism — the cleanest Innovation story available to us.
 **Wins if:** MRR approaches 1.0 *and* MTTC drops, because entropy converts at exactly the right moment.
 **Dies if:** the likelihood model is mis-specified and the posterior confidently backs the wrong item.
@@ -238,9 +292,8 @@ git worktree add ../r3-bayesian    idea/r3-bayesian
 
 Each runs the identical harness and appends to `runs/registry.jsonl` on `main`.
 
-**If you only have capacity for two:** run **R1 and R3**. They are the furthest apart — a hard filter versus a
-soft posterior — so the comparison is most informative, and R2's best components (dense blend, LLM rerank) can be
-folded into whichever wins as likelihood terms or tie-breakers.
+**If you only have capacity for one at a time:** R1 first — it is already at 0.9607 and gives the race an
+incumbent. Then R2, then R3. The order matters more than the parallelism: **R3 cannot start until both exist.**
 
 ---
 
@@ -390,11 +443,11 @@ tells you nothing about the private set.
 
 **Phase 1 — the race (parallel worktrees)**
 
-| Worktree | First move | Then |
-|---|---|---|
-| 🔵 R1 | Normalised attributes so matching survives rewording | Info-gain question selection over the surviving set |
-| 🟢 R2 | Scheduled dense+popularity blend (the 0.826 floor) | HyDE for cold Browsing, then LightGBM, then LLM rerank |
-| 🟣 R3 | Posterior = popularity prior × exact-match likelihood | EIG question selection, then entropy-based conversion |
+| Worktree | When | First move | Then |
+|---|---|---|---|
+| 🔵 R1 | parallel | Normalised attributes so matching survives rewording | Info-gain question selection over the surviving set |
+| 🟢 R2 | parallel | Scheduled dense+popularity blend (the 0.826 floor) | HyDE for cold Browsing, then LightGBM, then LLM rerank |
+| 🟣 R3 | **after both** | Wrap R1's matcher and R2's scorer as likelihood terms | EIG question selection, then entropy-based conversion |
 
 **Phase 2 — converge**
 
@@ -519,13 +572,12 @@ A 0.02 gap is one or two sessions changing rank.
 
 # Part VI — Recommendation
 
-**Race R1 against R3, and treat R2 as a component library for whichever wins.**
+**Race R1 against R2 in parallel. Then build R3 from whatever both produced.**
 
-R1 is the incumbent at 0.9607 and is the only idea that already works. R3 is the only one that could beat it on
-*mechanism* rather than on tuning — it answers ranking and ask-vs-convert with a single object, which is both the
-cleanest Innovation story and the most direct route to the MRR headroom (+0.075, where all remaining points are).
-R2's pieces — the dense blend that measured the 0.826 floor, HyDE, the LLM ranking stage the brief names — drop
-into either winner as likelihood terms or tie-breakers. Run R2 as its own worktree only if you have the people.
+R1 is the incumbent at 0.9607 and already works; R2 owns the measured 0.826 paraphrase-proof floor and the
+brief's named pipeline. They fail in opposite directions — R1 on Browsing, R2 on precision — so the race tells
+you which failure is cheaper. R3 then fuses them into one posterior, which is both the cleanest Innovation story
+and the most direct route to the remaining MRR headroom (+0.075, where all the remaining points are).
 
 Whatever wins, publish the ablation table including `no_spec_phrase` = 0.826. Being the team that found the
 generator was invertible, **measured exactly what it was worth, and built something that stands up without it**
