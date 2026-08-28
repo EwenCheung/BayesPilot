@@ -51,6 +51,24 @@ When your changes create orphans:
 
 ---
 
+## 3.5 Spec-Driven Development
+
+**The spec is the source of truth. Code follows it; it does not follow code.**
+
+Specs live in [docs/specs/](../docs/specs/). Before writing or changing any code in `src/`:
+
+1. **Read the spec for that road** — e.g. [docs/specs/r1-constraint-satisfaction.md](../docs/specs/r1-constraint-satisfaction.md).
+   It carries the hard contracts, per-module behaviour, and the acceptance criteria.
+2. **Changing behaviour? Update the spec first**, then write the failing test, then the code. In that order.
+   A behaviour that is in the code but not in the spec is a bug in one of them.
+3. **Every numeric claim in a spec cites its measurement.** No number without a source.
+
+The division of labour: [IMPORTANT.md](../IMPORTANT.md) is authoritative on *facts about the problem*;
+`docs/specs/` is authoritative on *what we build*. Where a spec contradicts IMPORTANT.md on a fact,
+IMPORTANT.md wins and the spec is wrong.
+
+---
+
 ## 4. Goal-Driven Execution
 
 **Define success criteria. Loop until verified.**

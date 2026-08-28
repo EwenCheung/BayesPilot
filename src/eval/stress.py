@@ -1,0 +1,129 @@
+"""Spec 3.10 — the paraphrase stress harness.
+
+⚠️ It wraps the **agent**, never the evaluator: the kit stays byte-identical, and the agent simply
+never sees the simulator's literal templates. That is the whole question the private set asks
+(IMPORTANT.md §3): what is left when the customer says the same thing in different words?
+
+Levels
+  0  clean          — the simulator's own text
+  1  scaffold       — templates reworded, constraint payloads verbatim   (tests the parser)
+  2  full           — scaffold + payloads reworded                       (tests the matcher)
+  3  llm            — a model rewrites the whole utterance, cached       (tests both, realistically)
+"""
+from __future__ import annotations
+
+import hashlib
+import random
+import re
+
+SCAFFOLDS: dict[str, tuple[str, ...]] = {
+    "buying": (
+        "Hi — after {category}. Must have: {payload}",
+        "need {category}. the important bit is {payload}",
+        "shopping for {category} and it really has to be {payload}",
+    ),
+    "browsing": (
+        "just browsing {category} at the moment, nothing fixed yet",
+        "having a look around {category}, still open on specifics",
+        "not sure yet, somewhere in {category}",
+    ),
+    "override_open": (
+        "after some {category}. {payload}",
+        "looking at {category} — {payload}",
+    ),
+    "reply": (
+        "what counts for me: {payload}",
+        "mainly {payload}",
+        "the things that matter are {payload}",
+    ),
+    "override": (
+        "scratch that, forget what I said before — what I actually need is {payload}",
+        "change of plan: {payload} is the real requirement",
+    ),
+    "no_pref": (
+        "no strong feelings on {attribute} honestly",
+        "{attribute} is up to you",
+    ),
+    "null_ask": ("those aren't right — ask me something specific",),
+}
+
+SYNONYMS = (
+    (r"\bcolor\b", "colour"), (r"\bmaterial\b", "made of"), (r"\bfit type\b", "fit"),
+    (r"\bdepartment\b", "for"), (r"\bsleeve type\b", "sleeves"), (r"\bclosure type\b", "closure"),
+    (r"\b100%\s*", "pure "), (r"\bimported\b", "imported goods"),
+)
+
+OPENER = re.compile(r"^I'm looking for (?P<category>.+?)(?P<tail>, but I'm still exploring\.|\. .*)?$", re.S)
+KEY_REQ = re.compile(r"^\. A key requirement is: (?P<payload>.+?)\.?$", re.S)
+REPLY = re.compile(r"^For that, what matters is: (?P<payload>.+?)\.?$", re.S)
+OVERRIDE = re.compile(r"^Actually, ignore my earlier preference\. What I need is: (?P<payload>.+?)\.?$", re.S)
+NO_PREF = re.compile(r"^I don't have (?:an additional preference|a preference) for (?P<attribute>[a-z_]+)")
+NULL_ASK = re.compile(r"^Those options are not quite right yet")
+
+
+def _rng(text: str) -> random.Random:
+    return random.Random(int(hashlib.sha256(text.encode()).hexdigest()[:8], 16))
+
+
+def _reword_payload(payload: str, rng: random.Random) -> str:
+    """`Material: alloy` → `alloy material`. Kills exact-phrase matching, which is the point."""
+    parts = []
+    for chunk in payload.split("; "):
+        key, sep, value = chunk.partition(":")
+        if sep and value.strip() and len(key) < 40:
+            chunk = f"{value.strip()} {key.strip().lower()}" if rng.random() < 0.7 else value.strip()
+        for pattern, replacement in SYNONYMS:
+            chunk = re.sub(pattern, replacement, chunk, flags=re.I)
+        parts.append(chunk)
+    rng.shuffle(parts)
+    return (" and " if rng.random() < 0.5 else ", ").join(parts)
+
+
+def paraphrase(message: str, level: int, llm=None) -> str:
+    """Rewrite one customer utterance at the requested stress level. Never raises."""
+    if level <= 0 or not message:
+        return message
+    try:
+        if level >= 3 and llm is not None:
+            written = llm.chat(
+                [{"role": "system", "content": "Rewrite the shopper's message casually in your own words. "
+                                               "Keep every requirement, change the wording. Reply with the "
+                                               "rewritten message only."},
+                 {"role": "user", "content": message}],
+                max_tokens=160,
+            )
+            if written:
+                return written.strip().strip('"')
+            # fall through to the deterministic rewrite when the endpoint is unavailable (C8)
+        rng = _rng(message)
+        payload_level = max(level, 2) if level >= 3 else level
+
+        def payload_of(text: str) -> str:
+            return _reword_payload(text, rng) if payload_level >= 2 else text
+
+        opener = OPENER.match(message.strip())
+        if opener:
+            category = opener.group("category").strip()
+            tail = (opener.group("tail") or "").strip()
+            if not tail or "still exploring" in tail:
+                return rng.choice(SCAFFOLDS["browsing"]).format(category=category)
+            key = KEY_REQ.match(opener.group("tail"))
+            if key:
+                return rng.choice(SCAFFOLDS["buying"]).format(
+                    category=category, payload=payload_of(key.group("payload")))
+            return rng.choice(SCAFFOLDS["override_open"]).format(
+                category=category, payload=payload_of(tail.lstrip(". ")))
+        override = OVERRIDE.match(message.strip())
+        if override:
+            return rng.choice(SCAFFOLDS["override"]).format(payload=payload_of(override.group("payload")))
+        reply = REPLY.match(message.strip())
+        if reply:
+            return rng.choice(SCAFFOLDS["reply"]).format(payload=payload_of(reply.group("payload")))
+        no_pref = NO_PREF.match(message.strip())
+        if no_pref:
+            return rng.choice(SCAFFOLDS["no_pref"]).format(attribute=no_pref.group("attribute"))
+        if NULL_ASK.match(message.strip()):
+            return SCAFFOLDS["null_ask"][0]
+        return message
+    except Exception:
+        return message

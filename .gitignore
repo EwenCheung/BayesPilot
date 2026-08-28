@@ -10,3 +10,7 @@ runs/
 # Keeping it out avoids GitHub's >50 MB warning on the public submission repo.
 assets/catalog.jsonl
 assets/catalog.jsonl.gz
+
+# The run registry is a committed artefact (IDEA.md 0.5); the raw run dumps are not.
+!runs/registry.jsonl
+.cache/
