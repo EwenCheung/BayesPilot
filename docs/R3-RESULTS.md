@@ -19,9 +19,19 @@ Deterministic paths only — **no network calls, no LLM tier**. Regenerate with 
 | `no_spec_phrase` | 0.9128 | 0.8315 | **0.9339** | +0.021 |
 | `no_popularity` | 0.9200 | 0.9318 | **0.9604** | +0.029 |
 
-**R3 wins every condition.** The clean margin is inside the noise floor and should not be claimed; the
-paraphrase margins are three to five times the CI width and are the ones that matter, because the
-private set is what they estimate.
+⚠️ **This table is scored on all 200 sessions, and 140 of them were used for tuning — so roughly 70% of
+it is in-sample.** It is reported this way because R1's and R2's published numbers are also all-200 and
+this is the only like-for-like comparison. **§2 is the unbiased table.** On the held-out 60, R3's clean
+advantage disappears (R2 0.9728 vs R3 0.9708); its L3 advantage does not (0.8381 vs 0.6863). See D22
+for the full leakage audit.
+
+**R3 wins every condition here**, but the clean margin is inside the noise floor and is not claimed. The
+paraphrase margins are three to five times the CI width, and they are the ones that survive the held-out
+check.
+
+⚠️ **All figures are the OFFLINE path**, measured under `R3_OFFLINE=1`. That is enforced rather than
+assumed: a warm `.cache/llm` otherwise lifts L3 to 0.8926 with **zero network calls**, which is
+indistinguishable from an offline run unless you count cache hits (D22).
 
 ### Hit@10 — where the difference comes from
 
@@ -67,6 +77,10 @@ Every R3 constant was fitted on the 140-session train split. The held-out 60 (di
 🔑 **R3's held-out L3 score (0.8381) is *higher* than its training score (0.8261).** Tuning did not buy
 performance that fails to transfer — the strongest evidence available on 60 sessions that the gain is
 real. On the same held-out sessions R3 beats R1 by **+0.164** and R2 by **+0.152**.
+
+⚠️ **And on held-out CLEAN text, R2 beats R3** (0.9728 vs 0.9708). The honest one-line summary of this
+whole project is therefore: **R3's robustness advantage is real and generalises; its clean advantage is
+not real.**
 
 ⚠️ 60 sessions is small and the L3 CIs there span ~0.13. The direction is trustworthy; the third decimal
 is not.

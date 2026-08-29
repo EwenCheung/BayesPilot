@@ -47,6 +47,8 @@ def _http(path: str, body: dict, timeout: float) -> dict:
 
 
 class LLMClient:
+    OFFLINE_ENV = "R3_OFFLINE"
+
     def __init__(
         self,
         chat_model: str = CHAT_MODEL,

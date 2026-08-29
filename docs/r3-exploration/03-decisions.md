@@ -494,3 +494,75 @@ headline number in [R3-RESULTS.md](../R3-RESULTS.md) §1 is the **network-free**
 an opportunistic improvement on top when the endpoint exists. Reporting the offline number as the
 headline is the honest way round; quoting 0.8926 as R3's L3 score would be claiming a capability that
 may not be available when it counts.
+
+## D22 — leakage audit: what is contaminated, what is not, and one measurement bug it found
+
+Prompted by the right question: the headline table is scored on all 200 sessions, and 140 of those were
+used for tuning. So what exactly is in-sample?
+
+### What is clean
+
+- **Every fitted parameter.** `scripts/fit_policy.py`, `fit_gain.py` and `fit_joint.py` all read
+  `holdout.load()["train"]` and nothing else. The 60 was never scored during any sweep.
+- **The split itself.** Disjoint on sample ID *and* target ASIN, scenario-stratified, hash-locked at
+  `a367f15873d772aa`, with a test that fails if it moves.
+- **The catalog.** `ItemIndex` and `CategoryBelief` are built from all 50,000 products including the
+  test targets — but the catalog is given, frozen and read-only, and the evaluator itself reads it.
+  That is not leakage.
+
+### What is contaminated, stated plainly
+
+**1. ⚠️ The headline table in [R3-RESULTS.md](../R3-RESULTS.md) §1 is scored on all 200, so 70% of it is
+in-sample.** It is reported that way for comparability with R1's and R2's published numbers, which were
+also all-200 — but it is not an unbiased estimate, and the held-out table in §2 is the one to trust.
+
+**2. ⚠️ On the held-out 60 alone, R2 beats R3 on clean text** — 0.9728 against 0.9708. "R3 wins every
+condition" is an all-200 statement and does **not** survive on the clean held-out half. What does
+survive, and by a wide margin, is L3: **0.8381 against R2's 0.6863 and R1's 0.6740.**
+
+**3. Structural decisions were made while looking at all-200 ablations** — not just parameters. That is
+researcher-degrees-of-freedom leakage and no split protects against it. So the two largest were re-run
+per half:
+
+| Decision, re-tested | train140 | test60 | verdict |
+|---|---|---|---|
+| switch EIG off — clean | +0.0247 | **+0.0125** | holds, same sign |
+| switch EIG off — L3 | +0.0514 | **+0.0445** | holds, same sign |
+| drop BLaIR — clean | +0.0033 | −0.0033 | **sign flips**, both inside noise |
+| drop BLaIR — L3 | −0.0046 | +0.0110 | **sign flips**, both inside noise |
+
+The EIG decision generalises. The BLaIR decision is a coin flip on either half — which is itself the
+finding (it buys nothing), but "dropping BLaIR helps" is **not** supportable; only "it makes no
+difference" is.
+
+**4. The level-1 `temperature`/`tau_mass` frontier was first swept on all 200 (D14) before being
+re-swept on the 140.** I had seen the full-set table when the train-only sweep confirmed the same
+point. Exposure is small — the joint re-fit later showed clean and L2 are completely flat in both
+parameters and L3 moves 0.006 — but the choice was not made blind.
+
+**5. The 200 public sessions are dev data; the real test is the private 800.** The 140/60 split is an
+internal generalisation estimate, not a competition requirement, and it cannot detect overfitting to
+properties of the public set as a whole (its scenario mix, its difficulty distribution, the fact that
+`coarse_category` behaves as it does).
+
+### The measurement bug this audit found
+
+**A warm `.cache/llm` silently turns the offline path into the LLM path.** Re-running R3 at L3 after the
+D21 measurement had populated the cache gave **0.8926 with 380 cache hits and zero network calls** —
+which looks exactly like an offline run unless you count cache hits. The published 0.8297 was measured
+before the cache existed and is correct, but it was reproducible only by accident.
+
+**Fixed:** `R3_OFFLINE=1` now disables the tier *and* its cache, `scripts/final.py` sets it for every
+headline number, and `tests/test_runtime_deps.py` asserts it. Verified: 0.9720 / 0.8845 / 0.8297 with
+`llm=None` and 0 cache hits.
+
+### Not train/test leakage, but leakage of a kind — worth naming
+
+- **The simulator is invertible.** Constraints are drawn verbatim from the catalog's `features` and
+  `details`, so the agent can reconstruct what the customer will say. Disclosed throughout via
+  `no_spec_phrase` (R3: 0.9339), which is exactly the standing estimate of what remains without it.
+- **The popularity prior exploits the sampling.** Targets come from a 5-core leave-last-out split and
+  are ~570× more reviewed than the catalog median (IMPORTANT.md §5). It is the single largest
+  contributor under stress (−0.121 to remove). It should hold on the private 800, which is drawn the
+  same way — but if the organizer sampled targets differently, **this is the assumption that breaks
+  first**, and `no_popularity` (0.9604) is the number to quote if it does.

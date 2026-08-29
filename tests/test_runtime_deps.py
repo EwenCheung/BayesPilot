@@ -64,3 +64,28 @@ class TestRuntimeDependencies(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestOfflineIsEnforced(unittest.TestCase):
+    """The offline claim must be enforceable, not merely true on the day it was measured.
+
+    A warm `.cache/llm` makes the default path score 0.8926 at L3 with **zero network calls** and 380
+    cache hits — indistinguishable from the published offline 0.8297 unless you count cache hits. Every
+    headline number is measured under `R3_OFFLINE=1`; this is what makes that reproducible.
+    """
+
+    def test_r3_offline_disables_the_llm_entirely(self) -> None:
+        import os
+
+        from src.eval import race
+
+        previous = os.environ.get("R3_OFFLINE")
+        os.environ["R3_OFFLINE"] = "1"
+        try:
+            agent = race.ROADS["r3"]()
+            self.assertIsNone(agent.llm, "R3_OFFLINE=1 must disable the LLM tier and its disk cache")
+        finally:
+            if previous is None:
+                os.environ.pop("R3_OFFLINE", None)
+            else:
+                os.environ["R3_OFFLINE"] = previous

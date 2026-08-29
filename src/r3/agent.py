@@ -8,6 +8,7 @@ it that way, and the README, the API contract and submission_rules all omit `__i
 """
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 from src.common.contracts import SessionState
@@ -25,8 +26,12 @@ class Agent:
         self.categories = CategoryBelief(catalog_path)
         self.flags = Flags.from_env()
         self.sessions: dict[str, SessionState] = {}
+        # ⚠️ R3_OFFLINE=1 disables the tier AND its disk cache. Without this, a warm .cache/llm makes
+        # the default path score 0.8926 at L3 with zero network calls — which looks exactly like the
+        # offline number (0.8297) unless you count cache hits. Every headline figure in
+        # docs/R3-RESULTS.md §1 is measured with the tier explicitly off.
         self.llm = None
-        if self.flags.llm_extract:
+        if self.flags.llm_extract and os.environ.get("R3_OFFLINE") != "1":
             try:
                 from src.common.llm import LLMClient
                 self.llm = LLMClient()

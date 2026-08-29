@@ -4,6 +4,7 @@ Everything R3 reports comes from here: the full-200 table for comparability with
 numbers, the held-out 60 for generalisation, the ablations, and bootstrap CIs on all of it.
 """
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -13,6 +14,10 @@ sys.path.insert(0, str(ROOT))
 from src.eval import harness, holdout, race          # harness puts the kit on sys.path
 from evaluator.local_evaluator import evaluate       # noqa: E402
 from src.eval.stress import ParaphraseRewriter       # noqa: E402
+
+# Every number in the headline table is the OFFLINE path. Enforced, not assumed: a warm .cache/llm
+# otherwise lifts L3 from 0.8297 to 0.8926 with zero network calls, which is invisible in the output.
+os.environ["R3_OFFLINE"] = "1"
 
 CONDITIONS = (("clean", 0, ()), ("L1 scaffold", 1, ()), ("L2 full", 2, ()), ("L3 category", 3, ()),
               ("no_spec_phrase", 0, ("no_spec_phrase",)), ("no_popularity", 0, ("no_popularity",)))

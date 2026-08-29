@@ -63,7 +63,13 @@ no network. Full table: [docs/R3-RESULTS.md](../R3-RESULTS.md).
 
 ### The bad — and this is the part that matters
 
-**1. The clean win is noise.** 0.9720 vs 0.9707, CIs overlapping almost entirely. Do not claim it.
+**1. The clean win is noise, and the held-out split says so directly.** 0.9720 vs 0.9707 on all 200 —
+but on the held-out 60, **R2 wins clean** (0.9728 vs 0.9708). Do not claim it.
+
+**1b. ⚠️ The headline table is 70% in-sample.** It is scored on all 200; 140 were tuned on. Reported that
+way only because R1's and R2's published numbers are also all-200. §2 is the unbiased table, and D22 is
+the full leakage audit — including one real measurement bug it caught (a warm LLM cache silently turning
+the offline path into the LLM path).
 
 **2. Three of IDEA.md's four promises for this road failed measurement.**
 
