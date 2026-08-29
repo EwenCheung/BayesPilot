@@ -59,7 +59,11 @@ class CategoryBelief:
 
     def __init__(self, catalog_path: str | Path = "data/catalog.jsonl") -> None:
         self.by_category: dict[str, list[str]] = defaultdict(list)
-        for line in Path(catalog_path).open(encoding="utf-8"):
+        with Path(catalog_path).open(encoding="utf-8") as handle:
+            self._ingest(handle)
+
+    def _ingest(self, handle) -> None:
+        for line in handle:
             product = json.loads(line)
             asin = product.get("parent_asin")
             if asin:

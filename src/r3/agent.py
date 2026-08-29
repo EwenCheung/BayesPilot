@@ -36,6 +36,14 @@ class Agent:
         self._completion = 0
         self._last_asked: dict[str, str] = {}
         self._stalls: dict[str, int] = {}
+        self.semantics = None
+        if self.flags.semantic_gain > 0:
+            if self.flags.semantic_backend == "blair":
+                from src.r3.semantic import BlairSemantics
+                self.semantics = BlairSemantics(self.index, query_mode=self.flags.query_mode)
+            else:
+                from src.r3.semantic import SvdSemantics
+                self.semantics = SvdSemantics(self.index)
         # popularity-ordered fallback, so a crashed turn still ships something plausible
         self._fallback = sorted(self.index.log_pop, key=lambda a: -self.index.log_pop[a])[:50]
 
@@ -89,7 +97,7 @@ class Agent:
         flags = self.flags
         belief = Belief(self.index, candidates, use_prior=flags.prior,
                         prior_weight=flags.prior_weight)
-        belief.update(state, flags)
+        belief.update(state, flags, self.semantics)
         ranked = belief.ranked()
         entropy = belief.entropy()
 

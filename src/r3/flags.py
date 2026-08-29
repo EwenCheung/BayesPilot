@@ -12,6 +12,9 @@ class Flags:
     lexical: bool = True       # generic token overlap; retrieval, not inversion
     prior: bool = True         # the popularity prior
     exact_gain: float = 3.2    # log-odds an exact match is worth; the R1<->R2 dial (fitted)
+    semantic_backend: str = "blair"  # blair | svd  (D11 switch matrix)
+    query_mode: str = "model"        # model = encode with BLaIR | prf = torch-free centroid
+    semantic_gain: float = 0.0  # 0 disables the term entirely (and skips building the index)
     prior_weight: float = 0.18 # scales log1p(rating) onto the evidence's units (fitted)
     belief_pool: bool = True   # level-1 posterior chooses the pool (else: argmax category, R1-style)
     infogain: bool = False     # ⚠️ OFF: measured worse at every stress level — see D18

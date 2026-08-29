@@ -386,3 +386,80 @@ its most elegant consequence.
 
 Kept behind `R3_FLAGS=infogain` because the mechanism is worth demonstrating and the measurement is the
 contribution. It is not shipped, and R3-A19 is satisfied by reporting the loss rather than by winning.
+
+## D19 — measured and rejected: the TF-IDF/SVD semantic term
+
+**Built** (`src/r3/semantic.py`, ~50 lines, scikit-learn only, no new dependency, no network) and
+**measured** as an evidence term on the full 200:
+
+| `semantic_gain` | clean | L2 | L3 |
+|---|---|---|---|
+| **0.0 (shipped)** | **0.9720** | **0.8845** | **0.8297** |
+| 1.0 | 0.9691 | 0.8712 | 0.8219 |
+| 2.5 | 0.9652 | 0.8554 | 0.8196 |
+
+**It hurts, monotonically, at every level.** Not neutral — actively harmful, and more weight is worse.
+
+This is the **third independent negative** on semantic retrieval for this benchmark: R2 measured
+`bge-m3` ≈ TF-IDF/SVD ≈ no gain, a teammate's separate codebase agreed, and now R3 measures LSA as a
+likelihood term costing 0.003–0.013.
+
+⚠️ **It does not settle BLaIR, and saying so would be overclaiming.** TF-IDF→SVD is a *lexical* method —
+LSA over the same word counts the token-overlap term already reads — so it cannot bridge "made of
+alloy" → "Material: alloy" much better than that term does, and the two are partly redundant, which is
+the likely mechanism for the harm. D11's hypothesis is specifically about a **corpus-pretrained**
+encoder, which remains untested. What this result does is lower its expected value: three of three
+semantic variants tried on this benchmark have failed.
+
+Kept behind `R3_FLAGS=semantic_gain=1.0`, off by default, because the negative is the contribution.
+
+## D20 — 🔴 BLaIR was built, embedded and measured. It buys nothing. Kill gate R3-A23 fires.
+
+The D11 hypothesis was the strongest remaining argument for a semantic term: R2's and the teammate's
+negative results used **generic** encoders, and `hyp1231/blair-roberta-base` is pretrained on **Amazon
+Reviews 2023, this exact corpus**. Vocabulary mismatch ("made of alloy" → "Material: alloy") is exactly
+what a corpus-matched encoder should bridge.
+
+**Built end to end:** all 50,000 products embedded (CLS-pooled, L2-normalised, the model's own recipe),
+float16, 71 MB, 4.6 minutes on MPS at ~180 items/s. Queries encoded by the model itself — locally, no
+network. Wired in as a bounded evidence term like any other.
+
+| `semantic_gain` | clean | L2 | L3 | mean |
+|---|---|---|---|---|
+| **0.0 — no semantic term** | **0.9720** | **0.8845** | 0.8297 | **0.8954** |
+| 1.0 | 0.9711 | 0.8773 | 0.8273 | 0.8919 |
+| 2.5 | 0.9707 | 0.8802 | **0.8349** | 0.8953 |
+| 4.0 | 0.9704 | 0.8704 | 0.8297 | 0.8902 |
+| 6.0 | 0.9654 | 0.8590 | 0.8204 | 0.8816 |
+
+**At its best (gain 2.5) the mean is 0.8953 against 0.8954 without it.** The one gain it offers — L3
++0.005 — is bought with clean −0.013 and L2 −0.043, and it is half the pre-registered ≥0.01 threshold
+in R3-A23 on its own terms. **Dropped**, exactly as the gate written before the measurement required.
+
+### Why this is the most useful negative in the project
+
+This is now the **fourth independent measurement** that semantic retrieval does not help on this
+benchmark, and critically it is the one that closes the loophole in the other three:
+
+| Who | Encoder | Result |
+|---|---|---|
+| R2 | `bge-m3` (generic, API) | ≈ TF-IDF/SVD, no gain |
+| a teammate, separate codebase | generic dense | no gain |
+| R3, D19 | TF-IDF → SVD (lexical LSA) | actively harmful |
+| **R3, here** | **BLaIR (corpus-pretrained)** | **neutral** |
+
+D19 explicitly said the LSA result "does not settle BLaIR, and saying so would be overclaiming". So it
+was built and tested rather than argued about, and the answer is that the domain match does not rescue
+it either.
+
+**The mechanism is worth naming.** The simulator's constraints are *drawn verbatim from the catalog's
+own `features` and `details`*. The evidence that decides a session is therefore string-level by
+construction, and the exact/attribute/token terms already read that surface directly. A semantic
+encoder adds a *correlated but blurrier* view of the same text — so it contributes redundancy plus
+noise, which is precisely the shape of the measured harm. **This benchmark has no vocabulary gap for a
+semantic model to close**, because the customer's vocabulary *is* the catalog's vocabulary.
+
+**Consequences for the submission:** `torch` and `transformers` are **not** runtime dependencies and
+not in the manifest. `scripts/embed_blair.py` and `src/r3/semantic.py` stay, behind
+`R3_FLAGS=semantic_gain=2.5`, because a measured negative with a reproduction recipe is worth more than
+a deleted branch. The shipped agent remains **numpy-only, zero network calls**.

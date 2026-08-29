@@ -23,7 +23,11 @@ class ItemIndex:
         self._pairs: dict[str, frozenset[tuple[str, str]]] = {}
         self._tokens: dict[str, frozenset[str]] = {}
 
-        for line in Path(catalog_path).open(encoding="utf-8"):
+        with Path(catalog_path).open(encoding="utf-8") as handle:
+            self._ingest(handle)
+
+    def _ingest(self, handle) -> None:
+        for line in handle:
             product = json.loads(line)
             asin = product.get("parent_asin")
             if not asin:

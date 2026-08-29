@@ -36,7 +36,7 @@ class Belief:
         """
         return {a: self.prior_weight * self.index.log_pop[a] for a in self.candidates}
 
-    def update(self, state, flags) -> None:
+    def update(self, state, flags, semantics=None) -> None:
         """Re-derive from the prior and all live evidence. Cheap enough, and avoids drift."""
         self.prior_weight = flags.prior_weight if flags.prior else 0.0
         self.log_p = self._prior()
@@ -47,6 +47,15 @@ class Belief:
             terms = constraint_terms(self.index, constraint, self.candidates, flags)
             for asin, log_l in terms.items():          # {} means the term abstained: nothing happens
                 self.log_p[asin] += weight * log_l
+
+        # the semantic term reads the whole utterance history at once rather than per constraint:
+        # meaning is carried by the sentence, not by the individual requirement strings
+        if semantics is not None and flags.semantic_gain > 0:
+            query = " ".join([state.category or ""] + [c.text for c in state.live()]).strip()
+            if query:
+                sims = semantics.scores(query, self.candidates)
+                for asin, sim in sims.items():          # {} again means abstain
+                    self.log_p[asin] += flags.semantic_gain * sim
 
     def normalised(self) -> dict[str, float]:
         peak = max(self.log_p.values())

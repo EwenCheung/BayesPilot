@@ -21,3 +21,6 @@ runs/*
 # Derived artifacts: regenerable via scripts/embed_all.py (~14 min, ~$0.10).
 # emb.npy alone is 98 MB and must never enter git history.
 artifacts/
+
+# BLaIR embeddings: 71 MB, rebuild with scripts/embed_blair.py (~5 min). Never in git.
+artifacts/

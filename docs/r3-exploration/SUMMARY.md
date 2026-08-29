@@ -77,8 +77,12 @@ no network. Full table: [docs/R3-RESULTS.md](../R3-RESULTS.md).
 Switching EIG off was worth **+0.040**. The category belief — the road's headline idea — is worth
 **+0.054**, real but third.
 
-**4. No semantic term at all.** R3 ships with no dense route: no BLaIR, no bge-m3, not even TF-IDF/SVD.
-Phase P5 was never run. Every number above is lexical, attribute and exact evidence over a prior.
+**4. No semantic term — and that is now a measured result, not a gap.** TF-IDF/SVD and BLaIR
+(`hyp1231/blair-roberta-base`, pretrained on this exact corpus, all 50k embedded) were both built and
+run as evidence terms. BLaIR at its best scores **0.8953 mean against 0.8954 without it**; the SVD
+version is actively harmful. Kill gate R3-A23 fires and both are dropped (D19, D20). **The reason is
+structural: the simulator draws its constraints verbatim from the catalog's own text, so there is no
+vocabulary gap for a semantic model to close.**
 
 **Honest summary: R3 wins, the win generalises, and the reasons are mostly not the ones predicted.**
 
@@ -183,35 +187,36 @@ python3 scripts/final.py                     # the full table + held-out → run
 
 ## 7. What is missing — read before you trust this
 
-1. **No semantic term.** BLaIR, bge-m3 and TF-IDF/SVD are all unbuilt (Phase P5, R3-A22/A23). D11 lays
-   out the switch matrix. R3's likelihood is currently lexical only, and the L3 losses that remain
-   (Hit@10 0.915, so 8.5% never found) are the exact vocabulary-mismatch case a corpus-matched encoder
-   targets. **This is the highest-value unbuilt thing.**
-2. **No calibration.** Phase P3 (isotonic on synthetic sessions), ECE and reliability curves are not
+1. **No calibration.** Phase P3 (isotonic on synthetic sessions), ECE and reliability curves are not
    built (R3-A7, R3-A15–A17). The posterior is *used* as a probability but has never been *shown* to be
    one, and "confidently wrong" is this road's named failure mode.
-3. **No L4.** Model-written paraphrase needs the endpoint. L3 is a good free proxy — it reproduces R1's
+2. **No L4.** Model-written paraphrase needs the endpoint. L3 is a good free proxy — it reproduces R1's
    published LLM-written L3 to 0.0005 — but a proxy.
-4. **The LLM extraction tier is wired but unmeasured here.** R1 measured its tier at ~+0.07 under stress;
+3. **The LLM extraction tier is wired but unmeasured here.** R1 measured its tier at ~+0.07 under stress;
    R3 has never been run with it on.
-5. **The tagging/classification models from D12 are unbuilt.** They were promoted into P3 and P3 did not
+4. **The tagging/classification models from D12 are unbuilt.** They were promoted into P3 and P3 did not
    happen.
-6. **Boundary is 10 sessions.** Its MRR moves 0.10 when one session changes rank. Never read it alone.
-7. **`temperature` and `tau_mass` were fitted on category coverage, not on end-to-end score.** They were
-   chosen before level 2 existed and never revisited jointly.
+5. **Boundary is 10 sessions.** Its MRR moves 0.10 when one session changes rank. Never read it alone.
+6. **`temperature` and `tau_mass` were fitted on category coverage.** Re-fitted jointly on end-to-end
+   score afterwards: clean and L2 are completely insensitive to both, and L3 moves 0.006. Non-issue,
+   but worth knowing they are flat rather than tuned.
 
 ## 8. How to pick this up
 
-1. **Build the semantic term and run the D11 switch matrix.** Biggest measured gap, clearest plan.
-2. **Calibrate (P3)** and publish the reliability curve — it is the one claim R3 makes that is currently
-   unevidenced.
-3. **Re-fit `temperature`/`tau_mass` jointly with level 2** on the 140 (defect 7).
-4. **Run L4** on a quiet endpoint with pinned model IDs.
-5. **Fold R1's LLM extraction tier in** and re-measure L3.
+1. **Calibrate (P3)** and publish the reliability curve — the one claim R3 makes that is still
+   unevidenced, and its named failure mode is "confidently wrong".
+2. **Fold R1's LLM extraction tier in** and re-measure L3. R1 measured its tier at ~+0.07 under stress
+   and it is the largest unclaimed gain left.
+3. **Run L4** on a quiet endpoint with pinned model IDs.
+4. **Attack the remaining L3 losses as ranking, not recall.** Category coverage is 0.967 and Hit@10 is
+   0.915, so ~5% is the target sitting in the pool below rank 10.
 
 **Do not repeat these — measured and rejected:**
 
 - Per-category naive Bayes over product titles for category resolution (0.525 vs 0.825 — D14).
+- **Semantic retrieval, four times over**: `bge-m3` (R2), a teammate's dense route, TF-IDF/SVD (D19),
+  and **BLaIR pretrained on this exact corpus** (D20). The last one closes the "but it was a generic
+  encoder" objection to the first three.
 - EIG question selection (−0.021 clean, −0.040 L3 — D18).
 - Entropy as the patience signal (1.34× separation vs p₁'s 2.4× — D15).
 - Channel-conditioned `exact_gain` (bought exactly zero — D17).
