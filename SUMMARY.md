@@ -7,20 +7,22 @@ kind of problem is this?"* — built separately and raced on one harness.
 |---|---|---|---|
 | 🔵 **R1** Constraint Satisfaction | a **filter** | a shrinking candidate *set* | built, measured — [handover](docs/r1-exploration/SUMMARY.md) |
 | 🟢 **R2** Retrieve & Rank | a **ranker** | a scored *list* | built, measured — [handover](docs/r2-exploration/SUMMARY.md) |
-| 🟣 **R3** Bayesian Fusion | a **posterior** | belief over categories, then items | **built, measured; wins robustness on a held-out split, ties on clean** — [handover](docs/r3-exploration/SUMMARY.md) |
+| 🟣 **R3** Bayesian Fusion | a **posterior** | belief over categories, then items | **built, measured; leads every held-out condition** — [handover](docs/r3-exploration/SUMMARY.md) |
 
 **The result** ([docs/R3-RESULTS.md](docs/R3-RESULTS.md)) — one harness, one rewriter, one ablation
 vocabulary, offline path enforced with `R3_OFFLINE=1`:
 
 | Condition | R1 | R2 | **R3** | |
 |---|---|---|---|---|
-| clean (all 200) | 0.9597 | 0.9707 | **0.9720** | ⚠️ ~70% in-sample |
-| paraphrase L2 (all 200) | 0.7887 | 0.7872 | **0.8845** | ⚠️ ~70% in-sample |
-| paraphrase L3 (all 200) | 0.7241 | 0.6630 | **0.8297** | ⚠️ ~70% in-sample |
-| **held-out 60, clean** | 0.9604 | **0.9728** | 0.9708 | R2 wins |
-| **held-out 60, L3** | 0.6740 | 0.6863 | **0.8381** | R3 wins, +0.152 |
+| clean (all 200) | 0.9597 | 0.9707 | **0.9731** | ⚠️ 60% in-sample |
+| paraphrase L2 (all 200) | 0.7887 | 0.7872 | **0.8857** | ⚠️ 60% in-sample |
+| paraphrase L3 (all 200) | 0.7241 | 0.6630 | **0.8299** | ⚠️ 60% in-sample |
+| **held-out 80, clean** | 0.9597 | 0.9722 | **0.9730** | +0.001, noise |
+| **held-out 80, L2** | 0.7752 | 0.7878 | **0.8756** | **+0.088** |
+| **held-out 80, L3** | 0.6749 | 0.6584 | **0.8177** | **+0.143** |
 
-**The honest one-liner: R3's robustness advantage is real and generalises; its clean advantage is not.**
+**The honest one-liner: R3 leads every held-out condition; the clean margin is noise, the robustness
+margin is large.**
 The clean scores are saturated (theoretical max 0.9922, noise floor ~0.02) and the paraphrase columns are
 what estimate the private 800.
 

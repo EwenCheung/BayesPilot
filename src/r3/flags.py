@@ -15,14 +15,20 @@ class Flags:
     semantic_backend: str = "blair"  # blair | svd  (D11 switch matrix)
     query_mode: str = "model"        # model = encode with BLaIR | prf = torch-free centroid
     semantic_gain: float = 0.0  # 0 disables the term entirely (and skips building the index)
-    prior_weight: float = 0.18 # scales log1p(rating) onto the evidence's units (fitted)
+    erase: str = "demote"      # override: demote (R1, best) | delete (R2) | keep — D23
+    prior_weight: float = 0.18       # scales log1p(rating) onto the evidence's units (fitted, D16)
+    # ⚠️ Both below are R2 mechanisms, ported and MEASURED, and neither earns its place (D23).
+    # Kept as switches so the negative reproduces; both default off.
+    pool_normalised_prior: bool = False  # R2's "well reviewed FOR A HOOP EARRING" form
+    idf_gain: float = 0.0                # R2's IDF lexical route as an evidence term
     belief_pool: bool = True   # level-1 posterior chooses the pool (else: argmax category, R1-style)
     infogain: bool = False     # ⚠️ OFF: measured worse at every stress level — see D18
     llm_extract: bool = True   # LLM constraint extraction, escalation only
     temperature: float = 2.0
     tau_mass: float = 0.9
     v_continue: float = 0.9   # expected reciprocal rank if the session continues (fitted)
-    stall_decay: float = 0.35  # P(evidence still coming) after N barren turns = stall_decay ** N
+    stall_decay: float = 0.2        # P(evidence still coming) after N barren turns, PARAPHRASED
+    stall_decay_clean: float = 0.8  # ...and when templates are still matching (fitted separately)
     deadline: int = 3          # override silence ends here — structural, see agent._respond
     max_turns: int = 10        # the evaluator's hard limit; ship everything on the last turn
 

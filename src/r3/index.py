@@ -22,6 +22,9 @@ class ItemIndex:
         self.spec: dict[str, tuple[str, ...]] = {}     # its features + details, unprocessed
         self._pairs: dict[str, frozenset[tuple[str, str]]] = {}
         self._tokens: dict[str, frozenset[str]] = {}
+        # R2's lexical surface: deliberately DIFFERENT from the spec surface above, so the two are
+        # not the same evidence counted twice (ported from src/r2/routes.py LexicalRoute).
+        self.lexical_text: dict[str, str] = {}
 
         with Path(catalog_path).open(encoding="utf-8") as handle:
             self._ingest(handle)
@@ -41,6 +44,10 @@ class ItemIndex:
                 card.get("soft_preferences", ()))
             self.spec[asin] = tuple(_flatten_values(product.get("features"))) + tuple(
                 _flatten_values(product.get("details")))
+            parts = [self.title[asin], str(product.get("store") or "")]
+            parts.extend(_flatten_values(product.get("categories")))
+            parts.extend(_flatten_values(product.get("features"))[:8])
+            self.lexical_text[asin] = " ".join(parts)
 
     def pairs(self, asin: str) -> frozenset[tuple[str, str]]:
         got = self._pairs.get(asin)

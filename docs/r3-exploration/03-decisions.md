@@ -566,3 +566,122 @@ headline number, and `tests/test_runtime_deps.py` asserts it. Verified: 0.9720 /
   contributor under stress (−0.121 to remove). It should hold on the private 800, which is drawn the
   same way — but if the organizer sampled targets differently, **this is the assumption that breaks
   first**, and `no_popularity` (0.9604) is the number to quote if it does.
+
+## D23 — absorbing R1's and R2's strengths: three of four fail, one is a real win
+
+The question was fair: R2 wins clean on the held-out split, R1 wins some ablations — so port whatever
+each does better. Every distinctive mechanism the other roads have and R3 did not was implemented and
+measured on the 120-session train split. **Three transfer nothing; the fourth is the largest clean gain
+in the road's history.**
+
+### First, where R3 actually lost — measured, not guessed
+
+Per-scenario on clean, before any of this:
+
+| scenario | R1 MRR | R2 MRR | R3 MRR | |
+|---|---|---|---|---|
+| buying (80) | 0.9833 | 0.9789 | **0.9906** | R3 already wins |
+| browsing (80) | 0.9604 | 0.9688 | **0.9729** | R3 already wins |
+| intent_override (30) | 0.9667 | **1.0000** | 0.9667 | −0.033, ≈2 sessions at rank 2 |
+| **boundary (10)** | 0.9333 | 0.9111 | **0.8583** | **−0.075, R3 worst of the three** |
+
+R3's entire clean deficit was two scenarios, and boundary was the one where it was worst *of all three
+roads* — while also converting **fastest** (MTTC 2.30 against R1's 3.10). Converting fastest and ranking
+worst is the early-conversion trap the whole policy exists to avoid.
+
+### ❌ R2's pool-normalised prior — rejected
+
+`log_pop / max(log_pop over pool)`, so the signal is "well reviewed *for a hoop earring*". Swept with
+its **own** prior weight, because dividing by the pool max (~11) makes the same weight an ~11× weaker
+prior — judging it at R3's raw-scale weight would have been the D16 units error again:
+
+| prior_weight | mean over clean/L2/L3 |
+|---|---|
+| R3 raw prior (baseline) | **0.8998** |
+| pool-normalised, 0.5 | 0.8791 |
+| pool-normalised, **1.5** | **0.8975** |
+| pool-normalised, 3.0 | 0.8816 |
+
+Best case still loses. R3's pools already come from the level-1 belief and are category-coherent, so the
+normalisation R2 needed corrects for a problem R3 does not have.
+
+### ❌ R2's IDF lexical route — rejected
+
+IDF-weighted overlap over a *different* surface (title + store + categories) from R3's spec-based token
+term, scored against the whole query:
+
+| idf_gain | clean | L2 | L3 | mean |
+|---|---|---|---|---|
+| 0 (baseline) | 0.9719 | 0.8912 | 0.8364 | **0.8998** |
+| 0.5 | **0.9723** | 0.8847 | 0.8350 | 0.8973 |
+| 1.5 | 0.9586 | 0.8793 | 0.8280 | 0.8886 |
+| 4.0 | 0.9421 | 0.8352 | 0.8004 | 0.8592 |
+
+It buys +0.0004 clean and loses more than that everywhere else. Same shape as the semantic terms (D19,
+D20): a correlated, blurrier view of evidence the existing terms already read.
+
+⚠️ **This one nearly produced a false negative.** The first run showed *identical scores to four
+decimals* at every gain — because the experiment runner sets flags after construction and the lexical
+index was built in `__init__`, so it never existed. A flag that silently does nothing looks exactly like
+a flag that makes no difference. Optional stages are now built lazily on a `@property`. This is the
+third time this class of bug has appeared here (see D15's `confidence_power`).
+
+### ❌ R2's override-delete — rejected, confirming R1
+
+R2 drops `initial_soft` constraints on override; R1 and R3 demote them to a lower weight.
+
+| erase mode | clean | override MRR |
+|---|---|---|
+| **demote (R1/R3)** | **0.9720** | **0.9667** |
+| delete (R2) | 0.9705 | 0.9361 |
+| keep | 0.9720 | 0.9667 |
+
+Independently reproduces R1's finding (it measured 0.909 → 0.967 switching to demotion). R2's perfect
+override MRR comes from its ranking, not from this mechanism. Also tested: `deadline` 3/4/5 — **no
+effect at all**, because the expected-utility policy already ships depth 0 while `V` is high, so the
+override silence is derived rather than configured.
+
+### ✅ Splitting the stall decay by whether we understood the customer — **kept**
+
+The one real win, and it came from asking what a barren turn *means* rather than from porting anything.
+
+**A turn that reveals nothing new means two opposite things**, and one stall counter conflated them:
+
+- **templates matching** — we parsed everything; the customer simply has no more preferences
+  (*"I don't have a preference for X"* — the boundary scenario, by construction). The belief is
+  trustworthy and one more turn can still resolve it to rank 1. **Be patient.**
+- **templates failing** — we are not parsing the customer at all. More turns of the same will not
+  help. **Ship wide now.**
+
+R3 treated both as "give up", which is why boundary was its worst scenario.
+
+| `stall_decay_clean` | clean | boundary MRR | boundary MTTC | L2 | L3 |
+|---|---|---|---|---|---|
+| 0.35 (= the single old value) | 0.9720 | 0.8583 | 2.30 | 0.8845 | 0.8297 |
+| **0.6** | **0.9736** | **1.0000** | 2.50 | 0.8845 | 0.8297 |
+| 0.95 | 0.9710 | 1.0000 | 2.50 | 0.8845 | 0.8297 |
+
+**Boundary MRR 0.8583 → 1.0000, clean +0.0016, L2 and L3 untouched.** Refitting both decays jointly on
+the 120 put them far apart — `stall_decay = 0.20` when paraphrased, `stall_decay_clean = 0.80` when
+understood — which is the mechanism asserting itself, not a tuning artefact. Overall clean MRR went
+**0.9733 → 0.9829**, above R2's 0.9746, and override MRR 0.9667 → 0.9833.
+
+**What this says about the exercise:** R1's and R2's *mechanisms* did not transfer, but the *diagnostic*
+did. Looking at where each road beat R3 per scenario found a real defect that porting code would never
+have surfaced — the fix is in R3's own vocabulary and has no counterpart in either road.
+
+## D24 — ⚠️ the offline gate was per-agent, so the baselines were reading the warm cache
+
+D22 added `R3_OFFLINE=1` and put the check in **R3's agent**. R1 and R2 build their own `LLMClient`, so
+the first race after the resplit reported **R1 L3 = 0.7893 against its true offline 0.7241** — a
+0.065 inflation of a *baseline*, in a table headed "no network", flattering nothing but corrupting every
+comparison in it.
+
+Caught because R1's stress numbers moved when nothing about R1 had changed.
+
+**Fixed at the right level:** the check now lives in `LLMClient.chat/extract/rerank`, so `R3_OFFLINE=1`
+holds for every road and every call path, cache included. Verified: R1 back to 0.7241 at L3.
+
+**The general lesson, and it has now cost three bugs in this project:** a switch that must hold for the
+whole system belongs at the shared boundary, not in one caller. D22 fixed the symptom in the road I was
+working on and left the same hole open in two others.

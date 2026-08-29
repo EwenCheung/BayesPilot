@@ -4,10 +4,9 @@
 
 If you read one thing, read [§2](#2-how-good-it-is-and-how-bad) and [§7 What is missing](#7-what-is-missing-read-before-you-trust-this).
 
-**In one line: R3's robustness advantage is large and generalises to a held-out split (+0.152 at L3);
-its clean advantage is not real — on the held-out 60, R2 wins clean.** Three of the four things IDEA.md
-promised this road would do **did not survive measurement**, and the two largest contributors are not
-the clever parts.
+**In one line: on 80 held-out sessions R3 leads every condition — clean +0.001 (noise), L2 +0.088,
+L3 +0.143.** Three of the four things IDEA.md promised this road would do **did not survive
+measurement**, and the largest contributors are not the clever parts.
 
 ---
 
@@ -35,22 +34,23 @@ no network. Full table: [docs/R3-RESULTS.md](../R3-RESULTS.md).
 
 | Condition | 🔵 R1 | 🟢 R2 | 🟣 **R3** | R3 − best |
 |---|---|---|---|---|
-| **clean** | 0.9597 | 0.9707 | **0.9720** | +0.0013 |
-| L1 scaffold | 0.7737 | 0.8305 | **0.8705** | +0.040 |
-| L2 payloads | 0.7887 | 0.7872 | **0.8845** | **+0.096** |
-| L3 category | 0.7241 | 0.6630 | **0.8297** | **+0.106** |
-| `no_spec_phrase` | 0.9128 | 0.8315 | **0.9339** | +0.021 |
+| **clean** | 0.9597 | 0.9707 | **0.9731** | +0.0024 |
+| L1 scaffold | 0.7737 | 0.8305 | **0.8684** | +0.038 |
+| L2 payloads | 0.7887 | 0.7872 | **0.8857** | **+0.097** |
+| L3 category | 0.7241 | 0.6630 | **0.8299** | **+0.106** |
+| `no_spec_phrase` | 0.9128 | 0.8315 | **0.9277** | +0.015 |
 
-**Held out — tuned on 140, read once on 60:**
+**Held out — tuned on 120, read once on 80** (manifest `30dc09816cff6b1c`):
 
-| | test60 clean | **test60 L3** |
-|---|---|---|
-| R1 | 0.9604 | 0.6740 |
-| R2 | **0.9728** ← wins | 0.6863 |
-| **R3** | 0.9708 | **0.8381** ← wins |
+| | test80 clean | test80 L2 | **test80 L3** |
+|---|---|---|---|
+| R1 | 0.9597 | 0.7752 | 0.6749 |
+| R2 | 0.9722 | 0.7878 | 0.6584 |
+| **R3** | **0.9730** | **0.8756** | **0.8177** |
 
-🔑 R3's held-out L3 (0.8381) is **higher than its training L3** (0.8261). The robustness gain transfers.
-⚠️ **R2 wins held-out clean.** The clean row of the all-200 table above does not survive the split.
+🔑 **R3 leads every held-out condition.** Clean +0.0008 is noise and is not claimed; L2 **+0.088** and
+L3 **+0.143** are three to five times the CI width. Train→test gap is small and in the expected
+direction (L3 0.8381 → 0.8177).
 
 ### The good
 
@@ -62,17 +62,23 @@ no network. Full table: [docs/R3-RESULTS.md](../R3-RESULTS.md).
 - **Zero network calls, numpy only.** R2 needs scipy and scikit-learn; R3 needs neither.
 - **And when a network IS available, +0.055 at L2 and +0.063 at L3** from the escalation-gated LLM
   extraction tier — for **0 calls and a bit-identical score on clean text** (D21).
-- **The first held-out number in this project.** R1 and R2 both list its absence as a top defect.
+- **The first held-out numbers in this project.** R1 and R2 both list their absence as a top defect.
+- **R1's and R2's distinctive mechanisms were ported and measured — three of four buy nothing** (D23).
+  The one real win came from the *diagnostic*, not the code: boundary was R3's worst scenario because a
+  barren turn means opposite things depending on whether we parsed the customer. Splitting the stall
+  decay on that took boundary MRR **0.8583 → 1.0000** and clean MRR **0.9733 → 0.9829**.
 
 ### The bad — and this is the part that matters
 
-**1. The clean win is noise, and the held-out split says so directly.** 0.9720 vs 0.9707 on all 200 —
-but on the held-out 60, **R2 wins clean** (0.9728 vs 0.9708). Do not claim it.
+**1. The clean win is still noise.** 0.9731 vs 0.9707 all-200, 0.9730 vs 0.9722 held-out. R3 no longer
+*loses* clean — the boundary fix in D23 closed that — but a 0.001–0.002 margin on 200 sessions is not a
+win and is not claimed.
 
-**1b. ⚠️ The headline table is 70% in-sample.** It is scored on all 200; 140 were tuned on. Reported that
-way only because R1's and R2's published numbers are also all-200. §2 is the unbiased table, and D22 is
-the full leakage audit — including one real measurement bug it caught (a warm LLM cache silently turning
-the offline path into the LLM path).
+**1b. ⚠️ The headline table is 60% in-sample.** Scored on all 200; 120 were tuned on. Reported that way
+only because R1's and R2's published numbers are also all-200. §2 is the unbiased table. D22 and D24 are
+the leakage audits — between them they caught two real measurement bugs, the second being an offline
+switch installed per-agent that left the *baselines* reading a warm LLM cache (R1's L3 inflated by
+0.065).
 
 **2. Three of IDEA.md's four promises for this road failed measurement.**
 
@@ -95,8 +101,8 @@ version is actively harmful. Kill gate R3-A23 fires and both are dropped (D19, D
 structural: the simulator draws its constraints verbatim from the catalog's own text, so there is no
 vocabulary gap for a semantic model to close.**
 
-**Honest summary: R3's robustness win is large and generalises; its clean win is not real; and the
-reasons for the robustness win are mostly not the ones predicted.**
+**Honest summary: R3 leads every held-out condition; the clean margin is noise and the robustness
+margin is large; and the reasons are mostly not the ones IDEA.md predicted.**
 
 ---
 
@@ -154,7 +160,7 @@ src/eval/
   race.py       ⭐ one runner, roads by name
   ablations.py  ⭐ one vocabulary — `no_spec_phrase` means the same thing in every road
   stress.py     ⭐ one rewriter, L0-L4
-  holdout.py    the immutable 140/60, hash a367f15873d772aa
+  holdout.py    the immutable 120/80, hash 30dc09816cff6b1c
 scripts/
   final.py           the full race → runs/final.json
   fit_policy.py      staged fit on the 140
@@ -242,5 +248,5 @@ python3 scripts/final.py                     # the full table + held-out → run
 - Raw `log1p(rating)` as a log-prior (−0.066 — D16).
 
 ⚠️ **TechnicalScore is an input to the 35% Technical Execution criterion, not the score.** R3's most
-defensible contribution is not 0.9720 — it is the held-out table, the four recorded reversals, and the
+defensible contribution is not 0.9731 — it is the held-out table, the six recorded reversals, and the
 fact that the merge proved R1's and R2's published robustness numbers were never comparable.

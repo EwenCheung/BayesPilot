@@ -6,6 +6,9 @@ so it cannot detect overfitting. R3 adds calibration parameters, making it the r
 invisibly — so this lands before any R3 parameter is chosen.
 
 Disjoint on sample_id AND target ASIN: the same product appearing in both halves leaks the answer.
+
+⚠️ Regenerating this split voids every held-out number taken before it. It has been regenerated exactly
+once, deliberately, to widen 70/30 -> 60/40; `holdout.py` refuses to do it by accident.
 """
 from __future__ import annotations
 
@@ -24,10 +27,15 @@ class TestM8Holdout(unittest.TestCase):
     def setUp(self) -> None:
         self.split = holdout.load()
 
-    def test_split_is_140_60(self) -> None:
-        """M8: 140 to tune on, 60 held back."""
-        self.assertEqual(len(self.split["train"]), 140)
-        self.assertEqual(len(self.split["test"]), 60)
+    def test_split_is_120_80(self) -> None:
+        """M8: 120 to tune on, 80 held back.
+
+        Widened from 70/30 after the leakage audit (D22): with 60 held-out sessions the L3 CI spans
+        ~0.13, too wide for the held-out check to separate the roads. The tuning set was never the
+        binding constraint — most fits are flat.
+        """
+        self.assertEqual(len(self.split["train"]), 120)
+        self.assertEqual(len(self.split["test"]), 80)
 
     def test_sample_ids_are_disjoint(self) -> None:
         """M8: the obvious leak."""

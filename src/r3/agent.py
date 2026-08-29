@@ -41,16 +41,31 @@ class Agent:
         self._completion = 0
         self._last_asked: dict[str, str] = {}
         self._stalls: dict[str, int] = {}
-        self.semantics = None
-        if self.flags.semantic_gain > 0:
-            if self.flags.semantic_backend == "blair":
-                from src.r3.semantic import BlairSemantics
-                self.semantics = BlairSemantics(self.index, query_mode=self.flags.query_mode)
-            else:
-                from src.r3.semantic import SvdSemantics
-                self.semantics = SvdSemantics(self.index)
+        self._lexical = None
+        self._semantics = None
         # popularity-ordered fallback, so a crashed turn still ships something plausible
         self._fallback = sorted(self.index.log_pop, key=lambda a: -self.index.log_pop[a])[:50]
+
+    @property
+    def lexical(self):
+        """Built on first use, not in __init__ — flags may be set after construction by the
+        experiment runner, and an optional stage that silently never builds looks exactly like an
+        optional stage that makes no difference."""
+        if self._lexical is None and self.flags.idf_gain > 0:
+            from src.r3.lexical import IdfLexical
+            self._lexical = IdfLexical(self.index)
+        return self._lexical
+
+    @property
+    def semantics(self):
+        if self._semantics is None and self.flags.semantic_gain > 0:
+            if self.flags.semantic_backend == "blair":
+                from src.r3.semantic import BlairSemantics
+                self._semantics = BlairSemantics(self.index, query_mode=self.flags.query_mode)
+            else:
+                from src.r3.semantic import SvdSemantics
+                self._semantics = SvdSemantics(self.index)
+        return self._semantics
 
     def reset(self, session_id: str, user_profile: dict) -> None:
         self.sessions[session_id] = SessionState(profile=user_profile or {})
@@ -70,7 +85,7 @@ class Agent:
         state.turn = turn
         before = len(state.constraints)
         llm = self.llm if (self.flags.llm_extract and state.paraphrased()) else None
-        parse(user_message, state, llm=llm)
+        parse(user_message, state, llm=llm, erase=self.flags.erase)
         # Pillar III, concretely: "is this conversation still teaching me anything?" A turn that
         # revealed nothing new means the belief will not improve by waiting, and the policy below
         # reads that directly instead of consulting a hand-tuned deadline.
@@ -101,8 +116,9 @@ class Agent:
         # matches nothing simply stops voting.
         flags = self.flags
         belief = Belief(self.index, candidates, use_prior=flags.prior,
-                        prior_weight=flags.prior_weight)
-        belief.update(state, flags, self.semantics)
+                        prior_weight=flags.prior_weight,
+                        pool_normalised=flags.pool_normalised_prior)
+        belief.update(state, flags, self.semantics, self.lexical)
         ranked = belief.ranked()
         entropy = belief.entropy()
 
@@ -117,9 +133,19 @@ class Agent:
         elif turn >= self.flags.max_turns:
             depth = top_k                       # last chance: a bad rank beats no rank
         else:
-            # hope: the belief's confidence in its leader, discounted by turns that taught us nothing
-            depth = belief.depth(top_k, v_continue=flags.v_continue,
-                                 hope=flags.stall_decay ** stalls)
+            # ⚠️ A barren turn means two OPPOSITE things, and one stall counter conflated them:
+            #
+            #   templates matching  -> we understood everything; the customer simply has no more
+            #                          preferences ("I don't have a preference for X"). Our belief is
+            #                          trustworthy and one more turn can still resolve it to rank 1.
+            #   templates failing   -> we are not parsing the customer at all. More turns of the same
+            #                          will not help, so ship wide now.
+            #
+            # Treating both as "give up and ship deep" made boundary sessions the worst scenario in
+            # R3 (MRR 0.8583 at MTTC 2.30, against R1's 0.9333 at 3.10) — converting fastest and
+            # ranking worst, which is the early-conversion trap the whole policy exists to avoid.
+            decay = flags.stall_decay if state.paraphrased() else flags.stall_decay_clean
+            depth = belief.depth(top_k, v_continue=flags.v_continue, hope=decay ** stalls)
 
         question = best_question(self.index, state, belief) if flags.infogain else "other"
         self._last_asked[session_id] = question

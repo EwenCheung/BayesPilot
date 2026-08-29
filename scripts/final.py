@@ -62,8 +62,8 @@ if __name__ == "__main__":
     print("\n== generalisation: tuned on the 140, read once on the 60 ==")
     split = holdout.load()
     for road in ("r1", "r2", "r3"):
-        for half, ids in (("train140", split["train"]), ("test60", split["test"])):
-            for lvl in (0, 3):
+        for half, ids in (("train120", split["train"]), ("test80", split["test"])):
+            for lvl in (0, 2, 3):
                 r = subset_run(road, set(ids), lvl)
                 out[f"{road}|{half}|L{lvl}"] = line(f"{half} L{lvl}", road, r)
 

@@ -20,10 +20,11 @@ class Belief:
     """An unnormalised log-posterior over one candidate pool."""
 
     def __init__(self, index, candidates: list[str], use_prior: bool = True,
-                 prior_weight: float = 0.35) -> None:
+                 prior_weight: float = 0.35, pool_normalised: bool = False) -> None:
         self.index = index
         self.candidates = candidates
         self.prior_weight = prior_weight if use_prior else 0.0
+        self.pool_normalised = pool_normalised
         self.log_p = self._prior()
 
     def _prior(self) -> dict[str, float]:
@@ -34,9 +35,14 @@ class Belief:
         strong prior — it is a units error. `prior_weight` puts it on the same scale as one piece of
         evidence, and is fitted on the 140-session train split like everything else here.
         """
+        if self.pool_normalised and self.candidates:
+            # R2's form: "well reviewed FOR A HOOP EARRING", not "well reviewed compared to a shoe".
+            # Makes prior_weight mean the same thing in a pool of watches and a pool of belts.
+            top = max(self.index.log_pop[a] for a in self.candidates) or 1.0
+            return {a: self.prior_weight * self.index.log_pop[a] / top for a in self.candidates}
         return {a: self.prior_weight * self.index.log_pop[a] for a in self.candidates}
 
-    def update(self, state, flags, semantics=None) -> None:
+    def update(self, state, flags, semantics=None, lexical=None) -> None:
         """Re-derive from the prior and all live evidence. Cheap enough, and avoids drift."""
         self.prior_weight = flags.prior_weight if flags.prior else 0.0
         self.log_p = self._prior()
@@ -47,6 +53,11 @@ class Belief:
             terms = constraint_terms(self.index, constraint, self.candidates, flags)
             for asin, log_l in terms.items():          # {} means the term abstained: nothing happens
                 self.log_p[asin] += weight * log_l
+
+        query = " ".join([state.category or ""] + [c.text for c in state.live()]).strip()
+        if lexical is not None and flags.idf_gain > 0 and query:
+            for asin, score in lexical.scores(query, self.candidates).items():
+                self.log_p[asin] += flags.idf_gain * score
 
         # the semantic term reads the whole utterance history at once rather than per constraint:
         # meaning is carried by the sentence, not by the individual requirement strings

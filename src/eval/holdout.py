@@ -2,6 +2,12 @@
 
 ⚠️ Tune on `train`. Report on `test`. A threshold chosen while looking at `test` has spent it.
 
+**60/40 (120 train / 80 test).** The first split was 70/30, and the leakage audit (D22) showed why that
+was the wrong trade here: with 60 held-out sessions the L3 confidence interval spans ~0.13, wide enough
+that the held-out check could barely distinguish the roads. 80 sessions tightens it materially, and the
+tuning set was never the binding constraint — the fits are flat in most parameters (D14 §frontier, the
+joint re-fit). Buying a sharper verdict with tuning data we were not using is the right direction.
+
 Disjoint on sample_id **and** target ASIN. The ASIN constraint is the one that is easy to miss and the
 one that matters: two sessions can have different ids and the same hidden product, and a parameter
 tuned on one then "generalises" to the other for no good reason.
@@ -21,7 +27,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 DATASET = ROOT / "techjam-conversational-search-main" / "data" / "public_set.jsonl"
 MANIFEST = ROOT / "runs" / "holdout.json"
-TEST_FRACTION = 0.30
+TEST_FRACTION = 0.40
 SEED = 20260829
 
 

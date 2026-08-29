@@ -17,6 +17,11 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+# Set to "1" to force EVERY road offline, disk cache included. The harness sets it for all reported
+# runs. It lives here rather than in an agent because gating it per-agent let R1 and R2 keep reading a
+# warm .cache/llm while R3 was offline (D24).
+OFFLINE_ENV = "R3_OFFLINE"
+
 # absolute: runs execute with cwd=<kit>, and a cache written in there would both contaminate the
 # kit we promise to keep pristine and be invisible to the next run
 CACHE_DIR = Path(__file__).resolve().parents[2] / ".cache" / "llm"
@@ -47,8 +52,6 @@ def _http(path: str, body: dict, timeout: float) -> dict:
 
 
 class LLMClient:
-    OFFLINE_ENV = "R3_OFFLINE"
-
     def __init__(
         self,
         chat_model: str = CHAT_MODEL,
@@ -153,6 +156,16 @@ class LLMClient:
     # --- tasks -------------------------------------------------------------
     def extract(self, message: str) -> list[tuple[str, str, str]]:
         """Paraphrase insurance: read constraints out of prose no template will match."""
+        # ⚠️ OFFLINE_ENV is checked HERE, not in an agent, so it holds for every road. Gating it
+        # per-agent let R1 and R2 keep reading a warm `.cache/llm` while R3 was offline, which
+        # silently lifted R1's L3 from 0.7241 to 0.7893 in a table headed "no network" (D22, D24).
+        if os.environ.get(OFFLINE_ENV) == "1":
+            return []
+        # ⚠️ OFFLINE_ENV is checked HERE, not in an agent, so it holds for every road. Gating it
+        # per-agent let R1 and R2 keep reading a warm `.cache/llm` while R3 was offline, which
+        # silently lifted R1's L3 from 0.7241 to 0.7893 in a table headed "no network" (D22, D24).
+        if os.environ.get(OFFLINE_ENV) == "1":
+            return None
         content = self.chat(
             [{"role": "system", "content": EXTRACT_SYSTEM}, {"role": "user", "content": message[:1500]}],
             max_tokens=300,
@@ -179,6 +192,11 @@ class LLMClient:
 
     def rerank(self, query: str, candidates: list[str], labels: list[str] | None = None) -> list[str] | None:
         """The brief's named 'LLM Semantic Ranking' stage. Returns None on any malformed answer."""
+        # ⚠️ OFFLINE_ENV is checked HERE, not in an agent, so it holds for every road. Gating it
+        # per-agent let R1 and R2 keep reading a warm `.cache/llm` while R3 was offline, which
+        # silently lifted R1's L3 from 0.7241 to 0.7893 in a table headed "no network" (D22, D24).
+        if os.environ.get(OFFLINE_ENV) == "1":
+            return None
         shown = labels or candidates
         listing = "\n".join(f"{i + 1}. {text[:220]}" for i, text in enumerate(shown))
         content = self.chat(
