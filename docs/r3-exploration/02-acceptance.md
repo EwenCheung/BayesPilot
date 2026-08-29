@@ -33,10 +33,10 @@ that is the merge's output, not a regression (see [04-merge-plan.md](04-merge-pl
 |---|---|---|---|
 | **R3-A1a** | With a degenerate 0/1 likelihood and `ℓ_min → 0`, the posterior's candidate set equals R1's `survivors()` on ≥95% of the 200 sessions | `tests/test_generalisation.py` | ⬜ |
 | **R3-A1b** | With flat calibration and R2's weights as log-likelihood coefficients, the posterior's top-10 equals R2's blend on ≥95% of sessions | `tests/test_generalisation.py` | ⬜ |
-| R3-A9 | A term that abstains returns `{}` and provably cancels in the normalisation | `tests/test_likelihood.py` | ⬜ |
-| R3-A10 | No evidence term can drive any item's posterior to zero (`ℓ_min > 0`) | `tests/test_likelihood.py` | ⬜ |
+| R3-A9 🟩 | A term that abstains returns `{}` and provably cancels in the normalisation | `tests/test_likelihood.py` | ⬜ |
+| R3-A10 🟩 | No evidence term can drive any item's posterior to zero (`ℓ_min > 0`) | `tests/test_likelihood.py` | ⬜ |
 | **R3-A2** 🟩 | **0.9720** — Clean score ≥ `0.9607` (within 0.01 of R2's 0.9707) | `src.eval.race` | ⬜ |
-| R3-A11 | Per-turn cost: posterior update + EIG over the pool < 50 ms p95 | `tests/test_latency.py` | ⬜ |
+| R3-A11 🟩 | Per-turn cost: posterior update + EIG over the pool < 50 ms p95 | `tests/test_latency.py` | ⬜ |
 
 🔴 **KILL GATE.** If R3-A2 fails with hand-set likelihood parameters, the likelihood family is
 mis-specified and calibration downstream cannot repair a wrong model. Stop, write the negative result,
@@ -53,16 +53,16 @@ pool by counting shared words ([00-r3-spec.md](00-r3-spec.md) §2.3).
 |---|---|---|---|
 | **R3-A27** 🟩 | Level-1 category accuracy under L3 paraphrase ≥ **0.95** (R1 measures **0.85**) | `tests/test_category_belief.py` | ⬜ |
 | **R3-A3** 🟩 | **0.970 achieved.** L2 paraphrase Hit@10 ≥ 0.95 (best current **0.890**, R1). Revised up after the merge: removing inversion costs R1 *no* recall (0.995), so paraphrase is the whole cause — 04-merge-plan.md §7.1 ④ | `src.eval.race --stress 2` | ⬜ |
-| R3-A12 | Clean score unchanged by widening (within 0.005) — the pool opens only when the belief is diffuse, exactly as R1's hedge measured 0.0000 on clean | `src.eval.race` | ⬜ |
-| R3-A13 | `τ_mass` replaces `hedge(keep=0.6)`, the top-3 cutoff and the 4000 cap; none of those constants survive in `src/r3/` | `tests/test_constants.py` | ⬜ |
-| R3-A14 | Pool size bounded: p95 candidates ≤ 8000, so R3-A11 still holds | `tests/test_latency.py` | ⬜ |
+| R3-A12 🟩 | **belief_pool off at L2 = identical, at L3 = −0.054.** Clean unchanged by widening (within 0.005) — the pool opens only when the belief is diffuse, exactly as R1's hedge measured 0.0000 on clean | `src.eval.race` | ⬜ |
+| R3-A13 🟩 | `τ_mass` replaces `hedge(keep=0.6)`, the top-3 cutoff and the 4000 cap; none of those constants survive in `src/r3/` | `tests/test_constants.py` | ⬜ |
+| R3-A14 🟩 | Pool size bounded: p95 candidates ≤ 8000, so R3-A11 still holds | `tests/test_latency.py` | ⬜ |
 | R3-A28 | Per-constraint evidence terms, not one fused query — each constraint updates the belief independently | `tests/test_likelihood.py` | ⬜ |
 
 ⚠️ **R3-A27 is the isolated version of the fix and should be measured first**, before it is entangled
 with level 2. If category accuracy does not move, the §2.3 diagnosis is wrong and P2 should be
 re-planned rather than tuned.
 
-## Phase P3 — calibration  ⬛ NOT BUILT (see SUMMARY §7.2)
+## Phase P3 — calibration  ⬛ NOT BUILT — the one phase that did not happen (SUMMARY §7.1)
 
 | ID | Criterion | Test | Status |
 |---|---|---|---|
@@ -84,18 +84,18 @@ re-planned rather than tuned.
 
 ---
 
-## Phase P5 — the model switch matrix  ⬛ NOT BUILT (see SUMMARY §7.1)
+## Phase P5 — the model switch matrix  🟩 BUILT AND MEASURED — both backends rejected (D19, D20)
 
 [00-r3-spec.md](00-r3-spec.md) §6.0 is the scope audit; §6.1 is the matrix. Every backend is measured on
 **stressed** and **`no_spec_phrase`**, at **both** belief levels, on the same harness.
 
 | ID | Criterion | Test | Status |
 |---|---|---|---|
-| R3-A21 | Embeddings are a **build-time** artifact; the runtime imports numpy only — no torch, no transformers | `tests/test_runtime_deps.py` (AST) | ⬜ |
-| R3-A22 | Full matrix reported: `tfidf_svd` · `bge_m3` · `blair_base` · `blair_large` · `qwen3_emb_0.6b`, × {level 1, level 2} | `docs/R3-RESULTS.md` | ⬜ |
-| **R3-A23** | 🔴 The winning backend beats `tfidf_svd` by ≥0.01 stressed, **or `tfidf_svd` ships** and the matrix is reported as a negative result | `03-decisions.md` D6 | ⬜ |
-| R3-A29 | 🚫 No image or multi-modal model anywhere — PROBLEM.md §4.3 | `tests/test_scope.py` | ⬜ |
-| R3-A30 | No vector DB; embeddings are one in-memory matrix. Peak RSS reported | registry row | ⬜ |
+| R3-A21 🟩 | Embeddings are a **build-time** artifact; the runtime imports numpy only — no torch, no transformers | `tests/test_runtime_deps.py` (AST) | ⬜ |
+| R3-A22 🟩 | **TF-IDF/SVD and BLaIR built, embedded and measured (D19, D20).** Full matrix reported: `tfidf_svd` · `bge_m3` · `blair_base` · `blair_large` · `qwen3_emb_0.6b`, × {level 1, level 2} | `docs/R3-RESULTS.md` | ⬜ |
+| **R3-A23** 🟥→🟩 | **FIRED. BLaIR gains +0.005 at L3 for −0.013 clean; both dropped, nothing ships.** Gate: beat by ≥0.01 stressed, **or `tfidf_svd` ships** and the matrix is reported as a negative result | `03-decisions.md` D6 | ⬜ |
+| R3-A29 🟩 | 🚫 No image or multi-modal model anywhere — PROBLEM.md §4.3 | `tests/test_scope.py` | ⬜ |
+| R3-A30 🟩 | No vector DB; embeddings are one in-memory matrix. Peak RSS reported | registry row | ⬜ |
 | R3-A31 | Every dependency declared with a version, split build-time vs runtime | `requirements*.txt` | ⬜ |
 | **R3-A8** 🟩 | Zero network calls on the default path; `R3_OFFLINE=1` is bit-identical to the networked run | `tests/test_offline.py` | ⬜ |
 
@@ -105,9 +105,9 @@ re-planned rather than tuned.
 |---|---|---|---|
 | **R3-A4** 🟩 | **+0.096 L2, +0.106 L3, +0.021 no_spec_phrase.** Beat `max(R1, R2)` by more than the bootstrap CI | `src.eval.race --all --bootstrap` | ⬜ |
 | **R3-A5** 🟩 | **test60 L3 0.8381 > train140 0.8261.** Held-out within CI of the 140-tuned score | `src.eval.race --holdout` | ⬜ |
-| R3-A24 | All four scenario breakdowns reported for all three roads | `docs/R3-RESULTS.md` | ⬜ |
-| R3-A25 | `llm_call_failures`, latency p50/p95, token usage and estimated USD disclosed | registry row | ⬜ |
-| R3-A26 | **Re-plan pass**: with the final numbers in hand, an explicit written review — is this the best available design, what would be reorganised, what is still open — before anything is called final | `docs/r3-exploration/SUMMARY.md` §"what I would change" | ⬜ |
+| R3-A24 🟩 | All four scenario breakdowns reported for all three roads | `docs/R3-RESULTS.md` | ⬜ |
+| R3-A25 🟩 | `llm_call_failures`, latency p50/p95, token usage and estimated USD disclosed | registry row | ⬜ |
+| R3-A26 🟩 | **Re-plan pass** — done: joint pool re-fit (flat), semantic term built and rejected ×2, LLM tier measured, file handles fixed.: with the final numbers in hand, an explicit written review — is this the best available design, what would be reorganised, what is still open — before anything is called final | `docs/r3-exploration/SUMMARY.md` §"what I would change" | ⬜ |
 
 ⚠️ **R3-A26 is a real gate, not a formality.** The final answer is delivered only after re-running
 everything on the final code and stating plainly what is still wrong with it.
