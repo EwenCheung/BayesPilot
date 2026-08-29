@@ -463,3 +463,34 @@ semantic model to close**, because the customer's vocabulary *is* the catalog's 
 not in the manifest. `scripts/embed_blair.py` and `src/r3/semantic.py` stay, behind
 `R3_FLAGS=semantic_gain=2.5`, because a measured negative with a reproduction recipe is worth more than
 a deleted branch. The shipped agent remains **numpy-only, zero network calls**.
+
+## D21 — the LLM extraction tier is worth +0.06 under paraphrase and exactly 0.000 on clean
+
+R1 measured its own escalation-gated extraction tier at ~+0.07 under stress. R3 inherits the same
+`src/common/parse.py` cascade but had never been run with it on. Measured, `qwen3.6:35b` pinned
+explicitly (never `default`, which is an alias — trap 8):
+
+| | tier off | tier on | Δ | calls | failures |
+|---|---|---|---|---|---|
+| clean | 0.9720 | 0.9720 | **0.000** | **0** | 0 |
+| L2 | 0.8845 | **0.9399** | **+0.055** | 188 | 51 (27%) |
+| L3 | 0.8297 | **0.8926** | **+0.063** | 28 | 113 (80%) |
+
+Hit@10 goes 0.970 → 0.995 at L2 and 0.915 → 0.950 at L3.
+
+🔑 **Zero calls and a bit-identical score on clean text.** The tier escalates only once no known
+template has matched by turn 2, so the sessions that do not need it do not pay for it — not in latency,
+not in tokens, not in a live-endpoint dependency. This is the brief's *"runtime workflow
+re-orchestration"* with a number on both sides.
+
+⚠️ **These are lower bounds.** The endpoint is shared and was heavily rate-limited during the run: 27%
+of calls failed at L2 and 80% at L3. Every failure falls back to the deterministic path, which is why
+the score still rose — the model is a bonus, never a dependency. On an uncontended endpoint the gain
+should be larger, and that measurement has not been taken.
+
+**It does not change the shipped default, and that is deliberate.** PROBLEM.md's model policy says
+*"organizer policy may disable network access"* for official scoring. So R3 ships offline-first: every
+headline number in [R3-RESULTS.md](../R3-RESULTS.md) §1 is the **network-free** path, and this tier is
+an opportunistic improvement on top when the endpoint exists. Reporting the offline number as the
+headline is the honest way round; quoting 0.8926 as R3's L3 score would be claiming a capability that
+may not be available when it counts.

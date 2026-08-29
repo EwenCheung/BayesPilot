@@ -36,6 +36,21 @@ R3 keeps R1's recall *and* R2's precision instead of trading one for the other �
 them was supposed to buy, stated as a testable claim in [00-r3-spec.md](r3-exploration/00-r3-spec.md)
 §1 and now measured.
 
+### 1.1 With the LLM extraction tier (network available)
+
+The headline table is the **offline** path, because *"organizer policy may disable network access"*.
+When the endpoint does exist, the escalation-gated extraction tier adds:
+
+| Condition | offline | + LLM tier | Δ | calls | failures |
+|---|---|---|---|---|---|
+| clean | 0.9720 | 0.9720 | **0.000** | **0** | 0 |
+| L2 | 0.8845 | **0.9399** | **+0.055** | 188 | 51 (27%) |
+| L3 | 0.8297 | **0.8926** | **+0.063** | 28 | 113 (80%) |
+
+Zero calls on clean text — the tier fires only once no template has matched by turn 2. Both stressed
+gains were measured while the shared endpoint was failing 27–80% of calls, so they are **lower bounds**;
+every failure falls back to the deterministic path, which is why the score rises anyway.
+
 ---
 
 ## 2. Generalisation — tuned on 140, read once on 60

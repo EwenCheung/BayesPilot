@@ -57,6 +57,8 @@ no network. Full table: [docs/R3-RESULTS.md](../R3-RESULTS.md).
 - **6 fitted constants** replace R2's 32 fusion weights + depth ladder + regime threshold and R1's NQC,
   deadline and three hedge constants.
 - **Zero network calls, numpy only.** R2 needs scipy and scikit-learn; R3 needs neither.
+- **And when a network IS available, +0.055 at L2 and +0.063 at L3** from the escalation-gated LLM
+  extraction tier — for **0 calls and a bit-identical score on clean text** (D21).
 - **The first held-out number in this project.** R1 and R2 both list its absence as a top defect.
 
 ### The bad — and this is the part that matters
@@ -192,8 +194,8 @@ python3 scripts/final.py                     # the full table + held-out → run
    one, and "confidently wrong" is this road's named failure mode.
 2. **No L4.** Model-written paraphrase needs the endpoint. L3 is a good free proxy — it reproduces R1's
    published LLM-written L3 to 0.0005 — but a proxy.
-3. **The LLM extraction tier is wired but unmeasured here.** R1 measured its tier at ~+0.07 under stress;
-   R3 has never been run with it on.
+3. **The LLM tier's gain is a lower bound.** Measured at +0.055 / +0.063 (D21) while the shared endpoint
+   failed 27–80% of calls. Not re-measured uncontended.
 4. **The tagging/classification models from D12 are unbuilt.** They were promoted into P3 and P3 did not
    happen.
 5. **Boundary is 10 sessions.** Its MRR moves 0.10 when one session changes rank. Never read it alone.
@@ -205,8 +207,8 @@ python3 scripts/final.py                     # the full table + held-out → run
 
 1. **Calibrate (P3)** and publish the reliability curve — the one claim R3 makes that is still
    unevidenced, and its named failure mode is "confidently wrong".
-2. **Fold R1's LLM extraction tier in** and re-measure L3. R1 measured its tier at ~+0.07 under stress
-   and it is the largest unclaimed gain left.
+2. **Re-measure the LLM tier on an uncontended endpoint** — its +0.055/+0.063 was taken while 27–80% of
+   calls were failing.
 3. **Run L4** on a quiet endpoint with pinned model IDs.
 4. **Attack the remaining L3 losses as ranking, not recall.** Category coverage is 0.967 and Hit@10 is
    0.915, so ~5% is the target sitting in the pool below rank 10.
