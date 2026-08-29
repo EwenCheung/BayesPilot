@@ -3,9 +3,11 @@
 **Branch:** `r3-exploration` · **Worktree:** `../r3-bayesian` · **Status:** built, measured, merged R1+R2
 
 If you read one thing, read [§2](#2-how-good-it-is-and-how-bad) and [§7 What is missing](#7-what-is-missing-read-before-you-trust-this).
-R3 wins every measured condition and the win generalises to a held-out split — but three of the four
-things IDEA.md promised this road would do **did not survive measurement**, and the two largest
-contributors are not the clever parts.
+
+**In one line: R3's robustness advantage is large and generalises to a held-out split (+0.152 at L3);
+its clean advantage is not real — on the held-out 60, R2 wins clean.** Three of the four things IDEA.md
+promised this road would do **did not survive measurement**, and the two largest contributors are not
+the clever parts.
 
 ---
 
@@ -44,10 +46,11 @@ no network. Full table: [docs/R3-RESULTS.md](../R3-RESULTS.md).
 | | test60 clean | **test60 L3** |
 |---|---|---|
 | R1 | 0.9604 | 0.6740 |
-| R2 | 0.9728 | 0.6863 |
-| **R3** | 0.9708 | **0.8381** |
+| R2 | **0.9728** ← wins | 0.6863 |
+| **R3** | 0.9708 | **0.8381** ← wins |
 
-🔑 R3's held-out L3 (0.8381) is **higher than its training L3** (0.8261). The gain transfers.
+🔑 R3's held-out L3 (0.8381) is **higher than its training L3** (0.8261). The robustness gain transfers.
+⚠️ **R2 wins held-out clean.** The clean row of the all-200 table above does not survive the split.
 
 ### The good
 
@@ -195,6 +198,13 @@ python3 scripts/final.py                     # the full table + held-out → run
 
 ## 7. What is missing — read before you trust this
 
+0. **⚠️ Read [D22](03-decisions.md#d22) first — the leakage audit.** The §2 headline table is scored on
+   all 200 and 140 were tuned on, so ~70% of it is in-sample; the held-out table is the unbiased one.
+   Structural decisions (switching EIG off, dropping BLaIR) were made from all-200 ablations, which no
+   split protects against — both were re-tested per half, EIG holds and BLaIR flips sign inside noise.
+   The audit also caught a real bug: a warm `.cache/llm` turns the offline path into the LLM path with
+   zero network calls, so every headline number is now measured under `R3_OFFLINE=1` and a test
+   enforces it.
 1. **No calibration.** Phase P3 (isotonic on synthetic sessions), ECE and reliability curves are not
    built (R3-A7, R3-A15–A17). The posterior is *used* as a probability but has never been *shown* to be
    one, and "confidently wrong" is this road's named failure mode.
