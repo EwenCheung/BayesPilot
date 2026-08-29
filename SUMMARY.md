@@ -7,7 +7,7 @@ kind of problem is this?"* — built separately and raced on one harness.
 |---|---|---|---|
 | 🔵 **R1** Constraint Satisfaction | a **filter** | a shrinking candidate *set* | built, measured — [handover](docs/r1-exploration/SUMMARY.md) |
 | 🟢 **R2** Retrieve & Rank | a **ranker** | a scored *list* | built, measured — [handover](docs/r2-exploration/SUMMARY.md) |
-| 🟣 **R3** Bayesian Fusion | a **posterior** | belief over categories, then items | **built, measured, wins every condition** — [handover](docs/r3-exploration/SUMMARY.md) |
+| 🟣 **R3** Bayesian Fusion | a **posterior** | belief over categories, then items | **built, measured; wins robustness on a held-out split, ties on clean** — [handover](docs/r3-exploration/SUMMARY.md) |
 
 **The result** ([docs/R3-RESULTS.md](docs/R3-RESULTS.md)) — one harness, one rewriter, one ablation
 vocabulary, offline path enforced with `R3_OFFLINE=1`:

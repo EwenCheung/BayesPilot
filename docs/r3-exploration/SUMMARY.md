@@ -95,7 +95,8 @@ version is actively harmful. Kill gate R3-A23 fires and both are dropped (D19, D
 structural: the simulator draws its constraints verbatim from the catalog's own text, so there is no
 vocabulary gap for a semantic model to close.**
 
-**Honest summary: R3 wins, the win generalises, and the reasons are mostly not the ones predicted.**
+**Honest summary: R3's robustness win is large and generalises; its clean win is not real; and the
+reasons for the robustness win are mostly not the ones predicted.**
 
 ---
 
