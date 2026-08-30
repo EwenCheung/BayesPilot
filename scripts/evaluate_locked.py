@@ -44,7 +44,6 @@ def _evaluate(path: Path, config: dict[str, float], world: tuple[set[str], dict,
     agent = Agent(CATALOG)
     for name, value in config.items():
         setattr(agent.flags, name, value)
-    agent.flags.llm_extract = False
     started = time.time()
     result = evaluate(agent, load_jsonl(path), catalog_ids, categories, products)
     return {

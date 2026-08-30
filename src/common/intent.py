@@ -57,6 +57,18 @@ class CanonicalResolution:
     alternatives: tuple[ConstraintAlternative, ...] = ()
 
 
+@dataclass(frozen=True)
+class RoutingDecision:
+    """One model call supplies both routing and any hybrid interpretation."""
+
+    route: str
+    normalized_text: str
+    kind: str
+    category: str
+    attribute: str
+    operations: tuple[IntentOperation, ...]
+
+
 def validate_operations(rows: object, message: str) -> list[IntentOperation]:
     """Convert untrusted model JSON into a narrow, typed proposal list."""
     if not isinstance(rows, list):
@@ -149,23 +161,34 @@ class IntentPipeline:
         rows = self.llm.interpret_operations(message, state_for_prompt(state)) or []
         return validate_operations(rows, message)
 
-    def _proposal(self, message: str, state: SessionState) -> tuple[str, str, str, list[IntentOperation]]:
+    def decide(self, message: str, state: SessionState) -> RoutingDecision:
         if hasattr(self.llm, "restore_template"):
             payload = self.llm.restore_template(message, state_for_prompt(state)) or {}
             rows = payload.get("operations") or []
+            route = _clean(payload.get("route")).lower()
+            normalized = _clean(payload.get("normalized_text"), 1500)
             kind = _clean(payload.get("kind")).lower()
             category = _clean(payload.get("category"))
             attribute = _clean(payload.get("attribute")).lower()
         else:
             rows = self.llm.interpret_operations(message, state_for_prompt(state)) or []
-            kind, category, attribute = "unknown", "", ""
+            route, normalized, kind, category, attribute = "hybrid", message, "unknown", "", ""
         if kind not in ALLOWED_KINDS:
             kind = "unknown"
         if category and category.lower() not in message.lower():
             category = ""
         if attribute not in ALLOWED_ATTRIBUTES:
             attribute = ""
-        return kind, category, attribute, validate_operations(rows, message)
+        operations = validate_operations(rows, message)
+        # Old cache entries and test doubles predate the route field. Treat a meaningful
+        # interpretation as hybrid, and an empty/failed response as deterministic fallback.
+        if route not in {"deterministic", "hybrid"}:
+            route = "hybrid" if kind != "unknown" or operations else "deterministic"
+        if not normalized:
+            normalized = message
+        return RoutingDecision(
+            route, normalized, kind, category, attribute, tuple(operations)
+        )
 
     def _candidate_records(self, operation: IntentOperation, state: SessionState) -> list[dict]:
         if hasattr(self.index, "canonical_candidate_records"):
@@ -423,9 +446,18 @@ class IntentPipeline:
             return "Those options are not quite right yet. Ask me about one specific attribute."
         return None
 
-    def process(self, message: str, state: SessionState, *, erase: str = "demote") -> int:
-        kind, category_phrase, attribute, operations = self._proposal(message, state)
-        changed = self.apply(state, operations, erase=erase)
+    def process_decision(
+        self,
+        message: str,
+        state: SessionState,
+        decision: RoutingDecision,
+        *,
+        erase: str = "demote",
+    ) -> int:
+        kind = decision.kind
+        category_phrase = decision.category
+        attribute = decision.attribute
+        changed = self.apply(state, list(decision.operations), erase=erase)
 
         category = ""
         if category_phrase and self.category_belief is not None:
@@ -458,3 +490,10 @@ class IntentPipeline:
         if kind != "unknown":
             state.llm_restoration_hits += 1
         return changed
+
+    def process(self, message: str, state: SessionState, *, erase: str = "demote") -> int:
+        """Compatibility entry point: decide and apply using one model call."""
+        decision = self.decide(message, state)
+        state.normalized_messages[state.turn] = decision.normalized_text
+        state.router_routes[state.turn] = decision.route
+        return self.process_decision(message, state, decision, erase=erase)

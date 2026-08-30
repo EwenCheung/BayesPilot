@@ -2,17 +2,19 @@
 
 ## Decision
 
-Use the LLM only as a context-aware interpreter for customer wording that does not match the known
-evaluator grammar. It proposes typed operations; it never mutates state, invents a canonical catalog
-label, selects the next question, or reranks products. All authoritative decisions remain
-deterministic and catalog-verified.
+One submitted agent always attempts one LLM routing call per customer message. The response chooses
+`deterministic` or `hybrid`. It also supplies a lossless normalized message and typed operations, so a
+hybrid decision does not cause a second intent call. The model never mutates state, invents an accepted
+catalog label, selects the next question, or reranks products. All authoritative actions remain
+deterministic and catalog-verified. Endpoint failure falls back to deterministic processing.
 
 ```mermaid
 flowchart TD
-    I[Customer message] --> T{Known fixed template?}
-    T -->|yes| P[Deterministic parser]
-    T -->|no| L[One context-aware LLM interpretation call]
-    L --> C[Typo, slang and concept retrieval]
+    I[Customer message] --> L[One LLM route + interpretation call]
+    L --> T{Route decision}
+    T -->|deterministic| P[Deterministic template or ontology parser]
+    T -->|hybrid| C[Normalized text + typed operations]
+    L -->|failure| P
     C --> V[Joint category and catalog-value verification]
     V --> U{Meaning uniquely supported?}
     U -->|yes| R[Safe fixed-template rendering]
@@ -22,7 +24,7 @@ flowchart TD
     A --> X
     X --> CB[Category posterior and 90% mass candidate pool]
     CB --> IP[Item log posterior]
-    IP --> K[Exact + attribute + BM25/lexical + semantic evidence]
+    IP --> K[Exact + attribute + token evidence<br/>optional IDF and semantic evidence]
     K --> EU[Expected-utility output depth]
     EU --> O[Recommendation or deterministic wildcard question]
 
@@ -39,8 +41,8 @@ flowchart TD
     classDef add fill:#d8f5df,color:#111,stroke:#198754;
     classDef change fill:#fff3bf,color:#111,stroke:#b8860b;
     classDef remove fill:#ffd7d7,color:#111,stroke:#c92a2a;
-    class I,T,P,X,CB,IP,K,EU,O keep;
-    class L,C,A add;
+    class I,P,X,CB,IP,K,EU,O keep;
+    class L,T,C,A add;
     class V,R change;
 ```
 
@@ -48,8 +50,9 @@ Legend: white = retained, green = added, yellow = updated, red = removed/rejecte
 
 ## State contract
 
-The state retains the raw category surface phrase, multiple verified category hypotheses, confirmed
-constraints, exclusions, superseded constraints, and grouped ambiguity alternatives. Each confirmed
+The state retains raw and normalized messages, per-turn router decisions, the raw category surface
+phrase, multiple verified category hypotheses, confirmed constraints, exclusions, superseded
+constraints, and grouped ambiguity alternatives. Each confirmed
 constraint records its source message, polarity, strength, confidence, and turn. The deterministic
 validator applies all accepted changes as one transaction, so an intent override cannot leave a
 half-updated state.
@@ -107,15 +110,15 @@ UX objective and should not be confused with benchmark optimization.
 - Select among predeclared candidates on `validation.jsonl` only.
 - Do not use `test.jsonl` or `public_set.jsonl` for fitting, prompt iteration, architecture selection,
   or augmentation.
-- The new LLM interpreter was developed and piloted only on validation. Its current evidence is a
-  20-session stress pilot, not an unseen-test claim.
-- Keep the deterministic path as the competition default until a predeclared, sufficiently powered
-  validation comparison justifies enabling the LLM path.
+- The gated interpreter checkpoint is `c816bfd`. The always-on router after that checkpoint has not
+  produced a valid online score because endpoint credentials were absent during its first pilot.
+- Keep the rollback checkpoint until a predeclared, sufficiently powered validation comparison shows
+  that the always-on router preserves clean performance and improves paraphrase robustness.
 
 ## What not to build
 
-- No always-review LLM path for known fixed templates: it adds cost without clean-score gain.
-- No LLM product reranker: exact, BM25/lexical, semantic, and Bayesian evidence already own ranking.
+- No LLM product reranker: verified exact/attribute evidence and the Bayesian ranker own final ranking;
+  IDF/semantic routes remain deterministic experiments.
 - No LLM-generated free-form question: the model does not know which hidden simulator fields exist.
 - No forced canonical value when evidence is ambiguous.
 - No synthetic balancing of validation, test, or public data; augmentation belongs only in training.

@@ -87,6 +87,7 @@ class Belief:
 
         query = " ".join(
             [state.category or state.category_surface or ""]
+            + list(state.normalized_messages.values())
             + [c.source_text or c.text for c in state.live()]
             + [item.evidence for item in state.live_ambiguities()]
         ).strip()
@@ -99,6 +100,7 @@ class Belief:
         if semantics is not None and flags.semantic_gain > 0:
             query = " ".join(
                 [state.category or state.category_surface or ""]
+                + list(state.normalized_messages.values())
                 + [c.source_text or c.text for c in state.live()]
                 + [item.evidence for item in state.live_ambiguities()]
             ).strip()

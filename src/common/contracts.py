@@ -77,6 +77,8 @@ class SessionState:
     slot_age: dict[str, int] = field(default_factory=dict)       # turns since confirmed (§14.2)
     disclosed: set[str] = field(default_factory=set)             # raw constraint strings revealed
     history: list[str] = field(default_factory=list)             # customer utterances, in order
+    normalized_messages: dict[int, str] = field(default_factory=dict)  # router's lossless rewrite
+    router_routes: dict[int, str] = field(default_factory=dict)  # deterministic | hybrid
     restored_messages: dict[int, str] = field(default_factory=dict)  # verified fixed-template form
     profile: dict = field(default_factory=dict)                  # anonymized user_profile
     long_term: dict = field(default_factory=dict)                # cross-session preferences (Pillar III)

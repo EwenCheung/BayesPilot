@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from src.common.contracts import Constraint, SessionState
-from src.common.intent import IntentPipeline, validate_operations
+from src.common.intent import IntentPipeline, RoutingDecision, validate_operations
 from src.common.parse import parse
 
 
@@ -88,14 +88,19 @@ def test_low_confidence_alternatives_survive_only_as_a_valid_group():
     assert {item.group for item in accepted} == {"poly"}
 
 
-def test_llm_skips_a_high_confidence_template():
+def test_llm_routes_a_clean_template_to_deterministic_processing_once():
     class ReviewPipeline:
         def __init__(self):
             self.calls = 0
 
-        def process(self, message, state, *, erase="demote"):
+        def decide(self, message, state):
             self.calls += 1
-            return 0
+            return RoutingDecision(
+                "deterministic", message, "buying", "Shirts", "", ()
+            )
+
+        def process_decision(self, message, state, decision, *, erase="demote"):
+            raise AssertionError("deterministic route must not apply model operations")
 
     pipeline = ReviewPipeline()
     state = SessionState(turn=1)
@@ -104,8 +109,72 @@ def test_llm_skips_a_high_confidence_template():
         state,
         intent_pipeline=pipeline,
     )
-    assert pipeline.calls == 0
+    assert pipeline.calls == 1
+    assert state.router_routes[1] == "deterministic"
+    assert state.normalized_messages[1].startswith("I'm looking for Shirts")
     assert "100% Cotton" in state.disclosed
+
+
+def test_deterministic_route_ignores_model_operations_and_trusts_template_parser():
+    class RouterLLM(StubLLM):
+        def restore_template(self, message, state):
+            self.interpret_calls += 1
+            return {
+                "route": "deterministic",
+                "normalized_text": message,
+                "kind": "buying",
+                "category": "Shirts",
+                "operations": [operation("add", "color", "blue", "Cotton")],
+            }
+
+    llm = RouterLLM([])
+    state = SessionState(turn=1)
+    parse(
+        "I'm looking for Shirts. A key requirement is: 100% Cotton.",
+        state,
+        intent_pipeline=IntentPipeline(StubIndex(), llm),
+    )
+    assert llm.interpret_calls == 1
+    assert state.slots == {"material": ["cotton"]}
+    assert all(item.attribute != "color" for item in state.constraints)
+
+
+def test_hybrid_route_reuses_the_same_router_response():
+    class HybridIndex(StubIndex):
+        def is_trusted_alias(self, attribute, evidence, value):
+            return (attribute, evidence.lower(), value.lower()) == (
+                "material", "cotten", "cotton"
+            )
+
+    class RestoreLLM(StubLLM):
+        def restore_template(self, message, state):
+            self.interpret_calls += 1
+            return {
+                "route": "hybrid",
+                "normalized_text": "I need shoes made of cotton.",
+                "kind": "buying",
+                "category": "kicks",
+                "operations": [operation("add", "material", "cotton", "cotten")],
+            }
+
+    class Categories:
+        def resolve_candidates(self, phrase):
+            return [("Shoes Fashion Sneakers", 1.0)]
+
+        def resolve_phrase(self, phrase):
+            return "Shoes Fashion Sneakers"
+
+    llm = RestoreLLM([])
+    state = SessionState(turn=1)
+    parse(
+        "need kicks made of cotten",
+        state,
+        intent_pipeline=IntentPipeline(HybridIndex(), llm, Categories()),
+    )
+    assert llm.interpret_calls == 1
+    assert state.router_routes[1] == "hybrid"
+    assert state.normalized_messages[1] == "I need shoes made of cotton"
+    assert state.slots["material"] == ["cotton"]
 
 
 def test_paraphrased_opener_is_restored_to_verified_fixed_template():

@@ -1,9 +1,9 @@
-"""Spec 3.4 — utterance → SessionState, in three tiers.
+"""Spec 3.4 — utterance → SessionState through an always-on route decision.
 
-1. template  — the simulator's four literal templates. Exact, free, recovers the verbatim
-               constraint string that the exact-phrase matcher needs.
-2. ontology  — attribute/value extraction from arbitrary prose. Survives rewording.
-3. llm       — escalation only, when 1 and 2 recovered nothing from a non-empty message.
+1. router    — one LLM response chooses deterministic or hybrid and supplies a lossless normalized
+               view plus typed operations when hybrid interpretation is needed.
+2. template  — the simulator's literal templates. Exact and authoritative after a deterministic route.
+3. hybrid    — catalog-verified typed operations; ontology parsing remains the failure fallback.
 
 Shared by all three roads (IDEA.md §0.4), so every road sees identical input.
 """
@@ -140,17 +140,29 @@ def parse(
         if not message:
             return state
         state.history.append(message)
-        handled, added = _template_tier(message, state, erase)
-        state.template_hits += int(handled)
-        if not handled:
-            if intent_pipeline is not None:
-                restored_before = state.llm_restoration_hits
-                added = intent_pipeline.process(message, state, erase=erase)
-                if state.llm_restoration_hits == restored_before:
+        decision = None
+        if intent_pipeline is not None and hasattr(intent_pipeline, "decide"):
+            decision = intent_pipeline.decide(message, state)
+            state.normalized_messages[state.turn] = decision.normalized_text
+            state.router_routes[state.turn] = decision.route
+
+        if decision is not None and decision.route == "hybrid":
+            restored_before = state.llm_restoration_hits
+            added = intent_pipeline.process_decision(message, state, decision, erase=erase)
+            if state.llm_restoration_hits == restored_before:
+                # A malformed/abstaining model response must not forfeit deterministic parsing.
+                added += _ontology_tier(decision.normalized_text or message, state)
+                if decision.normalized_text != message:
                     added += _ontology_tier(message, state)
-            else:
+        else:
+            handled, added = _template_tier(message, state, erase)
+            state.template_hits += int(handled)
+            if not handled:
                 added = _ontology_tier(message, state)
-                if llm is not None:
+                if intent_pipeline is not None and decision is None:
+                    # Backward compatibility for older pipeline test doubles.
+                    added += intent_pipeline.process(message, state, erase=erase)
+                elif llm is not None:
                     for _attribute, value, _text in llm.extract(message) or []:
                         # feed the short extracted phrase back through the normal cascade rather than
                         # trusting the model's attribute label: the catalog's vocabulary decides.

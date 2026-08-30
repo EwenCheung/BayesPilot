@@ -10,9 +10,9 @@ from src.r3.flags import Flags
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_competition_default_does_not_depend_on_llm_availability() -> None:
+def test_single_submitted_agent_has_no_llm_feature_toggle() -> None:
     assert not hasattr(Flags(), "llm_attribute")
-    assert Flags().llm_extract is False
+    assert not hasattr(Flags(), "llm_extract")
 
 
 def test_shared_harness_defaults_to_train_not_public() -> None:

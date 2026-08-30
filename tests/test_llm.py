@@ -145,6 +145,9 @@ def test_model_ids_are_pinned_not_aliases(tmp_path):
 
 def test_restoration_prompt_requires_context_typos_and_ambiguity_groups():
     lowered = INTENT_SYSTEM.lower()
+    assert '"route":"deterministic|hybrid"' in lowered
+    assert '"normalized_text"' in lowered
+    assert "always choose one route" in lowered
     assert "entire current state" in lowered
     assert "misspellings" in lowered
     assert "slang" in lowered

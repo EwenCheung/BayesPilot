@@ -11,8 +11,9 @@ Effective 2026-08-30, all new R3 fitting follows this protocol:
    only with the explicit `--acknowledge-golden-final` flag.
 5. Train, validation and test are disjoint by both sample ID and target ASIN. Dataset hashes are
    recorded in the split manifest and the locked configuration.
-6. LLM interpretation is opt-in and disabled in the locked competition configuration. LLM attribute
-   selection is removed from R3.
+6. At the historical locked evaluation, LLM interpretation was disabled. The post-checkpoint
+   always-on-router experiment changes runtime architecture only and must earn selection on validation
+   before any new final holdout evaluation. LLM attribute selection remains removed from R3.
 
 The scenario distribution is exactly preserved in every split:
 
@@ -33,8 +34,8 @@ on validation, versus `0.920248` and `0.923199` for the legacy `0.18` value. The
 ## Locked final results
 
 At configuration lock, after 129 passing tests, the final evaluator ran test first and public second.
-The current regression suite contains 150 passing tests; the holdouts were not rerun for the later
-opt-in paraphrase-interpreter work:
+The current regression suite contains 153 passing tests; the holdouts were not rerun for the later
+intent-router work:
 
 | split | rows | Hit@10 | MRR | MTTC | TechnicalScore | 95% CI |
 |---|---:|---:|---:|---:|---:|---:|
@@ -43,6 +44,11 @@ opt-in paraphrase-interpreter work:
 
 Both runs used zero LLM tokens. The locked test score improved by `0.003929` over the legacy
 `prior_weight=0.18` test result (`0.930050`); the public score was exactly unchanged.
+
+At the user's explicit request, the current always-on-router working tree was run again through this
+locked offline evaluator. It reproduced test `0.933979` and public `0.973075` with zero tokens and was
+written to `runs/r3_current_router_fallback_final.json`. This validates failure fallback, not live LLM
+routing, and the repeated holdout results are not eligible for further tuning.
 
 Historical limitation: the public 200 was used during earlier development, so it cannot be made
 statistically pristine retroactively. It is frozen as a golden regression set from this protocol

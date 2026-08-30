@@ -74,7 +74,7 @@ class TestOfflineIsEnforced(unittest.TestCase):
     headline number is measured under `R3_OFFLINE=1`; this is what makes that reproducible.
     """
 
-    def test_r3_offline_disables_the_llm_entirely(self) -> None:
+    def test_r3_offline_keeps_the_router_shape_but_never_calls_or_reads_cache(self) -> None:
         import os
 
         from src.eval import race
@@ -83,7 +83,17 @@ class TestOfflineIsEnforced(unittest.TestCase):
         os.environ["R3_OFFLINE"] = "1"
         try:
             agent = race.ROADS["r3"]()
-            self.assertIsNone(agent.llm, "R3_OFFLINE=1 must disable the LLM tier and its disk cache")
+            self.assertIsNotNone(agent.llm, "one submitted agent always owns the routing layer")
+            agent.reset("offline-router", {})
+            agent.respond(
+                "offline-router",
+                "I'm looking for Belts, but I'm still exploring.",
+                1,
+                10,
+            )
+            report = agent.llm.report()
+            self.assertEqual(report["calls"], 0)
+            self.assertEqual(report["cache_hits"], 0)
         finally:
             if previous is None:
                 os.environ.pop("R3_OFFLINE", None)

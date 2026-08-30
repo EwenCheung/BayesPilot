@@ -8,7 +8,6 @@ it that way, and the README, the API contract and submission_rules all omit `__i
 """
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 from src.common.contracts import SessionState
@@ -40,19 +39,17 @@ class Agent:
         self.categories = CategoryBelief(catalog_path)
         self.flags = Flags.from_env()
         self.sessions: dict[str, SessionState] = {}
-        # ⚠️ R3_OFFLINE=1 disables the tier AND its disk cache. Without this, a warm .cache/llm makes
-        # the default path score 0.8926 at L3 with zero network calls — which looks exactly like the
-        # offline number (0.8297) unless you count cache hits. Every headline figure in
-        # docs/R3-RESULTS.md §1 is measured with the tier explicitly off.
+        # One submitted agent always owns the router. R3_OFFLINE remains an evaluation/failure
+        # safeguard inside LLMClient, not a selectable agent feature; production attempts one routing
+        # call per message and deterministically falls back when the endpoint cannot answer.
         self.llm = None
-        if self.flags.llm_extract and os.environ.get("R3_OFFLINE") != "1":
-            try:
-                from src.common.llm import LLMClient
-                self.llm = LLMClient()
-            except Exception:
-                self.llm = None
+        try:
+            from src.common.llm import LLMClient
+            self.llm = LLMClient()
+        except Exception:
+            self.llm = None
         self.intent_pipeline = None
-        if self.flags.llm_extract and self.llm is not None:
+        if self.llm is not None:
             from src.common.intent import IntentPipeline
             self.intent_pipeline = IntentPipeline(self.index, self.llm, self.categories)
         self._prompt = 0
@@ -89,9 +86,7 @@ class Agent:
         self.sessions[session_id] = SessionState(profile=user_profile or {})
 
     def _ensure_intent_pipeline(self) -> None:
-        """Flags may be enabled by an experiment runner after construction."""
-        if not self.flags.llm_extract or os.environ.get("R3_OFFLINE") == "1":
-            return
+        """Keep the single submitted router available; failure falls back inside the parser."""
         if self.llm is None:
             try:
                 from src.common.llm import LLMClient
@@ -141,7 +136,7 @@ class Agent:
             user_message,
             state,
             erase=self.flags.erase,
-            intent_pipeline=self.intent_pipeline if self.flags.llm_extract else None,
+            intent_pipeline=self.intent_pipeline,
         )
         # Pillar III, concretely: "is this conversation still teaching me anything?" A turn that
         # revealed nothing new means the belief will not improve by waiting, and the policy below

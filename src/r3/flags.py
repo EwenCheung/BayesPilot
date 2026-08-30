@@ -26,7 +26,6 @@ class Flags:
     belief_pool: bool = True   # level-1 posterior chooses the pool (else: argmax category, R1-style)
     infogain: bool = False     # ⚠️ OFF: measured worse at every stress level — see D18
     critical_questions: bool = False  # opt-in real-UX mode; specific asks score worse in the simulator
-    llm_extract: bool = False  # optional fallback extraction; off when LLM only selects attributes
     temperature: float = 2.0
     tau_mass: float = 0.9
     v_continue: float = 0.9   # expected reciprocal rank if the session continues (fitted)

@@ -101,6 +101,22 @@ experiment.
 The complete flow and the retained/changed/removed components are documented in
 [FINAL-ARCHITECTURE.md](FINAL-ARCHITECTURE.md).
 
+## Always-on one-call router experiment
+
+Checkpoint `c816bfd` freezes the ambiguity-safe gated interpreter and all results above. The current
+working experiment removes the R3 LLM feature toggle: every customer message attempts one model call
+that returns `route=deterministic|hybrid`, lossless normalized text, message kind, category surface,
+and typed operations. A deterministic route ignores proposed operations and runs the fixed parser. A
+hybrid route reuses the same response for catalog verification and the atomic state transaction.
+
+The first 8-session clean validation execution after this change reported `0.938750`, but all 25
+router attempts failed because `SOCLAAS_BASE_URL` and `SOCLAAS_API_KEY` were absent. The score therefore
+measures deterministic failure fallback, **not** the always-on LLM design, and is not eligible for
+architecture selection. A valid online clean/paraphrase comparison remains pending. Test and public
+were subsequently evaluated only at the user's explicit request with the locked offline evaluator:
+test reproduced `0.933979` and public reproduced `0.973075`, both with zero tokens. Those holdout
+numbers validate deterministic fallback only and must not be used to tune the router.
+
 ## Augmentation verdict
 
 Do not downsample to equal scenario counts. Train, validation, and test intentionally share the same

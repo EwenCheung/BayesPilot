@@ -30,8 +30,9 @@ CHAT_MODEL = "qwen3.6:35b"     # 0.86 s/call, +0.191 rerank MRR (IMPORTANT.md §
 EMBED_MODEL = "bge-m3"         # 1024-d, ~$0.10 for the catalog
 PRICE_PER_MTOK = 0.0           # free on this endpoint; disclosure requires we say so explicitly
 
-INTENT_SYSTEM = """Restore a paraphrased simulator message to its fixed-template meaning. Return JSON only:
-{"kind":"buying|browsing|override_open|reply|override|no_preference|null_ask|unknown",
+INTENT_SYSTEM = """Route and interpret one shopping message. Return JSON only:
+{"route":"deterministic|hybrid","normalized_text":"lossless clear rewrite",
+"kind":"buying|browsing|override_open|reply|override|no_preference|null_ask|unknown",
 "category":"exact category phrase from the message or null","attribute":"requested field or null",
 "operations":[{"op":"add|remove|replace|confirm|no_preference",
 "attribute":"material|color|size|style|brand|budget|feature|use_case",
@@ -40,23 +41,30 @@ INTENT_SYSTEM = """Restore a paraphrased simulator message to its fixed-template
 "group":"shared ambiguity id or null"}]}
 
 Rules:
-1. Classify the message by meaning, not its wording. Use unknown when no fixed-template meaning fits.
-2. Read the entire current state and message together. Resolve pronouns and corrections against prior turns.
-3. Understand common misspellings, slang and abbreviations (tee/t-shirt, kicks/shoes, cotten/cotton,
+1. Always choose one route. Choose deterministic only when the message already follows one of the fixed
+   simulator templates exactly and needs no spelling, slang, abbreviation, negation, or context repair.
+   Choose hybrid for every paraphrase, free-form sentence, typo, slang term, abbreviation, correction,
+   implicit reference, or uncertain meaning.
+2. normalized_text must preserve every category, constraint, negation, correction, uncertainty and number.
+   Fix spelling/slang and make the meaning explicit, but never add information. For deterministic route,
+   copy the original message exactly.
+3. Classify the message by meaning, not its wording. Use unknown when no fixed-template meaning fits.
+4. Read the entire current state and message together. Resolve pronouns and corrections against prior turns.
+5. Understand common misspellings, slang and abbreviations (tee/t-shirt, kicks/shoes, cotten/cotton,
    polyster/polyester, XL/extra large), but never pretend an ambiguous abbreviation is certain.
-4. Category must be copied from an exact phrase present in this message; never infer a longer taxonomy leaf.
+6. Category must be copied from an exact phrase present in this message; never infer a longer taxonomy leaf.
    Category means the product type, never the requirement text. In "I want tees. Requirement: poly",
    category is "tees", while "poly" is an ambiguous constraint.
-5. For an ambiguous span, emit 2-4 plausible operations with the same non-null group id and calibrated
+7. For an ambiguous span, emit 2-4 plausible operations with the same non-null group id and calibrated
    confidences. Example: "poly" may mean polyester material, polyurethane, polycarbonate, or another
    polymer feature depending on context. Do not choose one merely because it is common.
-6. Preserve negation. "not dressy" is add style=dressy polarity=avoid.
-7. Explicit cancellation such as "forget blue" is remove color=blue.
-8. A correction such as "actually size XL, not L" replaces the previous size.
-9. Extract every explicit usable fact. "My dad wears XL" includes size=XL even if recipient is vague.
-10. Do not invent specificity: "from abroad" does not mean Europe.
-11. Evidence must be an exact phrase present in the message. Use no operation when unsupported.
-12. If the current state already captures the message correctly, return confirm for that value rather
+8. Preserve negation. "not dressy" is add style=dressy polarity=avoid.
+9. Explicit cancellation such as "forget blue" is remove color=blue.
+10. A correction such as "actually size XL, not L" replaces the previous size.
+11. Extract every explicit usable fact. "My dad wears XL" includes size=XL even if recipient is vague.
+12. Do not invent specificity: "from abroad" does not mean Europe.
+13. Evidence must be an exact phrase present in the original message. Use no operation when unsupported.
+14. If the current state already captures the message correctly, return confirm for that value rather
    than adding or replacing it again.
 """
 CANONICAL_SYSTEM = """Resolve a shopper phrase to one real catalog label. Return JSON only:
@@ -132,7 +140,9 @@ class LLMClient:
         self.embed_model = embed_model
         self.cache_dir = Path(cache_dir) if cache_dir else CACHE_DIR
         self.cache_dir.mkdir(parents=True, exist_ok=True)
-        self.offline = os.environ.get("R1_OFFLINE") == "1" if offline is None else offline
+        self.offline = (
+            os.environ.get("R1_OFFLINE") == "1" or os.environ.get(OFFLINE_ENV) == "1"
+        ) if offline is None else offline
         self.transport = transport
         self.retries = retries
         # R1_LLM_NOCACHE=1 forces real calls, so the disclosed latency and token figures are
@@ -265,6 +275,9 @@ class LLMClient:
             return {}
         rows = payload.get("operations") or []
         payload["operations"] = [row for row in rows if isinstance(row, dict)] if isinstance(rows, list) else []
+        route = str(payload.get("route") or "").strip().lower()
+        payload["route"] = route if route in {"deterministic", "hybrid"} else ""
+        payload["normalized_text"] = str(payload.get("normalized_text") or "").strip()[:1500]
         return payload
 
     def interpret_operations(self, message: str, state: dict) -> list[dict]:

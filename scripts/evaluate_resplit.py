@@ -3,11 +3,11 @@
 Examples:
 
     python3 scripts/evaluate_resplit.py --mode offline --splits train,validation
-    python3 scripts/evaluate_resplit.py --mode template-llm --splits validation --stress 3 --sample-per-scenario 5
+    python3 scripts/evaluate_resplit.py --mode always-router --splits validation --stress 3 --sample-per-scenario 5
 
-For template-LLM mode, export the endpoint credentials before running. The legacy ``full-llm`` name
-is retained as an alias. The script never loads or prints
-secrets itself.
+For always-router mode, export the endpoint credentials before running. The legacy ``template-llm``
+and ``full-llm`` names are retained as aliases. ``offline`` is an evaluation ablation, not a second
+submitted agent. The script never loads or prints secrets itself.
 """
 from __future__ import annotations
 
@@ -53,8 +53,8 @@ def _sample(rows: list[dict], per_scenario: int, seed: int) -> list[dict]:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--mode", choices=("offline", "template-llm", "full-llm"), required=True,
-        help="template-llm calls the LLM only when fixed evaluator grammar does not match",
+        "--mode", choices=("offline", "always-router", "template-llm", "full-llm"), required=True,
+        help="online modes run the one-call router on every message; offline is an ablation",
     )
     parser.add_argument("--splits", default="validation")
     parser.add_argument("--sample-per-scenario", type=int, default=0)
@@ -84,7 +84,6 @@ def main() -> None:
     for name in requested:
         rows = _sample(load_jsonl(SPLIT_DIR / f"{name}.jsonl"), args.sample_per_scenario, args.seed)
         agent = Agent(CATALOG)
-        agent.flags.llm_extract = args.mode != "offline"
         subject = StressedAgent(agent, ParaphraseRewriter(args.stress)) if args.stress else agent
         started = time.time()
         result = evaluate(subject, rows, catalog_ids, categories, products)
