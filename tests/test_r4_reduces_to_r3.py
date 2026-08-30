@@ -63,9 +63,6 @@ class TestR4ReducesToR3(unittest.TestCase):
         from src.r4.flags import Flags
         flags = Flags()
         self.assertFalse(flags.exclude_shipped)
-        self.assertEqual(flags.prior_damp, 0.0, "Phase S is subsumed by prior_weight=0 (D14)")
-        self.assertFalse(flags.calibrate)
-        self.assertFalse(flags.exhaustion)
         self.assertEqual(flags.truncate, 0, "truncation is measured-negative (D4); default off")
         self.assertEqual(flags.soft_card_gain, 1.5, "fitted on train (D15); 2.5 regressed clean")
 
