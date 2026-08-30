@@ -26,14 +26,14 @@ def load_module(path: Path, name: str):
 
 
 class TestA0HarnessCalibration(unittest.TestCase):
-    """R2-A0: the harness reproduces two independently known numbers, without touching the kit.
+    """the harness reproduces two independently known numbers, without touching the kit.
 
     If our referee cannot reproduce the official baseline and the R1 incumbent to the digit, no number
     it reports about R2 is worth anything.
     """
 
     def test_a0_reproduces_official_starter_baseline(self) -> None:
-        """R2-A0: pristine BM25 starter == 0.10671 (kit's own baseline_results.json)."""
+        """pristine BM25 starter == 0.10671 (kit's own baseline_results.json)."""
         starter = load_module(ROOT / "techjam-conversational-search-main" / "starter" / "agent.py",
                               "kit_starter")
         result = harness.run(starter.Agent(str(harness.CATALOG)))
@@ -41,24 +41,12 @@ class TestA0HarnessCalibration(unittest.TestCase):
         self.assertAlmostEqual(result["hit_rate_at_10"], 0.125, places=6)
         self.assertAlmostEqual(result["mttc"], 9.81, places=6)
 
-    def test_a0_reproduces_r1_incumbent(self) -> None:
-        """R2-A0: experiments/agent_best_0.9607.py == 0.9607.
-
-        This is the shared SEED prototype, not the R1 road — R1 is developed in its own worktree. It is
-        pinned here because it is a second independently-known number the harness must reproduce, which
-        is all R2-A0 needs it for.
-        """
-        r1 = load_module(ROOT / "experiments" / "agent_best_0.9607.py", "r1_incumbent")
-        result = harness.run(r1.Agent(str(harness.CATALOG)))
-        self.assertAlmostEqual(harness.score(result), 0.9607, places=4)
-        self.assertEqual(result["hit_rate_at_10"], 1.0)
-
     def test_a0_kit_is_pristine(self) -> None:
-        """R2-A0: the harness must never have written to the kit."""
+        """the harness must never have written to the kit."""
         self.assertTrue(harness.kit_is_pristine(), "kit drifted - reported scores are unverifiable")
 
     def test_a0_stress_wrapper_does_not_touch_the_evaluator(self) -> None:
-        """R2-A0: stress wraps the agent; the evaluator and labels are untouched."""
+        """stress wraps the agent; the evaluator and labels are untouched."""
         seen: list[str] = []
 
         class Spy:

@@ -19,11 +19,11 @@ sys.path.insert(0, str(ROOT / "techjam-conversational-search-main"))
 from evaluator.local_evaluator import evaluate  # noqa: E402
 
 from src.eval import harness, stress  # noqa: E402
-from src.r5.agent import Agent  # noqa: E402
+from src.copilot.agent import Agent  # noqa: E402
 
 LIMIT = 3000   # stress over all 12,000 is ~7 min per cell; 3,000 is the same set fit_r4 used
 
-harness.DATASET = ROOT / "train.jsonl"
+harness.DATASET = ROOT / "data" / "train.jsonl"
 SAMPLES, CID, CATS, PRODS = harness.load_world()
 SAMPLES = SAMPLES[:LIMIT]
 

@@ -23,8 +23,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 
-TRAIN = ROOT / "train.jsonl"
-DEV = ROOT / "dev.jsonl"
+TRAIN = ROOT / "data" / "train.jsonl"
+DEV = ROOT / "data" / "dev.jsonl"
 PUBLIC = ROOT / "techjam-conversational-search-main" / "data" / "public_set.jsonl"
 
 #: Names that may not appear in fitting code. `tests/test_datasets.py` enforces it.

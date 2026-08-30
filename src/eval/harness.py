@@ -28,7 +28,7 @@ if str(KIT) not in sys.path:
 
 from evaluator.local_evaluator import catalog_index, evaluate, load_jsonl  # noqa: E402
 
-CATALOG = ROOT / "assets" / "catalog.jsonl"
+CATALOG = ROOT / "data" / "catalog.jsonl"
 DATASET = KIT / "data" / "public_set.jsonl"
 REGISTRY = ROOT / "runs" / "registry.jsonl"
 
@@ -113,13 +113,38 @@ def bootstrap_ci(result: dict, resamples: int = 1000, seed: int = 0) -> tuple[fl
     return round(scores[int(0.025 * resamples)], 4), round(scores[int(0.975 * resamples)], 4)
 
 
+# The files a score actually depends on. Hashed, not `git status`-checked: a kit that was modified
+# AND committed passes a status check and still invalidates every number ever measured against it.
+KIT = ROOT / "techjam-conversational-search-main"
+MANIFEST = ROOT / "src" / "eval" / "kit_manifest.json"
+GUARDED = ("evaluator/local_evaluator.py", "data/public_set.jsonl", "starter/agent.py",
+           "docs/evaluation_config.json", "docs/agent_api_contract.json")
+
+
+def manifest() -> dict:
+    import hashlib
+    return {name: hashlib.sha256((KIT / name).read_bytes()).hexdigest() for name in GUARDED}
+
+
+def ensure_manifest() -> None:
+    if not MANIFEST.exists():
+        MANIFEST.write_text(json.dumps(manifest(), indent=2))
+
+
+def verify_kit() -> None:
+    """Raise rather than record a run against a drifted kit."""
+    expected = json.loads(MANIFEST.read_text())
+    actual = manifest()
+    drift = {n: (expected[n], actual[n]) for n in expected if expected[n] != actual[n]}
+    if drift:
+        raise SystemExit(f"kit drifted from pristine, refusing to record a run: {drift}")
+
+
 def kit_is_pristine() -> bool:
     """A reported score is worthless if the kit drifted. Checked before every registry row."""
-    out = subprocess.run(
-        ["git", "status", "--porcelain", "techjam-conversational-search-main"],
-        cwd=ROOT, capture_output=True, text=True,
-    )
-    return out.stdout.strip() == ""
+    if not MANIFEST.exists():
+        return False
+    return json.loads(MANIFEST.read_text()) == manifest()
 
 
 def git_sha() -> str:

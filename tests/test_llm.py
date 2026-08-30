@@ -3,7 +3,7 @@ import json
 
 import pytest
 
-from src.common.llm import LLMClient
+from src.understand.llm import LLMClient
 
 
 class FakeTransport:

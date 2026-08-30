@@ -12,7 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from src.r4.instrument import Recorder, SessionTrace, TurnTrace, early_hit_curve, shipped_curve  # noqa: E402
+from src.eval.instrument import Recorder, SessionTrace, TurnTrace, early_hit_curve, shipped_curve  # noqa: E402
 
 
 def _trace(turn, internal, shipped):

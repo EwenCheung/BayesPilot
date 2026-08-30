@@ -7,7 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from src.eval import harness, race                    # noqa: E402
+from src.eval import harness, measure                    # noqa: E402
 from src.eval.stress import ParaphraseRewriter        # noqa: E402
 
 if __name__ == "__main__":
@@ -15,7 +15,7 @@ if __name__ == "__main__":
           f"{'calls':>6s} {'fails':>6s}")
     for level in (0, 2, 3):
         for on in (False, True):
-            agent = race.ROADS["r3"]()
+            agent = measure.build()
             agent.flags.llm_extract = on
             if not on:
                 agent.llm = None

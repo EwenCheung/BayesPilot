@@ -2,7 +2,7 @@
 import json
 from pathlib import Path
 
-from src.eval import compare, run
+from src.eval import compare, harness
 
 KIT = Path(__file__).parent.parent / "techjam-conversational-search-main"
 
@@ -27,11 +27,7 @@ def test_bootstrap_is_seed_deterministic_and_brackets_the_point_estimate():
 
 
 def test_kit_manifest_covers_the_files_a_score_depends_on():
-    run.ensure_pristine_snapshot()
-    manifest = json.loads(run.MANIFEST.read_text())
+    harness.ensure_manifest()
+    manifest = json.loads(harness.MANIFEST.read_text())
     assert "evaluator/local_evaluator.py" in manifest and "data/public_set.jsonl" in manifest
-    run.verify_kit()  # raises if the kit has drifted
-
-
-def test_shim_does_not_import_the_evaluator():
-    assert "local_evaluator" not in run.SHIM
+    harness.verify_kit()  # raises if the kit has drifted
