@@ -1,0 +1,91 @@
+{
+  "evaluator_sha256": "79a5ea06f9a1b8c5036f30efa85dc1f36b8f6b06eb8feb8f545dfa767bc45564",
+  "policy": "source-split-preserving; test sealed; every agent-visible turn rewritten",
+  "seed": 20260830,
+  "splits": {
+    "test": {
+      "official_grammar_matches": 0,
+      "path": "techjam-conversational-search-main/data/freeform_v1/test.jsonl",
+      "rows": 800,
+      "scenario_counts": {
+        "boundary": 40,
+        "browsing": 320,
+        "buying": 320,
+        "intent_override": 120
+      },
+      "sha256": "a60dfaccb562a4b65ddd635f23d1619d142dc2616008a449d2c46c5b812996b7",
+      "source_path": "techjam-conversational-search-main/data/resplit_60_20_20/test.jsonl",
+      "source_sha256": "f31bbb197ac01e701d6da36eb5fa66ecd4ee7365cf27535b9f14d62ff655212b",
+      "style_counts": {
+        "chatty_slang": 98,
+        "emoji_casual": 104,
+        "fragmented": 94,
+        "lowercase_typo": 101,
+        "polite_ramble": 99,
+        "punctuation_light": 111,
+        "self_correcting": 89,
+        "terse_shorthand": 104
+      },
+      "unique_coarse_categories": 298,
+      "unique_targets": 800
+    },
+    "train": {
+      "official_grammar_matches": 0,
+      "path": "techjam-conversational-search-main/data/freeform_v1/train.jsonl",
+      "rows": 1200,
+      "scenario_counts": {
+        "boundary": 60,
+        "browsing": 480,
+        "buying": 480,
+        "intent_override": 180
+      },
+      "sha256": "9124ce7a80473a88e7739fb9999b67d480023662dfc02ed3263357e05e5a9335",
+      "source_path": "techjam-conversational-search-main/data/resplit_60_20_20/train.jsonl",
+      "source_sha256": "eceb461ec0f4d903fa2fd9f80cb23632166ed8b59827e1734ad95643b4776f4d",
+      "style_counts": {
+        "chatty_slang": 139,
+        "emoji_casual": 154,
+        "fragmented": 146,
+        "lowercase_typo": 142,
+        "polite_ramble": 147,
+        "punctuation_light": 150,
+        "self_correcting": 165,
+        "terse_shorthand": 157
+      },
+      "unique_coarse_categories": 348,
+      "unique_targets": 1200
+    },
+    "validation": {
+      "official_grammar_matches": 0,
+      "path": "techjam-conversational-search-main/data/freeform_v1/validation.jsonl",
+      "rows": 400,
+      "scenario_counts": {
+        "boundary": 20,
+        "browsing": 160,
+        "buying": 160,
+        "intent_override": 60
+      },
+      "sha256": "ca633b9fc091b41c146fbfa4fcbd8aabfd5418ab3cfa01137287ee2af70c3a7b",
+      "source_path": "techjam-conversational-search-main/data/resplit_60_20_20/validation.jsonl",
+      "source_sha256": "6153aa812695923b46bd10e7143039d3f57309c196c3e4d5700b3178b28076dc",
+      "style_counts": {
+        "chatty_slang": 49,
+        "emoji_casual": 55,
+        "fragmented": 54,
+        "lowercase_typo": 40,
+        "polite_ramble": 54,
+        "punctuation_light": 46,
+        "self_correcting": 47,
+        "terse_shorthand": 55
+      },
+      "unique_coarse_categories": 212,
+      "unique_targets": 400
+    }
+  },
+  "target_overlaps": {
+    "train:test": [],
+    "train:validation": [],
+    "validation:test": []
+  },
+  "version": "freeform-v1"
+}

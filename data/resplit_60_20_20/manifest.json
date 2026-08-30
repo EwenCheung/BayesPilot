@@ -1,0 +1,58 @@
+{
+  "ratios": {
+    "test": 0.2,
+    "train": 0.6,
+    "validation": 0.2
+  },
+  "seed": 20260830,
+  "source_rows": 14000,
+  "source_scenario_counts": {
+    "boundary": 700,
+    "browsing": 5600,
+    "buying": 5600,
+    "intent_override": 2100
+  },
+  "sources": {
+    "techjam-conversational-search-main/data/dev.jsonl": {
+      "sha256": "9a1da8610a2bffcefac369e4da8860f65fff7dd0fb2e4aaa2b0e71a4470477c2"
+    },
+    "techjam-conversational-search-main/data/train.jsonl": {
+      "sha256": "1fa9a9a40e36f72f786a228d30f189233f5bd293a0979e41dec9199fae3dd778"
+    }
+  },
+  "splits": {
+    "test": {
+      "path": "techjam-conversational-search-main/data/resplit_60_20_20/test.jsonl",
+      "rows": 2800,
+      "scenario_counts": {
+        "boundary": 140,
+        "browsing": 1120,
+        "buying": 1120,
+        "intent_override": 420
+      },
+      "sha256": "f31bbb197ac01e701d6da36eb5fa66ecd4ee7365cf27535b9f14d62ff655212b"
+    },
+    "train": {
+      "path": "techjam-conversational-search-main/data/resplit_60_20_20/train.jsonl",
+      "rows": 8400,
+      "scenario_counts": {
+        "boundary": 420,
+        "browsing": 3360,
+        "buying": 3360,
+        "intent_override": 1260
+      },
+      "sha256": "eceb461ec0f4d903fa2fd9f80cb23632166ed8b59827e1734ad95643b4776f4d"
+    },
+    "validation": {
+      "path": "techjam-conversational-search-main/data/resplit_60_20_20/validation.jsonl",
+      "rows": 2800,
+      "scenario_counts": {
+        "boundary": 140,
+        "browsing": 1120,
+        "buying": 1120,
+        "intent_override": 420
+      },
+      "sha256": "6153aa812695923b46bd10e7143039d3f57309c196c3e4d5700b3178b28076dc"
+    }
+  }
+}
