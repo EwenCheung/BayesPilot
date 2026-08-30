@@ -36,6 +36,15 @@ SHARED: dict[str, dict[str, object]] = {
     "infogain": {"r1": {"infogain": True}, "r2": (), "r3": {"infogain": True}},
 }
 
+# R4 is R3's posterior with a different stopping rule, and `src.r4.flags.Flags` subclasses R3's, so
+# every shared ablation means exactly what it means in R3. Derived rather than duplicated: a
+# hand-copied second table is a table that drifts, and M7 exists because the roads once disagreed
+# about what `no_spec_phrase` meant.
+for _spec in SHARED.values():
+    _spec.setdefault("r4", _spec["r3"])
+    # R5 subclasses R4's flags, so an ablation name means the same thing again. Derived, not copied.
+    _spec.setdefault("r5", _spec["r4"])
+
 
 def r1_flags(*names: str):
     """R1's Flags with the named shared ablations applied."""
@@ -68,3 +77,19 @@ def r2_ablations(*names: str) -> tuple[str, ...]:
         assert name in SHARED, f"unknown ablation {name!r}; have {sorted(SHARED)}"
         out.extend(SHARED[name]["r2"])
     return tuple(out)
+
+
+def r4_flags(*names: str):
+    """R4's Flags with the named shared ablations applied.
+
+    Separate from `r3_flags` only because it must construct `src.r4.flags.Flags` — the field names
+    and values are R3's, by the derivation above.
+    """
+    from src.r4.flags import Flags
+
+    flags = Flags.from_env()
+    for name in names:
+        assert name in SHARED, f"unknown ablation {name!r}; have {sorted(SHARED)}"
+        for field, value in SHARED[name]["r4"].items():
+            setattr(flags, field, value)
+    return flags
