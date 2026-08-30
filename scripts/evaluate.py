@@ -1,7 +1,11 @@
-"""The four-dataset table in `docs/R5-RESULTS.md` §1, one run.
+"""The four-dataset table in README.md and SUMMARY.md §5, one run.
 
-    R3_OFFLINE=1 PYTHONHASHSEED=0 python3 scripts/final_r5.py            # offline everywhere
-    PYTHONHASHSEED=0 python3 scripts/final_r5.py                         # freeform gets the LLM tier
+    COPILOT_OFFLINE=1 PYTHONHASHSEED=0 python3 scripts/evaluate.py       # offline everywhere
+    PYTHONHASHSEED=0 python3 scripts/evaluate.py                         # freeform gets the model tier
+
+⚠️ The agent is constructed with **defaults only**. A runner that hand-sets a flag the submission
+relies on measures a configuration the organizer will never construct — that was D2, and it cost this
+project every published number until it was fixed.
 
 ⚠️ Only `freeform_v1/test` uses the LLM, and only as the escalation tier `parse()` already gates —
 every other dataset is templated, reads deterministically, and never reaches it.
@@ -26,9 +30,8 @@ _, CID, CATS, PRODS = harness.load_world()
 
 
 
-def run(samples, wrap: bool, bm25: float = 0.0):
+def run(samples, wrap: bool):
     agent = Agent(str(harness.CATALOG))          # defaults only — this IS the submission (D2)
-    agent.flags.bm25_gain = bm25
     subject = freeform.FreeFormAgent(agent, samples) if wrap else agent
     t0 = time.time()
     result = evaluate(subject, samples, CID, CATS, PRODS)
@@ -44,18 +47,17 @@ def main() -> None:
         ("public_set.jsonl", harness.load_jsonl(ROOT / "data" / "public_set.jsonl"), False),
         ("dev.jsonl", harness.load_jsonl(ROOT / "data" / "dev.jsonl"), False),
     ):
-        for bm25 in (0.0,):
-            r, score, wall, calls = run(samples, wrap, bm25)
-            lo, hi = harness.bootstrap_ci(r)
-            rows.append({"dataset": label, "n": len(samples), "bm25_gain": bm25,
-                         "hit_rate_at_10": round(r["hit_rate_at_10"], 4),
-                         "mrr": round(r["mrr"], 4), "mttc": round(r["mttc"], 2),
-                         "technical_score": round(score, 4), "ci": [round(lo, 4), round(hi, 4)],
-                         "llm_calls": calls, "seconds": round(wall, 1)})
-            print(f"{label:<24} bm25={bm25:<4} n={len(samples):<5} "
-                  f"hit {r['hit_rate_at_10']:.4f}  mrr {r['mrr']:.4f}  mttc {r['mttc']:.2f}  "
-                  f"score {score:.4f}  CI ({lo:.4f}, {hi:.4f})  calls={calls}  {wall:.0f}s",
-                  flush=True)
+        r, score, wall, calls = run(samples, wrap)
+        lo, hi = harness.bootstrap_ci(r)
+        rows.append({"dataset": label, "n": len(samples),
+                     "hit_rate_at_10": round(r["hit_rate_at_10"], 4),
+                     "mrr": round(r["mrr"], 4), "mttc": round(r["mttc"], 2),
+                     "technical_score": round(score, 4), "ci": [round(lo, 4), round(hi, 4)],
+                     "llm_calls": calls, "seconds": round(wall, 1)})
+        print(f"{label:<24} n={len(samples):<5} "
+              f"hit {r['hit_rate_at_10']:.4f}  mrr {r['mrr']:.4f}  mttc {r['mttc']:.2f}  "
+              f"score {score:.4f}  CI ({lo:.4f}, {hi:.4f})  calls={calls}  {wall:.0f}s",
+              flush=True)
     (ROOT / "runs" / "final_r5.json").write_text(json.dumps(rows, indent=2))
     print("\n-> runs/final_r5.json")
 

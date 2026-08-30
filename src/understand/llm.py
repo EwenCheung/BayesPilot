@@ -20,7 +20,7 @@ from pathlib import Path
 # Set to "1" to force EVERY road offline, disk cache included. The harness sets it for all reported
 # runs. It lives here rather than in an agent because gating it per-agent let R1 and R2 keep reading a
 # warm .cache/llm while R3 was offline (D24).
-OFFLINE_ENV = "R3_OFFLINE"
+OFFLINE_ENV = "COPILOT_OFFLINE"
 
 # absolute: runs execute with cwd=<kit>, and a cache written in there would both contaminate the
 # kit we promise to keep pristine and be invisible to the next run
@@ -29,6 +29,60 @@ CACHE_DIR = Path(__file__).resolve().parents[2] / ".cache" / "llm"
 CHAT_MODEL = "qwen3.6:35b"     # 0.86 s/call, +0.191 rerank MRR (IMPORTANT.md §12.3)
 EMBED_MODEL = "bge-m3"         # 1024-d, ~$0.10 for the catalog
 PRICE_PER_MTOK = 0.0           # free on this endpoint; disclosure requires we say so explicitly
+
+INTENT_SYSTEM = """Route and interpret one shopping message. Return JSON only:
+{"route":"deterministic|hybrid","normalized_text":"lossless clear rewrite",
+"kind":"buying|browsing|override_open|reply|override|no_preference|null_ask|unknown",
+"category":"exact category phrase from the message or null","attribute":"requested field or null",
+"operations":[{"op":"add|remove|replace|confirm|no_preference",
+"attribute":"material|color|size|style|brand|budget|feature|use_case",
+"value":"short literal or normalized value","polarity":"require|avoid",
+"strength":"hard|soft","evidence":"exact supporting phrase","confidence":0.0,
+"group":"shared ambiguity id or null"}]}
+
+Rules:
+1. Always choose one route. Choose deterministic only when the message already follows one of the fixed
+   simulator templates exactly and needs no spelling, slang, abbreviation, negation, or context repair.
+   Choose hybrid for every paraphrase, free-form sentence, typo, slang term, abbreviation, correction,
+   implicit reference, or uncertain meaning.
+2. normalized_text must preserve every category, constraint, negation, correction, uncertainty and number.
+   Fix spelling/slang and make the meaning explicit, but never add information. For deterministic route,
+   copy the original message exactly.
+3. Classify the message by meaning, not its wording. Use unknown when no fixed-template meaning fits.
+4. Read the entire current state and message together. Resolve pronouns and corrections against prior turns.
+5. Understand common misspellings, slang and abbreviations (tee/t-shirt, kicks/shoes, cotten/cotton,
+   polyster/polyester, XL/extra large), but never pretend an ambiguous abbreviation is certain.
+6. Category must be copied from an exact phrase present in this message; never infer a longer taxonomy leaf.
+   Category means the product type, never the requirement text. In "I want tees. Requirement: poly",
+   category is "tees", while "poly" is an ambiguous constraint.
+7. For an ambiguous span, emit 2-4 plausible operations with the same non-null group id and calibrated
+   confidences. Example: "poly" may mean polyester material, polyurethane, polycarbonate, or another
+   polymer feature depending on context. Do not choose one merely because it is common.
+8. Preserve negation. "not dressy" is add style=dressy polarity=avoid.
+9. Explicit cancellation such as "forget blue" is remove color=blue.
+10. A correction such as "actually size XL, not L" replaces the previous size.
+11. Extract every explicit usable fact. "My dad wears XL" includes size=XL even if recipient is vague.
+12. Do not invent specificity: "from abroad" does not mean Europe.
+13. Evidence must be an exact phrase present in the original message. Use no operation when unsupported.
+14. If the current state already captures the message correctly, return confirm for that value rather
+   than adding or replacing it again.
+"""
+CANONICAL_SYSTEM = """Resolve a shopper phrase to one real catalog label. Return JSON only:
+{"choice":<1-based number or null>,"generated_query":"short query or null"}
+
+Choose a number only when the label is fully entailed by the phrase. Never add unsupported details
+(for example, "abroad" does not entail "Europe"). If no label fits, provide a short meaning-preserving
+query for a second retrieval pass. If even that would invent meaning, use null for both fields.
+Typos may be corrected when the intended word is clear from context. Short ambiguous fragments such
+as "poly" must abstain unless the surrounding message and state distinguish the meaning.
+"""
+RERANK_SYSTEM = (
+    "You rank products against a shopper's requirements. Reply with a JSON array of the candidate "
+    "numbers, best first, every number used exactly once. No prose."
+)
+
+# Domain importance is a tie-breaker. Candidate answer probability and information gain are stronger
+# signals: size matters enormously for shoes but often not at all for jewellery.
 
 EXTRACT_SYSTEM = (
     "You extract shopping constraints. Reply with JSON only: "
@@ -154,6 +208,40 @@ class LLMClient:
         return vectors
 
     # --- tasks -------------------------------------------------------------
+    def restore_template(self, message: str, state: dict) -> dict:
+        """Return an untrusted fixed-template classification plus typed operation proposals."""
+        if self.offline or os.environ.get(OFFLINE_ENV) == "1":
+            return {}
+        user = f"Current state: {json.dumps(state, sort_keys=True)[:2500]}\nMessage: {message[:1500]}"
+        content = self.chat(
+            [{"role": "system", "content": INTENT_SYSTEM}, {"role": "user", "content": user}],
+            max_tokens=700,
+        )
+        if not content:
+            return {}
+        match = re.search(r"\{.*\}", content, re.S)
+        if not match:
+            self.failures += 1
+            return {}
+        try:
+            payload = json.loads(match.group(0))
+        except Exception:
+            self.failures += 1
+            return {}
+        if not isinstance(payload, dict):
+            self.failures += 1
+            return {}
+        rows = payload.get("operations") or []
+        payload["operations"] = [row for row in rows if isinstance(row, dict)] if isinstance(rows, list) else []
+        route = str(payload.get("route") or "").strip().lower()
+        payload["route"] = route if route in {"deterministic", "hybrid"} else ""
+        payload["normalized_text"] = str(payload.get("normalized_text") or "").strip()[:1500]
+        return payload
+
+    def interpret_operations(self, message: str, state: dict) -> list[dict]:
+        """Backward-compatible operation-only view over template restoration."""
+        return list(self.restore_template(message, state).get("operations") or [])
+
     def extract(self, message: str) -> list[tuple[str, str, str]]:
         """Paraphrase insurance: read constraints out of prose no template will match."""
         # ⚠️ OFFLINE_ENV is checked HERE, not in an agent, so it holds for every road. Gating it

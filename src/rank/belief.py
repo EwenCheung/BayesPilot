@@ -17,6 +17,7 @@ import math
 
 from src.rank.likelihood import constraint_terms
 from src.rank.softcard import softcard_terms
+from src.state.session import Constraint
 
 
 class Belief:
@@ -46,11 +47,48 @@ class Belief:
                                                   self.candidates, flags).items():
                     self.log_p[asin] += weight * log_l
 
+        # --- ambiguity, as a mixture rather than a guess ----------------------------------------
+        # Ambiguous language contributes ONE probability mixture, never several independent exact
+        # constraints. If "poly" plausibly means polyester or polyurethane, an item matching either
+        # receives soft support while neither interpretation is promoted to fact. Adding each reading
+        # separately would let one uncertain span outvote three things the shopper confirmed.
+        for ambiguity in state.live_ambiguities():
+            alternatives = []
+            for option in ambiguity.alternatives:
+                hypothesis = Constraint(
+                    text=option.text,
+                    attribute=option.attribute,
+                    value=option.value,
+                    turn=ambiguity.turn,
+                    tier="llm-hypothesis",
+                    source_text=ambiguity.evidence,
+                    polarity=ambiguity.polarity,
+                    strength="soft",
+                    confidence=option.confidence,
+                )
+                terms = constraint_terms(self.index, hypothesis, self.candidates, flags)
+                if terms:
+                    alternatives.append((option.confidence, terms))
+            mass = sum(probability for probability, _ in alternatives)
+            if mass > 0:
+                weight = ambiguity.weight(state.turn)
+                for asin in self.candidates:
+                    mixture = sum(
+                        probability * math.exp(terms[asin])
+                        for probability, terms in alternatives
+                    ) / mass
+                    self.log_p[asin] += weight * math.log(max(1e-12, mixture))
+
         # BM25 reads the whole accumulated query at once rather than one constraint at a time:
         # term saturation and length normalisation are properties of a query, not of a phrase.
         if flags.bm25_gain > 0:
             from src.retrieve.bm25 import bm25_scores
-            query = " ".join([state.category or ""] + [c.text for c in state.live()]).strip()
+            query = " ".join(
+                [state.category or state.category_surface or ""]
+                + list(state.normalized_messages.values())
+                + [c.source_text or c.text for c in state.live()]
+                + [item.evidence for item in state.live_ambiguities()]
+            ).strip()
             if query:
                 for asin, strength in bm25_scores(self.index, query,
                                                   self.candidates, flags).items():

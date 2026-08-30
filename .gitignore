@@ -3,31 +3,19 @@ __pycache__/
 *.py[cod]
 .DS_Store
 CLAUDE.local.md
-results.json
+.cache/
+.venv/
 
-# Catalog: 60 MB, re-downloadable from the official release and verified by assets/SHA256SUMS.
-# Keeping it out avoids GitHub's >50 MB warning on the public submission repo.
-assets/catalog.jsonl
-assets/catalog.jsonl.gz
-# data/catalog.jsonl is byte-identical to the above (sha256 da979b05...). Same reason, same rule.
+# The catalog: 60 MB, re-downloadable from the official release.
+# sha256 da979b05a68af864cb0dcf9ee6a81c010c7e66a57978ad286c7a2e005fc69a67
+# Kept out of git to avoid GitHub's >50 MB warning on the public submission repo.
 data/catalog.jsonl
 
-# The run registry is the race's shared record and IS committed (IDEA.md §0.5, merge plan §4).
-# Raw per-run dumps are not. `runs/*` not `runs/` — git cannot un-ignore a file inside an
-# ignored DIRECTORY, only inside an ignored glob.
+# Run outputs. The registry and the split manifest ARE committed — they are the record every
+# held-out number depends on. Raw dumps and progress logs are not.
+# ⚠️ `runs/*` not `runs/`: git cannot un-ignore a file inside an ignored DIRECTORY, only inside an
+# ignored glob. holdout.json was silently ignored for a while precisely because of this.
 runs/*
 !runs/registry.jsonl
-# ⚠️ Split manifests are the lock on every held-out number ever reported, and holdout.py's docstring
-# already claimed they were committed while `runs/*` was silently ignoring them (R4 D5). The
-# content_hash guard only ever held because build() is seed-deterministic, not because the artefact
-# was under version control.
 !runs/holdout.json
-
-.cache/
-
-# Derived artifacts: regenerable via scripts/embed_all.py (~14 min, ~$0.10).
-# emb.npy alone is 98 MB and must never enter git history.
-artifacts/
-
-# BLaIR embeddings: 71 MB, rebuild with scripts/embed_blair.py (~5 min). Never in git.
-artifacts/
+!runs/final_r5.json

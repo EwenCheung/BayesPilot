@@ -89,6 +89,15 @@ class AlignedExtractor:
         self.failures = 0
         self.calls = 0
 
+    def __getattr__(self, item):
+        """Delegate anything we do not override — `restore_template`, `totals`, the counters.
+
+        `IntentPipeline.decide()` selects its path with `hasattr(llm, "restore_template")`, so a
+        wrapper that swallowed it would silently downgrade the router to the older extract-only
+        prompt and look exactly like a router that had nothing to say.
+        """
+        return getattr(self.client, item)
+
     def extract(self, message: str) -> list[tuple[str, str, str]]:
         if not message or not message.strip():
             return []

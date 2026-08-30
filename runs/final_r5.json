@@ -1,0 +1,58 @@
+[
+  {
+    "dataset": "freeform_v1/test",
+    "n": 800,
+    "hit_rate_at_10": 0.9725,
+    "mrr": 0.9596,
+    "mttc": 2.98,
+    "technical_score": 0.9345,
+    "ci": [
+      0.923,
+      0.9446
+    ],
+    "llm_calls": 0,
+    "seconds": 32.7
+  },
+  {
+    "dataset": "resplit_60_20_20/test",
+    "n": 2800,
+    "hit_rate_at_10": 0.9911,
+    "mrr": 0.9783,
+    "mttc": 2.64,
+    "technical_score": 0.9562,
+    "ci": [
+      0.9526,
+      0.9599
+    ],
+    "llm_calls": 0,
+    "seconds": 22.5
+  },
+  {
+    "dataset": "public_set.jsonl",
+    "n": 200,
+    "hit_rate_at_10": 1.0,
+    "mrr": 0.9942,
+    "mttc": 2.19,
+    "technical_score": 0.9744,
+    "ci": [
+      0.9692,
+      0.9789
+    ],
+    "llm_calls": 0,
+    "seconds": 3.9
+  },
+  {
+    "dataset": "dev.jsonl",
+    "n": 2000,
+    "hit_rate_at_10": 0.9865,
+    "mrr": 0.9721,
+    "mttc": 2.71,
+    "technical_score": 0.9506,
+    "ci": [
+      0.9449,
+      0.9554
+    ],
+    "llm_calls": 0,
+    "seconds": 18.1
+  }
+]

@@ -24,7 +24,26 @@ class Flags:
     exact_gain: float = 3.2     # log-odds an exact match is worth; the filter <-> blend dial (fitted)
     soft_card_gain: float = 1.5  # token-Jaccard against the item's OWN card strings (+0.062 L2, +0.073 L3)
     soft_card_floor: float = 0.34   # below this, overlap is noise (mirrors likelihood.TOKEN_FLOOR)
-    bm25_gain: float = 0.0      # Okapi BM25 over the lexical surface — OFF pending held-out confirmation
+    # Okapi BM25 over the lexical surface — BUILT, SWEPT, and SHIPPED OFF. The measurement is the
+    # contribution, so both halves are recorded here.
+    #
+    # On data/train.jsonl[:3000] it looks like the best thing available, mean over L0/L2/L3:
+    #   gain   0.0     2.0     3.0     4.0     6.0     8.0
+    #   mean  .8558   .8742   .8747   .8744   .8724   .8696      (+0.0189 at the interior optimum)
+    # All of that comes from L2/L3. The L0 row is flat: 0.9513 -> 0.9516.
+    #
+    # It does not hold out. On the clean discriminating sets it is monotonically NEGATIVE:
+    #   gain          0.0      0.5      1.0      2.0
+    #   dev  (2,000)  .9506    .9495    .9494    .9489
+    #   public (200)  .9744    .9700    .9700    .9697
+    #
+    # ⚠️ A +0.0003 L0 row on 3,000 sessions did not survive contact with 2,000 held-out ones. The
+    # private 800 are drawn from the same templated pipeline as the public 200, so clean text is the
+    # distribution that decides, and the pre-registered gate forbids trading it for stress.
+    # This is the third independent negative for a lexical route over this surface, and it holds
+    # even after understand/tokens.py repaired the tokenizer — so the earlier negatives were not an
+    # artefact of the damaged surface, which is what we suspected and can now rule out.
+    bm25_gain: float = 0.0
     bm25_k1: float = 1.5
     bm25_b: float = 0.75
 

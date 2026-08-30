@@ -11,7 +11,8 @@ overstated one side by ~0.09, because one switch disabled only the exact matcher
   no_soft_card    remove the paraphrase-tolerant twin of the exact term.
   no_lexical      remove generic token-overlap retrieval.
   no_exclude      re-ship items a live session has already proven wrong.
-  bm25            switch the Okapi BM25 evidence term on at its fitted gain.
+  bm25            switch the Okapi BM25 term ON at its train-fitted gain. It ships OFF —
+                  this reproduces the held-out loss that kept it off (see copilot/flags.py).
 """
 from __future__ import annotations
 
