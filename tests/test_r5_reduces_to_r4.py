@@ -40,9 +40,7 @@ class TestR5ReducesToR4(unittest.TestCase):
     def test_every_new_mechanism_defaults_off(self) -> None:
         from src.r5.flags import Flags
         flags = Flags()
-        self.assertFalse(flags.freetext_category, "measured to buy nothing (D16); default off")
-        self.assertFalse(flags.freetext_route, "measured slightly negative (D16); default off")
-        self.assertFalse(flags.llm_fallback)
+        self.assertEqual(flags.bm25_gain, 0.0, "R5's only mechanism defaults off (D24)")
 
     def test_r5_inherits_r4s_fitted_constants(self) -> None:
         from src.r4.flags import Flags as R4Flags

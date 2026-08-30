@@ -22,20 +22,14 @@ from src.eval import freeform, harness  # noqa: E402
 from src.r5.agent import Agent  # noqa: E402
 
 _, CID, CATS, PRODS = harness.load_world()
-FUZZY = {"fuzzy_cutoff": 0.80, "fuzzy_k": 3, "fuzzy_min_len": 4}   # scripts/fit_fuzzy.py
 
 
 
 
-def run(samples, wrap: bool, fuzzy: bool):
+def run(samples, wrap: bool, bm25: float = 0.0):
     agent = Agent(str(harness.CATALOG))
     agent.flags.exclude_shipped = True
-    agent.flags.fuzzy_expand = fuzzy
-    if fuzzy:
-        for k, v in FUZZY.items():
-            setattr(agent.flags, k, v)
-        from src.r5.fuzzy import FuzzyCanon
-        agent._fuzzy = FuzzyCanon(agent.categories.by_category.keys(), agent.index.lexical_text)
+    agent.flags.bm25_gain = bm25
     subject = freeform.FreeFormAgent(agent, samples) if wrap else agent
     t0 = time.time()
     result = evaluate(subject, samples, CID, CATS, PRODS)
@@ -51,15 +45,15 @@ def main() -> None:
         ("public_set.jsonl", harness.load_jsonl(ROOT / "data" / "public_set.jsonl"), False),
         ("dev.jsonl", harness.load_jsonl(ROOT / "dev.jsonl"), False),
     ):
-        for fuzzy in ((False, True) if wrap else (False,)):
-            r, score, wall, calls = run(samples, wrap, fuzzy)
+        for bm25 in (0.0,):
+            r, score, wall, calls = run(samples, wrap, bm25)
             lo, hi = harness.bootstrap_ci(r)
-            rows.append({"dataset": label, "n": len(samples), "fuzzy": fuzzy,
+            rows.append({"dataset": label, "n": len(samples), "bm25_gain": bm25,
                          "hit_rate_at_10": round(r["hit_rate_at_10"], 4),
                          "mrr": round(r["mrr"], 4), "mttc": round(r["mttc"], 2),
                          "technical_score": round(score, 4), "ci": [round(lo, 4), round(hi, 4)],
                          "llm_calls": calls, "seconds": round(wall, 1)})
-            print(f"{label:<24} fuzzy={str(fuzzy):<5} n={len(samples):<5} "
+            print(f"{label:<24} bm25={bm25:<4} n={len(samples):<5} "
                   f"hit {r['hit_rate_at_10']:.4f}  mrr {r['mrr']:.4f}  mttc {r['mttc']:.2f}  "
                   f"score {score:.4f}  CI ({lo:.4f}, {hi:.4f})  calls={calls}  {wall:.0f}s",
                   flush=True)
