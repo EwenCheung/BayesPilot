@@ -1,4 +1,9 @@
-"""R5 flags. Every new mechanism defaults OFF, so a default R5 is a default R4."""
+"""R5 flags — R4's, plus BM25. Every new mechanism defaults OFF, so a default R5 is a default R4.
+
+⚠️ `freetext_category`, `freetext_route`, `llm_fallback` and `fuzzy_expand` were removed after all four
+measured **exactly 0.0000** (D17, D21, D22). Their measurements survive in `03-decisions.md`; the code
+does not, because a default-off flag that can never be turned on is not an experiment, it is clutter.
+"""
 from __future__ import annotations
 
 import os
@@ -9,21 +14,11 @@ from src.r4.flags import Flags as R4Flags
 
 @dataclass
 class Flags(R4Flags):
-    # Recover `state.category` from a free-form opener by matching the catalog's coarse-category
-    # vocabulary. R4 parses it from 0% of free-form openers.
-    freetext_category: bool = False
-    category_floor: float = 0.34      # min share of the category name's tokens present in the opener
-    # Recover buying/browsing/override from speech-act cues. R4 assigns the "browsing" DEFAULT to
-    # 100% of free-form sessions, which also keeps exclude_shipped's guard permanently conservative.
-    freetext_route: bool = False
-    # Escalation: canonicalise with the LLM only when both deterministic recoveries fail.
-    llm_fallback: bool = False
-    # Fuzzy canonicalisation BEFORE the deterministic/LLM decision (D22). Fires only on messages
-    # `reads_deterministically` rejects, so the templated corpora are untouched by construction.
-    fuzzy_expand: bool = False
-    fuzzy_k: int = 3            # keep the top-k candidates; n=1 loses shirt/skirt to an alphabetical tie
-    fuzzy_cutoff: float = 0.80  # difflib SequenceMatcher ratio floor
-    fuzzy_min_len: int = 4      # shorter words match too much of the vocabulary to be safe
+    # BM25 as an evidence term (D24). The IDF lexical route over the SAME surface measured harmful
+    # (D23); this isolates what term saturation and length normalisation add on top.
+    bm25_gain: float = 0.0
+    bm25_k1: float = 1.5
+    bm25_b: float = 0.75
 
     @classmethod
     def from_env(cls) -> "Flags":
