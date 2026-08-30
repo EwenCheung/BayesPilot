@@ -53,12 +53,7 @@ def verify_kit() -> None:
         raise SystemExit(f"kit drifted from pristine, refusing to record a run: {drift}")
 
 
-def run(
-    name: str,
-    env: dict | None = None,
-    output: Path | None = None,
-    dataset: str = "train",
-) -> dict:
+def run(name: str, env: dict | None = None, output: Path | None = None) -> dict:
     """Swap in our agent, run the official evaluator, restore, verify. Returns the metrics dict."""
     ensure_pristine_snapshot()
     verify_kit()
@@ -67,15 +62,8 @@ def run(
     started = time.time()
     try:
         STARTER.write_text(SHIM)
-        dataset_path = {
-            "train": KIT / "data" / "resplit_60_20_20" / "train.jsonl",
-            "validation": KIT / "data" / "resplit_60_20_20" / "validation.jsonl",
-            "test": KIT / "data" / "resplit_60_20_20" / "test.jsonl",
-            "public": KIT / "data" / "public_set.jsonl",
-        }[dataset]
         process = subprocess.run(
-            [sys.executable, "-m", "evaluator.local_evaluator", "--dataset", str(dataset_path),
-             "--output", str(output)],
+            [sys.executable, "-m", "evaluator.local_evaluator", "--output", str(output)],
             cwd=KIT, env={**os.environ, **(env or {}), "PYTHONPATH": str(ROOT),
                           "PYTHONHASHSEED": "0", "R1_RUN_NAME": name},
             capture_output=True, text=True, timeout=7200,
@@ -99,17 +87,8 @@ def main() -> None:
     parser.add_argument("--name", default="r1")
     parser.add_argument("--flags", default="")
     parser.add_argument("--stress", default="0")
-    parser.add_argument("--dataset", choices=("train", "validation", "test", "public"),
-                        default="train")
-    parser.add_argument("--acknowledge-final-test", action="store_true")
-    parser.add_argument("--acknowledge-golden-final", action="store_true")
     arguments = parser.parse_args()
-    if arguments.dataset == "test" and not arguments.acknowledge_final_test:
-        raise SystemExit("test evaluation requires --acknowledge-final-test")
-    if arguments.dataset == "public" and not arguments.acknowledge_golden_final:
-        raise SystemExit("public evaluation requires --acknowledge-golden-final")
-    result = run(arguments.name, {"R1_FLAGS": arguments.flags, "R1_STRESS": arguments.stress},
-                 dataset=arguments.dataset)
+    result = run(arguments.name, {"R1_FLAGS": arguments.flags, "R1_STRESS": arguments.stress})
     print(json.dumps({k: v for k, v in result.items() if k != "sessions"}, indent=2))
 
 

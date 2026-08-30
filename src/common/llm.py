@@ -22,21 +22,6 @@ from pathlib import Path
 # warm .cache/llm while R3 was offline (D24).
 OFFLINE_ENV = "R3_OFFLINE"
 
-# Automatically load .env if present and keys are missing from environment
-_env_path = Path(__file__).resolve().parents[2] / ".env"
-if _env_path.exists():
-    try:
-        for line in _env_path.read_text(encoding="utf-8").splitlines():
-            line = line.strip()
-            if not line or line.startswith("#") or "=" not in line:
-                continue
-            k, _, v = line.partition("=")
-            k, v = k.strip(), v.strip()
-            if k and k not in os.environ:
-                os.environ[k] = v
-    except Exception:
-        pass
-
 # absolute: runs execute with cwd=<kit>, and a cache written in there would both contaminate the
 # kit we promise to keep pristine and be invisible to the next run
 CACHE_DIR = Path(__file__).resolve().parents[2] / ".cache" / "llm"
@@ -45,89 +30,14 @@ CHAT_MODEL = "qwen3.6:35b"     # 0.86 s/call, +0.191 rerank MRR (IMPORTANT.md §
 EMBED_MODEL = "bge-m3"         # 1024-d, ~$0.10 for the catalog
 PRICE_PER_MTOK = 0.0           # free on this endpoint; disclosure requires we say so explicitly
 
-INTENT_SYSTEM = """Route and interpret one shopping message. Return JSON only:
-{"route":"deterministic|hybrid","normalized_text":"lossless clear rewrite",
-"kind":"buying|browsing|override_open|reply|override|no_preference|null_ask|unknown",
-"category":"exact category phrase from the message or null","attribute":"requested field or null",
-"operations":[{"op":"add|remove|replace|confirm|no_preference",
-"attribute":"material|color|size|style|brand|budget|feature|use_case",
-"value":"short literal or normalized value","polarity":"require|avoid",
-"strength":"hard|soft","evidence":"exact supporting phrase","confidence":0.0,
-"group":"shared ambiguity id or null"}]}
-
-Rules:
-1. Always choose one route. Choose deterministic only when the message already follows one of the fixed
-   simulator templates exactly and needs no spelling, slang, abbreviation, negation, or context repair.
-   Choose hybrid for every paraphrase, free-form sentence, typo, slang term, abbreviation, correction,
-   implicit reference, or uncertain meaning.
-2. normalized_text must preserve every category, constraint, negation, correction, uncertainty and number.
-   Fix spelling/slang and make the meaning explicit, but never add information. For deterministic route,
-   copy the original message exactly.
-3. Classify the message by meaning, not its wording. Use unknown when no fixed-template meaning fits.
-4. Read the entire current state and message together. Resolve pronouns and corrections against prior turns.
-5. Understand common misspellings, slang and abbreviations (tee/t-shirt, kicks/shoes, cotten/cotton,
-   polyster/polyester, XL/extra large), but never pretend an ambiguous abbreviation is certain.
-6. Category must be copied from an exact phrase present in this message; never infer a longer taxonomy leaf.
-   Category means the product type, never the requirement text. In "I want tees. Requirement: poly",
-   category is "tees", while "poly" is an ambiguous constraint.
-7. For an ambiguous span, emit 2-4 plausible operations with the same non-null group id and calibrated
-   confidences. Example: "poly" may mean polyester material, polyurethane, polycarbonate, or another
-   polymer feature depending on context. Do not choose one merely because it is common.
-8. Preserve negation. "not dressy" is add style=dressy polarity=avoid.
-9. Explicit cancellation such as "forget blue" is remove color=blue.
-10. A correction such as "actually size XL, not L" replaces the previous size.
-11. Extract every explicit usable fact. "My dad wears XL" includes size=XL even if recipient is vague.
-12. Do not invent specificity: "from abroad" does not mean Europe.
-13. Evidence must be an exact phrase present in the original message. Use no operation when unsupported.
-14. If the current state already captures the message correctly, return confirm for that value rather
-   than adding or replacing it again.
-"""
-CANONICAL_SYSTEM = """Resolve a shopper phrase to one real catalog label. Return JSON only:
-{"choice":<1-based number or null>,"generated_query":"short query or null"}
-
-Choose a number only when the label is fully entailed by the phrase. Never add unsupported details
-(for example, "abroad" does not entail "Europe"). If no label fits, provide a short meaning-preserving
-query for a second retrieval pass. If even that would invent meaning, use null for both fields.
-Typos may be corrected when the intended word is clear from context. Short ambiguous fragments such
-as "poly" must abstain unless the surrounding message and state distinguish the meaning.
-"""
+EXTRACT_SYSTEM = (
+    "You extract shopping constraints. Reply with JSON only: "
+    '{"constraints":[{"attribute":"material|color|size|style|brand|budget|feature|use_case",'
+    '"value":"<short value>"}]}. No prose.'
+)
 RERANK_SYSTEM = (
     "You rank products against a shopper's requirements. Reply with a JSON array of the candidate "
     "numbers, best first, every number used exactly once. No prose."
-)
-
-# Domain importance is a tie-breaker. Candidate answer probability and information gain are stronger
-# signals: size matters enormously for shoes but often not at all for jewellery.
-ATTRIBUTE_PRIORITY = (
-    ("category", 100, "exact product type, only if still unknown"),
-    ("size", 90, "size, dimensions, width, or fit"),
-    ("use_case", 85, "occasion, activity, environment, recipient, or season"),
-    ("feature", 80, "non-negotiable function or compatibility requirement"),
-    ("budget", 75, "maximum price or acceptable range"),
-    ("material", 70, "material, construction, allergies, or care needs"),
-    ("style", 60, "style, cut, silhouette, or formality"),
-    ("color", 50, "colour or pattern"),
-    ("brand", 40, "brand only when explicitly important"),
-    ("other", 10, "fallback only when no useful specific field remains"),
-)
-ATTRIBUTE_NAMES = frozenset(name for name, _, _ in ATTRIBUTE_PRIORITY)
-ATTRIBUTE_SYSTEM = """You select the next attribute for a conversational shopping agent to ask.
-Return JSON only: {{"ask_attribute":"<one allowed field>"}}.
-
-Rules:
-1. Never select a field that is already known or exhausted.
-2. Use the current category, known slots, profile, route, turn, and previous questions as context.
-3. Follow domain priority, but skip an attribute that is irrelevant to the known product type.
-4. "Season" maps to use_case.
-5. Select other only when no useful specific missing field remains.
-
-Priority guide:
-{guide}
-""".format(
-    guide="\n".join(
-        f"- {name} (priority {priority}): {description}"
-        for name, priority, description in ATTRIBUTE_PRIORITY
-    ),
 )
 
 
@@ -155,9 +65,7 @@ class LLMClient:
         self.embed_model = embed_model
         self.cache_dir = Path(cache_dir) if cache_dir else CACHE_DIR
         self.cache_dir.mkdir(parents=True, exist_ok=True)
-        self.offline = (
-            os.environ.get("R1_OFFLINE") == "1" or os.environ.get(OFFLINE_ENV) == "1"
-        ) if offline is None else offline
+        self.offline = os.environ.get("R1_OFFLINE") == "1" if offline is None else offline
         self.transport = transport
         self.retries = retries
         # R1_LLM_NOCACHE=1 forces real calls, so the disclosed latency and token figures are
@@ -247,139 +155,40 @@ class LLMClient:
 
     # --- tasks -------------------------------------------------------------
     def extract(self, message: str) -> list[tuple[str, str, str]]:
-        """Backward-compatible add-only view over typed operation extraction."""
+        """Paraphrase insurance: read constraints out of prose no template will match."""
         # ⚠️ OFFLINE_ENV is checked HERE, not in an agent, so it holds for every road. Gating it
         # per-agent let R1 and R2 keep reading a warm `.cache/llm` while R3 was offline, which
         # silently lifted R1's L3 from 0.7241 to 0.7893 in a table headed "no network" (D22, D24).
-        if self.offline or os.environ.get(OFFLINE_ENV) == "1":
+        if os.environ.get(OFFLINE_ENV) == "1":
             return []
-        failures_before = self.failures
-        rows = self.interpret_operations(message, {})
-        pairs = [
-            (str(row.get("attribute", "")).strip().lower(),
-             str(row.get("value", "")).strip().lower(), message)
-            for row in rows
-            if row.get("op") in {"add", "replace"} and row.get("attribute") and row.get("value")
-        ]
-        if not pairs and self.failures == failures_before:
-            self.failures += 1
-        return pairs
-
-    def restore_template(self, message: str, state: dict) -> dict:
-        """Return an untrusted fixed-template classification plus typed operation proposals."""
-        if self.offline or os.environ.get(OFFLINE_ENV) == "1":
-            return {}
-        user = f"Current state: {json.dumps(state, sort_keys=True)[:2500]}\nMessage: {message[:1500]}"
-        content = self.chat(
-            [{"role": "system", "content": INTENT_SYSTEM}, {"role": "user", "content": user}],
-            max_tokens=700,
-        )
-        if not content:
-            return {}
-        match = re.search(r"\{.*\}", content, re.S)
-        if not match:
-            self.failures += 1
-            return {}
-        try:
-            payload = json.loads(match.group(0))
-        except Exception:
-            self.failures += 1
-            return {}
-        if not isinstance(payload, dict):
-            self.failures += 1
-            return {}
-        rows = payload.get("operations") or []
-        payload["operations"] = [row for row in rows if isinstance(row, dict)] if isinstance(rows, list) else []
-        route = str(payload.get("route") or "").strip().lower()
-        payload["route"] = route if route in {"deterministic", "hybrid"} else ""
-        payload["normalized_text"] = str(payload.get("normalized_text") or "").strip()[:1500]
-        return payload
-
-    def interpret_operations(self, message: str, state: dict) -> list[dict]:
-        """Backward-compatible operation-only view over template restoration."""
-        return list(self.restore_template(message, state).get("operations") or [])
-
-    def resolve_canonical(
-        self,
-        attribute: str,
-        phrase: str,
-        candidates: list[str],
-        *,
-        allow_generate: bool,
-        context: dict | None = None,
-    ) -> dict | None:
-        """Constrained catalog selection; generated text is only a new retrieval query."""
-        if self.offline or os.environ.get(OFFLINE_ENV) == "1":
-            return None
-        listing = "\n".join(f"{index}. {label}" for index, label in enumerate(candidates, 1))
-        user = (
-            f"Attribute: {attribute}\nShopper phrase: {phrase}\n"
-            f"Conversation context: {json.dumps(context or {}, sort_keys=True)[:1800]}\n"
-            f"Generation allowed: {'yes' if allow_generate else 'no'}\nCandidates:\n{listing or '(none)'}"
-        )
-        content = self.chat(
-            [{"role": "system", "content": CANONICAL_SYSTEM}, {"role": "user", "content": user}],
-            max_tokens=120,
-        )
-        if not content:
-            return None
-        match = re.search(r"\{.*\}", content, re.S)
-        if not match:
-            self.failures += 1
-            return None
-        try:
-            payload = json.loads(match.group(0))
-        except Exception:
-            self.failures += 1
-            return None
-        selected = None
-        choice = payload.get("choice")
-        if isinstance(choice, int) and 1 <= choice <= len(candidates):
-            selected = candidates[choice - 1]
-        generated = str(payload.get("generated_query") or "").strip()[:80]
-        if not allow_generate:
-            generated = ""
-        if not selected and not generated:
-            return {"selected": None, "generated_query": None}
-        return {"selected": selected, "generated_query": generated or None}
-
-    def select_attribute(
-        self,
-        profile: dict,
-        state: dict,
-    ) -> str | None:
-        """Choose one field from known/missing state; never sees or changes retrieval/ranking."""
+        # ⚠️ OFFLINE_ENV is checked HERE, not in an agent, so it holds for every road. Gating it
+        # per-agent let R1 and R2 keep reading a warm `.cache/llm` while R3 was offline, which
+        # silently lifted R1's L3 from 0.7241 to 0.7893 in a table headed "no network" (D22, D24).
         if os.environ.get(OFFLINE_ENV) == "1":
             return None
-        user = (
-            "Profile: " + json.dumps(profile or {}, sort_keys=True)[:1200]
-            + "\nAgent state: " + json.dumps(state, sort_keys=True)[:3500]
-        )
         content = self.chat(
-            [{"role": "system", "content": ATTRIBUTE_SYSTEM}, {"role": "user", "content": user}],
-            max_tokens=80,
+            [{"role": "system", "content": EXTRACT_SYSTEM}, {"role": "user", "content": message[:1500]}],
+            max_tokens=300,
         )
         if not content:
-            return None
+            return []
         match = re.search(r"\{.*\}", content, re.S)
         if not match:
             self.failures += 1
-            return None
+            return []
         try:
-            payload = json.loads(match.group(0))
+            rows = json.loads(match.group(0)).get("constraints") or []
+            pairs = [
+                (str(row["attribute"]).strip().lower(), str(row["value"]).strip().lower(), message)
+                for row in rows
+                if row.get("attribute") and row.get("value")
+            ]
         except Exception:
             self.failures += 1
-            return None
-        attribute = str(payload.get("ask_attribute") or "").strip().lower()
-        if attribute not in ATTRIBUTE_NAMES:
+            return []
+        if not pairs:
             self.failures += 1
-            return None
-        known = set(state.get("known_attributes") or [])
-        exhausted = set(state.get("exhausted") or [])
-        if attribute in known or attribute in exhausted:
-            self.failures += 1
-            return None
-        return attribute
+        return pairs
 
     def rerank(self, query: str, candidates: list[str], labels: list[str] | None = None) -> list[str] | None:
         """The brief's named 'LLM Semantic Ranking' stage. Returns None on any malformed answer."""
@@ -418,10 +227,6 @@ class LLMClient:
         return ranked
 
     # --- disclosure --------------------------------------------------------
-    def totals(self) -> tuple[int, int]:
-        """Cumulative paid-token totals; callers convert these to per-turn deltas."""
-        return self.prompt_tokens, self.completion_tokens
-
     def report(self) -> dict:
         latencies = sorted(self.latencies)
         percentile = lambda p: latencies[min(len(latencies) - 1, int(p * len(latencies)))] if latencies else 0.0

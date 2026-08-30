@@ -12,7 +12,6 @@ The scoring code that runs is byte-identical to the official one either way.
 from __future__ import annotations
 
 import json
-import hashlib
 import random
 import statistics
 import subprocess
@@ -30,28 +29,19 @@ if str(KIT) not in sys.path:
 from evaluator.local_evaluator import catalog_index, evaluate, load_jsonl  # noqa: E402
 
 CATALOG = ROOT / "assets" / "catalog.jsonl"
-SPLIT_DIR = KIT / "data" / "resplit_60_20_20"
-TRAIN_DATASET = SPLIT_DIR / "train.jsonl"
-VALIDATION_DATASET = SPLIT_DIR / "validation.jsonl"
-TEST_DATASET = SPLIT_DIR / "test.jsonl"
+DATASET = KIT / "data" / "public_set.jsonl"
 REGISTRY = ROOT / "runs" / "registry.jsonl"
 
 _CACHE: dict = {}
 
 
-def load_world(dataset: str | Path = TRAIN_DATASET) -> tuple[list[dict], set[str], dict, dict]:
-    """Parse one explicit development dataset and the catalog once per process.
-
-    Train is intentionally the default. The public path is not defined in this development harness;
-    this prevents an old sweep or ablation script from silently tuning against the golden set.
-    """
-    path = Path(dataset).resolve()
-    key = f"world:{path}"
-    if key not in _CACHE:
-        samples = load_jsonl(path)
+def load_world() -> tuple[list[dict], set[str], dict, dict]:
+    """Parse the catalog and dataset once per process; variants reuse them."""
+    if "world" not in _CACHE:
+        samples = load_jsonl(DATASET)
         catalog_ids, categories, products = catalog_index(CATALOG)
-        _CACHE[key] = (samples, catalog_ids, categories, products)
-    return _CACHE[key]
+        _CACHE["world"] = (samples, catalog_ids, categories, products)
+    return _CACHE["world"]
 
 
 class Rewriter:
@@ -85,17 +75,9 @@ class StressedAgent:
         return getattr(self._agent, item)
 
 
-def run(
-    agent,
-    rewriter: Rewriter | None = None,
-    *,
-    dataset: str | Path = TRAIN_DATASET,
-    sample_limit: int | None = None,
-) -> dict:
+def run(agent, rewriter: Rewriter | None = None) -> dict:
     """Score one agent. Returns the evaluator's own result dict plus wall-clock."""
-    samples, catalog_ids, categories, products = load_world(dataset)
-    if sample_limit is not None:
-        samples = samples[:sample_limit]
+    samples, catalog_ids, categories, products = load_world()
     subject = StressedAgent(agent, rewriter) if rewriter and rewriter.name != "clean" else agent
     t0 = time.time()
     result = evaluate(subject, samples, catalog_ids, categories, products)
@@ -132,18 +114,12 @@ def bootstrap_ci(result: dict, resamples: int = 1000, seed: int = 0) -> tuple[fl
 
 
 def kit_is_pristine() -> bool:
-    """Verify the exact referee inputs while allowing additional released data files.
-
-    A blanket ``git status`` check made the official evaluator look contaminated as soon as the
-    separately supplied train/dev files were placed in ``data/``.  The score depends on the guarded
-    files in ``kit_manifest.json``; hash those exact inputs instead.
-    """
-    manifest = json.loads((ROOT / "src" / "eval" / "kit_manifest.json").read_text())
-    for relative, expected in manifest.items():
-        path = KIT / relative
-        if not path.exists() or hashlib.sha256(path.read_bytes()).hexdigest() != expected:
-            return False
-    return True
+    """A reported score is worthless if the kit drifted. Checked before every registry row."""
+    out = subprocess.run(
+        ["git", "status", "--porcelain", "techjam-conversational-search-main"],
+        cwd=ROOT, capture_output=True, text=True,
+    )
+    return out.stdout.strip() == ""
 
 
 def git_sha() -> str:

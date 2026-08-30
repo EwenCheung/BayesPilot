@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import math
 
-from src.common.contracts import Constraint
 from src.r3.likelihood import constraint_terms
 
 
@@ -55,42 +54,7 @@ class Belief:
             for asin, log_l in terms.items():          # {} means the term abstained: nothing happens
                 self.log_p[asin] += weight * log_l
 
-        # Ambiguous language contributes one probability mixture, never several independent exact
-        # constraints. If ``poly`` plausibly means polyester or polycarbonate, an item matching either
-        # receives soft support while neither interpretation is promoted to fact.
-        for ambiguity in state.live_ambiguities():
-            alternatives = []
-            for option in ambiguity.alternatives:
-                hypothesis = Constraint(
-                    text=option.text,
-                    attribute=option.attribute,
-                    value=option.value,
-                    turn=ambiguity.turn,
-                    tier="llm-hypothesis",
-                    source_text=ambiguity.evidence,
-                    polarity=ambiguity.polarity,
-                    strength="soft",
-                    confidence=option.confidence,
-                )
-                terms = constraint_terms(self.index, hypothesis, self.candidates, flags)
-                if terms:
-                    alternatives.append((option.confidence, terms))
-            mass = sum(probability for probability, _ in alternatives)
-            if mass > 0:
-                weight = ambiguity.weight(state.turn)
-                for asin in self.candidates:
-                    mixture = sum(
-                        probability * math.exp(terms[asin])
-                        for probability, terms in alternatives
-                    ) / mass
-                    self.log_p[asin] += weight * math.log(max(1e-12, mixture))
-
-        query = " ".join(
-            [state.category or state.category_surface or ""]
-            + list(state.normalized_messages.values())
-            + [c.source_text or c.text for c in state.live()]
-            + [item.evidence for item in state.live_ambiguities()]
-        ).strip()
+        query = " ".join([state.category or ""] + [c.text for c in state.live()]).strip()
         if lexical is not None and flags.idf_gain > 0 and query:
             for asin, score in lexical.scores(query, self.candidates).items():
                 self.log_p[asin] += flags.idf_gain * score
@@ -98,12 +62,7 @@ class Belief:
         # the semantic term reads the whole utterance history at once rather than per constraint:
         # meaning is carried by the sentence, not by the individual requirement strings
         if semantics is not None and flags.semantic_gain > 0:
-            query = " ".join(
-                [state.category or state.category_surface or ""]
-                + list(state.normalized_messages.values())
-                + [c.source_text or c.text for c in state.live()]
-                + [item.evidence for item in state.live_ambiguities()]
-            ).strip()
+            query = " ".join([state.category or ""] + [c.text for c in state.live()]).strip()
             if query:
                 sims = semantics.scores(query, self.candidates)
                 for asin, sim in sims.items():          # {} again means abstain

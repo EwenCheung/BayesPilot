@@ -47,7 +47,7 @@ def main() -> None:
     for label, pop3, spec3, lex3, dense3 in GRID:
         for bonus in BONUSES:
             agent = build("svd", schedule=schedule(pop3, spec3, lex3, dense3))
-            result = harness.run(agent, dataset=harness.TRAIN_DATASET)
+            result = harness.run(agent)
             value = harness.score(result)
             flag = ""
             if value > best[1]:

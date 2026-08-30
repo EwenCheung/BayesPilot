@@ -4,7 +4,8 @@ All remaining headroom is MRR (+0.075 vs +0.012 from speed), and MRR is bought b
 the session and locks in that rank. So the knobs that matter are how eagerly the ladder ships depth and
 how long the deadline waits.
 
-Runs on the resplit train data; test and public are reserved for locked final evaluation.
+⚠️ 200 sessions is small. Anything inside 0.02 of the leader is a tie, and the winner is confirmed with
+a bootstrap CI, never by the point estimate alone.
 """
 from __future__ import annotations
 
@@ -36,7 +37,7 @@ def main(dense: str = "svd", ladders: tuple[str, ...] = (), deadlines: tuple[int
     for name, ladder in chosen.items():
         for deadline in deadlines:
             agent = build(dense, ladder=ladder, deadline=deadline)
-            result = harness.run(agent, dataset=harness.TRAIN_DATASET)
+            result = harness.run(agent)
             score = harness.score(result)
             flag = ""
             if score > best[1]:

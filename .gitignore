@@ -9,15 +9,19 @@ results.json
 # Keeping it out avoids GitHub's >50 MB warning on the public submission repo.
 assets/catalog.jsonl
 assets/catalog.jsonl.gz
+# data/catalog.jsonl is byte-identical to the above (sha256 da979b05...). Same reason, same rule.
+data/catalog.jsonl
 
-# Benchmark evaluation outputs
+# The run registry is the race's shared record and IS committed (IDEA.md §0.5, merge plan §4).
+# Raw per-run dumps are not. `runs/*` not `runs/` — git cannot un-ignore a file inside an
+# ignored DIRECTORY, only inside an ignored glob.
 runs/*
-!runs/public_set_eval.json
-!runs/resplit_test_eval.json
-!runs/freeform_v1_test_eval.json
-!runs/r3_current_router_fallback_final.json
-!runs/r3_locked_final.json
-!runs/r3_resplit_locked.json
+!runs/registry.jsonl
+# ⚠️ Split manifests are the lock on every held-out number ever reported, and holdout.py's docstring
+# already claimed they were committed while `runs/*` was silently ignoring them (R4 D5). The
+# content_hash guard only ever held because build() is seed-deterministic, not because the artefact
+# was under version control.
+!runs/holdout.json
 
 .cache/
 
@@ -27,5 +31,3 @@ artifacts/
 
 # BLaIR embeddings: 71 MB, rebuild with scripts/embed_blair.py (~5 min). Never in git.
 artifacts/
-
-.venv/

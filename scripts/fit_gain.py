@@ -1,4 +1,4 @@
-"""Fit the two evidence gains on the resplit train data only."""
+"""Fit the two evidence gains — trusted channel vs paraphrased channel — on the 140."""
 import json
 import sys
 from pathlib import Path
@@ -6,9 +6,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from scripts.fit_policy import score_on  # noqa: E402
+from src.eval import holdout  # noqa: E402
 
 if __name__ == "__main__":
-    train = "train"
+    train = set(holdout.load()["train"])
     base = json.loads((ROOT / "runs" / "r3_fitted.json").read_text())
     best = None
     print(f"{'clean gain':>10s} {'para gain':>10s} | {'clean':>7s} {'L3':>7s} | {'obj':>7s}")

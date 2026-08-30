@@ -1,7 +1,0 @@
-# Tested with Python 3.11.9.
-# Runtime and local semantic/retrieval dependencies.
-numpy==2.3.3
-scikit-learn==1.7.2
-
-# Development and regression suite.
-pytest==8.3.5

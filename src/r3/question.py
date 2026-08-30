@@ -22,12 +22,7 @@ from __future__ import annotations
 
 import math
 
-from src.common.simulator import classify_constraint
-
-# These fields correspond to concrete, candidate-shrinking questions a real shopper can answer.
-# "season" is represented by the contract's use_case field (winter, summer, outdoor, etc.).
-CRITICAL_ASKABLE = ("material", "size", "color", "use_case", "style", "feature", "budget")
-ASKABLE = (*CRITICAL_ASKABLE, "other")
+ASKABLE = ("material", "color", "size", "style", "feature", "use_case", "other")
 
 
 def _entropy(weights: list[float]) -> float:
@@ -37,17 +32,7 @@ def _entropy(weights: list[float]) -> float:
     return -sum((w / total) * math.log(w / total) for w in weights if w > 0)
 
 
-def _answer_signature(index, state, asin: str, attribute: str) -> tuple[str, ...]:
-    undisclosed = [value for value in index.card[asin] if value not in state.disclosed]
-    if attribute == "other":
-        return tuple(undisclosed[:2])
-    if attribute in {"category", "brand"}:
-        # The official intent card never classifies a constraint into these two fields.
-        return ()
-    return tuple(value for value in undisclosed if classify_constraint(value) == attribute)[:2]
-
-
-def best_question(index, state, belief, *, include_other: bool = True) -> str:
+def best_question(index, state, belief) -> str:
     """Pick the attribute whose answer most reduces expected entropy of the item posterior."""
     post = belief.normalised()
     live = sorted(post, key=lambda a: -post[a])[:400]   # the tail cannot change the answer
@@ -55,16 +40,18 @@ def best_question(index, state, belief, *, include_other: bool = True) -> str:
         return "other"
 
     before = _entropy([post[a] for a in live])
-    choices = ASKABLE if include_other else CRITICAL_ASKABLE
-    best, best_gain = choices[0], -1.0
-    for attribute in choices:
+    best, best_gain = "other", -1.0
+    for attribute in ASKABLE:
         if state.asked.get(attribute) is False:      # already came back barren; never ask twice
             continue
         # partition by the answer the simulator WOULD give if each candidate were the target:
         # items producing the same answer form one group, so this is O(|live|) per attribute.
         groups: dict[object, list[float]] = {}
         for asin in live:
-            signature = _answer_signature(index, state, asin, attribute)
+            if attribute == "other":
+                signature = tuple(c for c in index.card[asin] if c not in state.disclosed)[:2]
+            else:
+                signature = tuple(sorted(v for k, v in index.pairs(asin) if k == attribute))
             groups.setdefault(signature, []).append(post[asin])
         expected = sum(sum(g) * _entropy(g) for g in groups.values())
         gain = before - expected

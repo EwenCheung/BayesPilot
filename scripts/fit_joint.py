@@ -8,9 +8,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from scripts.fit_policy import score_on  # noqa: E402
+from src.eval import holdout  # noqa: E402
 
 if __name__ == "__main__":
-    train = "train"
+    train = set(holdout.load()["train"])
     base = json.loads((ROOT / "runs" / "r3_fitted.json").read_text())
     base.pop("confidence_power", None)
     best = None

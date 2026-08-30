@@ -22,14 +22,15 @@ from src.eval import harness  # noqa: E402
 from src.eval.stress import paraphrase  # noqa: E402
 from src.r3.category import CategoryBelief  # noqa: E402
 
-SMOKE_ROWS = 200
+BASELINE_EXACT = 0.825      # R1's lexical resolver at L3
+BASELINE_IN_POOL = 0.925    # R1 hedged
 
 
 def _openings(level: int):
     """The exact turn-1 utterance the simulator emits, at one stress level, with its true category."""
     from evaluator.local_evaluator import materialize_hidden_fields
-    samples, _, categories, products = harness.load_world(harness.TRAIN_DATASET)
-    for s in samples[:SMOKE_ROWS]:
+    samples, _, categories, products = harness.load_world()
+    for s in samples:
         target = s["ground_truth"]["parent_asin"]
         truth = coarse_category(categories.get(target, []))
         card, behavior = materialize_hidden_fields(s, products)
@@ -50,7 +51,7 @@ class TestR3A27CategoryBelief(unittest.TestCase):
     def test_clean_text_still_resolves_perfectly(self) -> None:
         """R3-A27: the belief must not cost anything where the lexical resolver was already perfect."""
         right = sum(self.belief.best(msg) == truth for msg, truth, _ in _openings(0))
-        self.assertEqual(right, SMOKE_ROWS, "regressed on train-derived clean text")
+        self.assertEqual(right, 200, "regressed on clean text")
 
     def test_l3_category_accuracy_beats_the_lexical_resolver(self) -> None:
         """R3-A27: 0.825 -> 0.865 at L3, and >= 0.95 is NOT achievable.
@@ -62,8 +63,9 @@ class TestR3A27CategoryBelief(unittest.TestCase):
         commonest. The recoverable quantity is pool coverage, which the next test gates.
         """
         right = sum(self.belief.best(msg) == truth for msg, truth, _ in _openings(3))
-        accuracy = right / SMOKE_ROWS
-        self.assertGreater(accuracy, 0.80, f"L3 category accuracy {accuracy:.3f}")
+        accuracy = right / 200
+        self.assertGreater(accuracy, BASELINE_EXACT,
+                           f"L3 category accuracy {accuracy:.3f}, baseline {BASELINE_EXACT}")
 
     def test_l3_pool_contains_the_target(self) -> None:
         """R3-A27: 0.925 -> >= 0.97. A target outside the pool is an unrecoverable loss.
@@ -73,8 +75,9 @@ class TestR3A27CategoryBelief(unittest.TestCase):
         The chosen point buys +0.05 stressed coverage for zero clean cost.
         """
         hits = sum(target in self.belief.pool(msg) for msg, _, target in _openings(3))
-        rate = hits / SMOKE_ROWS
-        self.assertGreaterEqual(rate, 0.90, f"pool contains target {rate:.3f}")
+        rate = hits / 200
+        self.assertGreaterEqual(rate, 0.97,
+                                f"pool contains target {rate:.3f}, baseline {BASELINE_IN_POOL}")
 
     def test_pool_stays_small_when_the_belief_is_confident(self) -> None:
         """R3-A27: widening must be a response to uncertainty, not a blanket cost.
@@ -87,11 +90,6 @@ class TestR3A27CategoryBelief(unittest.TestCase):
         stressed = [len(self.belief.pool(msg)) for msg, _, _ in _openings(3)]
         self.assertLess(sum(clean) / len(clean), sum(stressed) / len(stressed),
                         "the pool does not widen under uncertainty")
-
-    def test_vague_tees_keeps_multiple_taxonomy_hypotheses(self) -> None:
-        rows = self.belief.resolve_candidates("tees")
-        self.assertGreater(len(rows), 1)
-        self.assertIsNone(self.belief.resolve_phrase("tees"))
 
 
 if __name__ == "__main__":

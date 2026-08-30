@@ -46,16 +46,7 @@ def constraint_terms(index, constraint, candidates: list[str], flags) -> dict[st
 
     for asin in candidates:
         strength = 0.0
-        if flags.exact and (
-            (
-                constraint.tier != "llm-hypothesis"
-                and constraint.text in index.card[asin]
-            )
-            or (
-                constraint.tier.startswith("llm-canonical")
-                and (constraint.attribute, constraint.value) in index.card_pairs(asin)
-            )
-        ):
+        if flags.exact and constraint.text in index.card[asin]:
             strength = 1.0
         elif flags.attribute and (constraint.attribute, constraint.value) in index.pairs(asin):
             strength = ATTRIBUTE_GAIN / EXACT_GAIN
@@ -65,9 +56,7 @@ def constraint_terms(index, constraint, candidates: list[str], flags) -> dict[st
                 strength = overlap * LEXICAL_GAIN / EXACT_GAIN
         if strength:
             saw_evidence = True
-        # An exclusion is the complement of positive evidence: matching candidates are penalised,
-        # non-matches remain neutral. This only activates if at least one candidate actually matches.
-        out[asin] = _bounded(1.0 - strength, gain) if constraint.polarity == "avoid" else _bounded(strength, gain)
+        out[asin] = _bounded(strength, gain)
 
     # abstain rather than flatten: a constraint nothing matches should not reshape the belief at all
     return out if saw_evidence else {}

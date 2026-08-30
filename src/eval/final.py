@@ -45,13 +45,11 @@ def load_r1():
 
 
 def measure(label: str, make, stress: bool = True) -> dict:
-    out = {"clean": harness.run(make(), dataset=harness.TRAIN_DATASET)}
+    out = {"clean": harness.run(make())}
     show(label, out["clean"])
     if stress:
         for level in ("scaffold", "full"):
-            out[level] = harness.run(
-                make(), ParaphraseRewriter(level), dataset=harness.TRAIN_DATASET
-            )
+            out[level] = harness.run(make(), ParaphraseRewriter(level))
             show(f"  └ stressed:{level}", out[level])
     return out
 
@@ -107,7 +105,7 @@ def main() -> None:
     print("\n--- LLM semantic ranking stage (escalation only) ---")
     try:
         agent = build(dense, rerank=True)
-        result = harness.run(agent, dataset=harness.TRAIN_DATASET)
+        result = harness.run(agent)
         show("R2 + qwen3.6:35b listwise rerank", result)
         reranker = agent.reranker
         print(f"     llm calls={reranker.calls} failures={reranker.failures} "
@@ -151,7 +149,7 @@ def main() -> None:
     )
 
     lo, hi = harness.bootstrap_ci(headline["clean"])
-    print(f"\nR2 bootstrap 95% CI: [{lo}, {hi}]   (1000 train resamples)")
+    print(f"\nR2 bootstrap 95% CI: [{lo}, {hi}]   (1000 resamples of the 200 sessions)")
     lo1, hi1 = harness.bootstrap_ci(RESULTS["r1"]["clean"])
     print(f"R1 bootstrap 95% CI: [{lo1}, {hi1}]")
     print(f"kit pristine: {harness.kit_is_pristine()}   total {time.time() - t0:.0f}s")
