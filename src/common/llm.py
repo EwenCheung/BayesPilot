@@ -30,11 +30,44 @@ CHAT_MODEL = "qwen3.6:35b"     # 0.86 s/call, +0.191 rerank MRR (IMPORTANT.md §
 EMBED_MODEL = "bge-m3"         # 1024-d, ~$0.10 for the catalog
 PRICE_PER_MTOK = 0.0           # free on this endpoint; disclosure requires we say so explicitly
 
-EXTRACT_SYSTEM = (
-    "You extract shopping constraints. Reply with JSON only: "
-    '{"constraints":[{"attribute":"material|color|size|style|brand|budget|feature|use_case",'
-    '"value":"<short value>"}]}. No prose.'
-)
+INTENT_SYSTEM = """Restore a paraphrased simulator message to its fixed-template meaning. Return JSON only:
+{"kind":"buying|browsing|override_open|reply|override|no_preference|null_ask|unknown",
+"category":"exact category phrase from the message or null","attribute":"requested field or null",
+"operations":[{"op":"add|remove|replace|confirm|no_preference",
+"attribute":"material|color|size|style|brand|budget|feature|use_case",
+"value":"short literal or normalized value","polarity":"require|avoid",
+"strength":"hard|soft","evidence":"exact supporting phrase","confidence":0.0,
+"group":"shared ambiguity id or null"}]}
+
+Rules:
+1. Classify the message by meaning, not its wording. Use unknown when no fixed-template meaning fits.
+2. Read the entire current state and message together. Resolve pronouns and corrections against prior turns.
+3. Understand common misspellings, slang and abbreviations (tee/t-shirt, kicks/shoes, cotten/cotton,
+   polyster/polyester, XL/extra large), but never pretend an ambiguous abbreviation is certain.
+4. Category must be copied from an exact phrase present in this message; never infer a longer taxonomy leaf.
+   Category means the product type, never the requirement text. In "I want tees. Requirement: poly",
+   category is "tees", while "poly" is an ambiguous constraint.
+5. For an ambiguous span, emit 2-4 plausible operations with the same non-null group id and calibrated
+   confidences. Example: "poly" may mean polyester material, polyurethane, polycarbonate, or another
+   polymer feature depending on context. Do not choose one merely because it is common.
+6. Preserve negation. "not dressy" is add style=dressy polarity=avoid.
+7. Explicit cancellation such as "forget blue" is remove color=blue.
+8. A correction such as "actually size XL, not L" replaces the previous size.
+9. Extract every explicit usable fact. "My dad wears XL" includes size=XL even if recipient is vague.
+10. Do not invent specificity: "from abroad" does not mean Europe.
+11. Evidence must be an exact phrase present in the message. Use no operation when unsupported.
+12. If the current state already captures the message correctly, return confirm for that value rather
+   than adding or replacing it again.
+"""
+CANONICAL_SYSTEM = """Resolve a shopper phrase to one real catalog label. Return JSON only:
+{"choice":<1-based number or null>,"generated_query":"short query or null"}
+
+Choose a number only when the label is fully entailed by the phrase. Never add unsupported details
+(for example, "abroad" does not entail "Europe"). If no label fits, provide a short meaning-preserving
+query for a second retrieval pass. If even that would invent meaning, use null for both fields.
+Typos may be corrected when the intended word is clear from context. Short ambiguous fragments such
+as "poly" must abstain unless the surrounding message and state distinguish the meaning.
+"""
 RERANK_SYSTEM = (
     "You rank products against a shopper's requirements. Reply with a JSON array of the candidate "
     "numbers, best first, every number used exactly once. No prose."
@@ -189,35 +222,98 @@ class LLMClient:
 
     # --- tasks -------------------------------------------------------------
     def extract(self, message: str) -> list[tuple[str, str, str]]:
-        """Paraphrase insurance: read constraints out of prose no template will match."""
+        """Backward-compatible add-only view over typed operation extraction."""
         # ⚠️ OFFLINE_ENV is checked HERE, not in an agent, so it holds for every road. Gating it
         # per-agent let R1 and R2 keep reading a warm `.cache/llm` while R3 was offline, which
         # silently lifted R1's L3 from 0.7241 to 0.7893 in a table headed "no network" (D22, D24).
-        if os.environ.get(OFFLINE_ENV) == "1":
+        if self.offline or os.environ.get(OFFLINE_ENV) == "1":
             return []
+        failures_before = self.failures
+        rows = self.interpret_operations(message, {})
+        pairs = [
+            (str(row.get("attribute", "")).strip().lower(),
+             str(row.get("value", "")).strip().lower(), message)
+            for row in rows
+            if row.get("op") in {"add", "replace"} and row.get("attribute") and row.get("value")
+        ]
+        if not pairs and self.failures == failures_before:
+            self.failures += 1
+        return pairs
+
+    def restore_template(self, message: str, state: dict) -> dict:
+        """Return an untrusted fixed-template classification plus typed operation proposals."""
+        if self.offline or os.environ.get(OFFLINE_ENV) == "1":
+            return {}
+        user = f"Current state: {json.dumps(state, sort_keys=True)[:2500]}\nMessage: {message[:1500]}"
         content = self.chat(
-            [{"role": "system", "content": EXTRACT_SYSTEM}, {"role": "user", "content": message[:1500]}],
-            max_tokens=300,
+            [{"role": "system", "content": INTENT_SYSTEM}, {"role": "user", "content": user}],
+            max_tokens=700,
         )
         if not content:
-            return []
+            return {}
         match = re.search(r"\{.*\}", content, re.S)
         if not match:
             self.failures += 1
-            return []
+            return {}
         try:
-            rows = json.loads(match.group(0)).get("constraints") or []
-            pairs = [
-                (str(row["attribute"]).strip().lower(), str(row["value"]).strip().lower(), message)
-                for row in rows
-                if row.get("attribute") and row.get("value")
-            ]
+            payload = json.loads(match.group(0))
         except Exception:
             self.failures += 1
-            return []
-        if not pairs:
+            return {}
+        if not isinstance(payload, dict):
             self.failures += 1
-        return pairs
+            return {}
+        rows = payload.get("operations") or []
+        payload["operations"] = [row for row in rows if isinstance(row, dict)] if isinstance(rows, list) else []
+        return payload
+
+    def interpret_operations(self, message: str, state: dict) -> list[dict]:
+        """Backward-compatible operation-only view over template restoration."""
+        return list(self.restore_template(message, state).get("operations") or [])
+
+    def resolve_canonical(
+        self,
+        attribute: str,
+        phrase: str,
+        candidates: list[str],
+        *,
+        allow_generate: bool,
+        context: dict | None = None,
+    ) -> dict | None:
+        """Constrained catalog selection; generated text is only a new retrieval query."""
+        if self.offline or os.environ.get(OFFLINE_ENV) == "1":
+            return None
+        listing = "\n".join(f"{index}. {label}" for index, label in enumerate(candidates, 1))
+        user = (
+            f"Attribute: {attribute}\nShopper phrase: {phrase}\n"
+            f"Conversation context: {json.dumps(context or {}, sort_keys=True)[:1800]}\n"
+            f"Generation allowed: {'yes' if allow_generate else 'no'}\nCandidates:\n{listing or '(none)'}"
+        )
+        content = self.chat(
+            [{"role": "system", "content": CANONICAL_SYSTEM}, {"role": "user", "content": user}],
+            max_tokens=120,
+        )
+        if not content:
+            return None
+        match = re.search(r"\{.*\}", content, re.S)
+        if not match:
+            self.failures += 1
+            return None
+        try:
+            payload = json.loads(match.group(0))
+        except Exception:
+            self.failures += 1
+            return None
+        selected = None
+        choice = payload.get("choice")
+        if isinstance(choice, int) and 1 <= choice <= len(candidates):
+            selected = candidates[choice - 1]
+        generated = str(payload.get("generated_query") or "").strip()[:80]
+        if not allow_generate:
+            generated = ""
+        if not selected and not generated:
+            return {"selected": None, "generated_query": None}
+        return {"selected": selected, "generated_query": generated or None}
 
     def select_attribute(
         self,

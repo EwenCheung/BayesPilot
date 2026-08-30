@@ -14,20 +14,17 @@ class AttributeSelector:
         self.completion_tokens = 0
 
     def select_attribute(self, profile, state):
-        self.prompt_tokens += 11
-        self.completion_tokens += 3
-        return "size"
+        raise AssertionError("R3 must not use an LLM to choose simulator attributes")
 
     def totals(self):
         return self.prompt_tokens, self.completion_tokens
 
 
-def test_attribute_selector_changes_only_the_question_policy(monkeypatch) -> None:
+def test_llm_attribute_selector_is_not_part_of_r3(monkeypatch) -> None:
     monkeypatch.setenv("R3_OFFLINE", "1")
     baseline = Agent(CATALOG)
     monkeypatch.delenv("R3_OFFLINE")
     with_selector = Agent(CATALOG)
-    with_selector.flags.llm_attribute = True
     with_selector.llm = AttributeSelector()
 
     profile = {"preference_tags": ["fit"]}
@@ -38,10 +35,10 @@ def test_attribute_selector_changes_only_the_question_policy(monkeypatch) -> Non
     selected = with_selector.respond("selector", message, 1, 10)
 
     assert plain["ask_attribute"] == "other"
-    assert selected["ask_attribute"] == "size"
+    assert selected["ask_attribute"] == "other"
     assert selected["recommendations"] == plain["recommendations"]
-    assert selected["message"] == "What size, dimensions, or fit do you need?"
-    assert selected["usage"] == {"prompt_tokens": 11, "completion_tokens": 3}
+    assert selected["message"] == plain["message"]
+    assert selected["usage"] == {"prompt_tokens": 0, "completion_tokens": 0}
 
 
 def test_critical_question_is_specific_and_contract_legal(monkeypatch) -> None:

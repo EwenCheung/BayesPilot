@@ -81,7 +81,6 @@ def _set_flags(agent: Agent, config: dict[str, float]) -> None:
         setattr(agent.flags, field.name, getattr(defaults, field.name))
     for name, value in config.items():
         setattr(agent.flags, name, value)
-    agent.flags.llm_attribute = False
     agent.flags.llm_extract = False
     agent.sessions.clear()
     agent._last_asked.clear()

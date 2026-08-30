@@ -11,7 +11,8 @@ Effective 2026-08-30, all new R3 fitting follows this protocol:
    only with the explicit `--acknowledge-golden-final` flag.
 5. Train, validation and test are disjoint by both sample ID and target ASIN. Dataset hashes are
    recorded in the split manifest and the locked configuration.
-6. LLM attribute selection and LLM extraction are disabled for the competition configuration.
+6. LLM interpretation is opt-in and disabled in the locked competition configuration. LLM attribute
+   selection is removed from R3.
 
 The scenario distribution is exactly preserved in every split:
 
@@ -31,7 +32,9 @@ on validation, versus `0.920248` and `0.923199` for the legacy `0.18` value. The
 
 ## Locked final results
 
-After configuration lock and 129 passing tests, the final evaluator ran test first and public second:
+At configuration lock, after 129 passing tests, the final evaluator ran test first and public second.
+The current regression suite contains 150 passing tests; the holdouts were not rerun for the later
+opt-in paraphrase-interpreter work:
 
 | split | rows | Hit@10 | MRR | MTTC | TechnicalScore | 95% CI |
 |---|---:|---:|---:|---:|---:|---:|

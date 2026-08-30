@@ -34,15 +34,22 @@ structural decisions made on all 200 were re-tested per half.
 
 The separately supplied `train.jsonl` and `dev.jsonl` were merged and re-split 60/20/20 without target
 overlap. R3 scores **0.920248 train / 0.923199 validation / 0.930050 test**. These are the better
-generalisation estimates; the public-200 `0.973075` is a reproducible but contaminated development
-score. In the optional online mode, the LLM selects only the next `ask_attribute` from accumulated
-agent state; search, ranking, and question wording stay deterministic. See
-[the resplit and LLM results](docs/RESPLIT-LLM-RESULTS.md).
+generalisation estimates; the public-200 `0.973075` is a reproducible but historically contaminated
+score. LLM question selection was rejected after validation. The retained opt-in LLM path skips the
+model for recognized evaluator templates and interprets only unknown wording as typed state
+operations. Deterministic catalog verification, atomic state mutation, search, and ranking remain
+authoritative; unresolved meanings remain probability mixtures instead of invented hard facts. The
+implementation preserved the full 2,800-session clean validation score (**0.927023**) with **zero LLM
+calls**. On the same 20-session strong-paraphrase pilot, it improved from **0.436750 to 0.565750**
+(`+0.129000`), but the interval is wide and the stressed path is substantially slower. See
+[the resplit and LLM results](docs/RESPLIT-LLM-RESULTS.md) and
+[the final architecture](docs/FINAL-ARCHITECTURE.md).
 
 The competition configuration has since been refit under the locked
-[train/validation/test protocol](docs/DATA-PROTOCOL.md). LLM selection is opt-in, and neither test nor
-public data is addressable by the fitting script. The locked result is **0.933979 on the 2,800-row
-test split** and **0.973075 on the public golden regression set**, with zero LLM calls.
+[train/validation/test protocol](docs/DATA-PROTOCOL.md). LLM interpretation is opt-in, and neither test
+nor public data is addressable by the fitting script. The locked result is **0.933979 on the 2,800-row
+test split** and **0.973075 on the public golden regression set**, with zero LLM calls. Those locked
+holdout numbers predate the new opt-in paraphrase interpreter and were not rerun for its development.
 
 ⚠️ **R1's and R2's originally published stress and ablation numbers were never comparable** — different
 rewriters, different `no_spec_phrase` definitions (R1 defect 2, R2 defect A8). Everything above is on

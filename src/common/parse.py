@@ -127,7 +127,13 @@ def _ontology_tier(message: str, state: SessionState) -> int:
     return added
 
 
-def parse(message: str, state: SessionState, llm=None, erase: str = "demote") -> SessionState:
+def parse(
+    message: str,
+    state: SessionState,
+    llm=None,
+    erase: str = "demote",
+    intent_pipeline=None,
+) -> SessionState:
     """Never raises. Returns the same state object, mutated."""
     try:
         message = (message or "").strip()
@@ -137,15 +143,18 @@ def parse(message: str, state: SessionState, llm=None, erase: str = "demote") ->
         handled, added = _template_tier(message, state, erase)
         state.template_hits += int(handled)
         if not handled:
-            added = _ontology_tier(message, state)
-        # Escalate to the model whenever no template matched — that is precisely the paraphrase
-        # case the LLM is insurance for. On clean text the templates always match, so this costs
-        # nothing there: measured 0 calls on the clean set, ~1 call per stressed turn.
-        if not handled and llm is not None:
-            for _attribute, value, _text in llm.extract(message) or []:
-                # feed the short extracted phrase back through the normal cascade rather than
-                # trusting the model's attribute label: the catalog's own vocabulary decides.
-                _add(state, value, "llm")
+            if intent_pipeline is not None:
+                restored_before = state.llm_restoration_hits
+                added = intent_pipeline.process(message, state, erase=erase)
+                if state.llm_restoration_hits == restored_before:
+                    added += _ontology_tier(message, state)
+            else:
+                added = _ontology_tier(message, state)
+                if llm is not None:
+                    for _attribute, value, _text in llm.extract(message) or []:
+                        # feed the short extracted phrase back through the normal cascade rather than
+                        # trusting the model's attribute label: the catalog's vocabulary decides.
+                        _add(state, value, "llm")
         for attribute in state.slot_age:
             state.slot_age[attribute] = state.turn - max(
                 (c.turn for c in state.constraints if c.attribute == attribute), default=state.turn

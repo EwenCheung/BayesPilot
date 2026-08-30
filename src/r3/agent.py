@@ -45,12 +45,16 @@ class Agent:
         # offline number (0.8297) unless you count cache hits. Every headline figure in
         # docs/R3-RESULTS.md §1 is measured with the tier explicitly off.
         self.llm = None
-        if (self.flags.llm_extract or self.flags.llm_attribute) and os.environ.get("R3_OFFLINE") != "1":
+        if self.flags.llm_extract and os.environ.get("R3_OFFLINE") != "1":
             try:
                 from src.common.llm import LLMClient
                 self.llm = LLMClient()
             except Exception:
                 self.llm = None
+        self.intent_pipeline = None
+        if self.flags.llm_extract and self.llm is not None:
+            from src.common.intent import IntentPipeline
+            self.intent_pipeline = IntentPipeline(self.index, self.llm, self.categories)
         self._prompt = 0
         self._completion = 0
         self._last_asked: dict[str, str] = {}
@@ -84,6 +88,40 @@ class Agent:
     def reset(self, session_id: str, user_profile: dict) -> None:
         self.sessions[session_id] = SessionState(profile=user_profile or {})
 
+    def _ensure_intent_pipeline(self) -> None:
+        """Flags may be enabled by an experiment runner after construction."""
+        if not self.flags.llm_extract or os.environ.get("R3_OFFLINE") == "1":
+            return
+        if self.llm is None:
+            try:
+                from src.common.llm import LLMClient
+                self.llm = LLMClient()
+            except Exception:
+                return
+        if self.intent_pipeline is None:
+            from src.common.intent import IntentPipeline
+            self.intent_pipeline = IntentPipeline(self.index, self.llm, self.categories)
+
+    def _candidate_pool(self, state: SessionState, user_message: str) -> list[str]:
+        """Rebuild retrieval from the catalog-backed category index on every turn.
+
+        The previous turn's ranked list is deliberately not an input. A correction or replacement
+        therefore reranks the complete category pool and can recover an item that was outside the
+        earlier top 10/200. If the category itself changes, ``opener`` changes and ``pool`` performs
+        a new global category-posterior lookup before returning the new product universe.
+        """
+        opener = (
+            state.category
+            or state.category_surface
+            or state.restored_messages.get(1)
+            or (state.history[0] if state.history else user_message)
+        )
+        if self.flags.belief_pool:
+            candidates = self.categories.pool(opener, tau=self.flags.tau_mass)
+        else:
+            candidates = self.categories.by_category[self.categories.best(opener)]
+        return list(candidates) if candidates else list(self._fallback)
+
     def respond(self, session_id: str, user_message: str, turn: int, top_k: int) -> dict:
         try:
             return self._respond(session_id, user_message, turn, top_k)
@@ -95,15 +133,20 @@ class Agent:
                     "usage": {"prompt_tokens": 0, "completion_tokens": 0}}
 
     def _respond(self, session_id: str, user_message: str, turn: int, top_k: int) -> dict:
+        self._ensure_intent_pipeline()
         state = self.sessions.setdefault(session_id, SessionState())
         state.turn = turn
-        before = len(state.constraints)
-        extraction_llm = self.llm if (self.flags.llm_extract and state.paraphrased()) else None
-        parse(user_message, state, llm=extraction_llm, erase=self.flags.erase)
+        before = len(state.constraints) + len(state.ambiguities)
+        parse(
+            user_message,
+            state,
+            erase=self.flags.erase,
+            intent_pipeline=self.intent_pipeline if self.flags.llm_extract else None,
+        )
         # Pillar III, concretely: "is this conversation still teaching me anything?" A turn that
         # revealed nothing new means the belief will not improve by waiting, and the policy below
         # reads that directly instead of consulting a hand-tuned deadline.
-        gained = len(state.constraints) - before
+        gained = len(state.constraints) + len(state.ambiguities) - before
         stalls = self._stalls.get(session_id, 0)
         stalls = stalls + 1 if (turn > 1 and gained == 0) else 0
         self._stalls[session_id] = stalls
@@ -115,13 +158,7 @@ class Agent:
             state.asked[previous] = False
 
         # --- level 1: the pool, by posterior mass over categories ---
-        opener = state.history[0] if state.history else user_message
-        if self.flags.belief_pool:
-            candidates = self.categories.pool(opener, tau=self.flags.tau_mass)
-        else:
-            candidates = self.categories.by_category[self.categories.best(opener)]
-        if not candidates:
-            candidates = self._fallback
+        candidates = self._candidate_pool(state, user_message)
 
         # --- level 2: the posterior over items in it ---
         # A channel-conditioned `exact_gain` (high while templates match, low once they stop) was
@@ -137,9 +174,6 @@ class Agent:
         entropy = belief.entropy()
 
         # --- the policy, from one number ---
-        # An override session cannot convert before the override utterance lands on turn 3-4: the
-        # evaluator discards every list shipped before it, even at rank 1. So spend those turns
-        # listening instead of selling. This is structural, not tuning (00-r3-spec.md §5).
         # An override session cannot convert before the override lands: the evaluator discards every
         # list shipped before it, even at rank 1. Structural, not tuning (00-r3-spec.md §5).
         if state.route == "override" and not state.override_seen and turn < self.flags.deadline:
@@ -167,33 +201,6 @@ class Agent:
             question = best_question(self.index, state, belief, include_other=True)
         else:
             question = "other"
-        # The model sees only accumulated known/missing state and returns one attribute. It never sees
-        # product candidates, BM25/semantic scores, or ranks, and cannot change the search pipeline.
-        if flags.llm_attribute and self.llm is not None and hasattr(self.llm, "select_attribute"):
-            known_attributes = sorted(set(state.slots) | ({"category"} if state.category else set()))
-            exhausted = sorted(
-                attribute for attribute, useful in state.asked.items() if useful is False
-            )
-            state_summary = {
-                "turn": state.turn,
-                "route": state.route,
-                "override_seen": state.override_seen,
-                "category": state.category,
-                "known_slots": state.slots,
-                "known_attributes": known_attributes,
-                "missing_attributes": sorted(
-                    set(QUESTION_TEXT) - set(known_attributes) - set(exhausted)
-                ),
-                "live_constraints": [
-                    {"attribute": item.attribute, "value": item.value, "demoted": item.demoted}
-                    for item in state.live()
-                ],
-                "exhausted": exhausted,
-                "previous_question": self._last_asked.get(session_id),
-            }
-            selected = self.llm.select_attribute(state.profile, state_summary)
-            if selected and selected not in known_attributes and selected not in exhausted:
-                question = selected
         message = QUESTION_TEXT.get(question, QUESTION_TEXT["other"])
         self._last_asked[session_id] = question
         usage = {"prompt_tokens": 0, "completion_tokens": 0}

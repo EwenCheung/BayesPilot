@@ -1,4 +1,4 @@
-# Train/dev resplit and LLM question-writer result
+# Train/dev resplit and LLM interpretation results
 
 ## Data split
 
@@ -31,9 +31,9 @@ The clean-path constants were subsequently refit using train only and selected u
 test score was **0.933979** (95% CI `0.9284–0.9394`) and the public golden regression score remained
 **0.973075**. See [the locked protocol](DATA-PROTOCOL.md).
 
-## LLM scope
+## Rejected LLM question-selection scope
 
-The online architecture uses the LLM only to select the next `ask_attribute`. Its input is the
+An earlier online experiment used the LLM only to select the next `ask_attribute`. Its input was the
 accumulated agent state: category, known slots, missing attributes, exhausted attributes, intent route,
 override status, profile, turn, and previous question. It never sees products, candidates, BM25 or
 semantic scores, or ranks. BM25/semantic/posterior retrieval and ranking remain authoritative, and a
@@ -60,6 +60,46 @@ A subsequent deterministic candidate-information policy was restricted to concre
 scored **0.889028**, down from **0.923199** with wildcard `other`; boundary performance was hit hardest.
 It remains available through `R3_FLAGS=critical_questions` for real-UX evaluation, but is not the
 competition-score default.
+
+## Retained gated intent-operation interpreter
+
+The first experiment used an always-review LLM. The retained `template-llm` path applies the fixed
+evaluator grammar first and makes zero model calls when it matches. For unknown wording, one
+context-aware model call proposes the message kind, the shopper's category phrase, and typed
+add/remove/replace operations. Deterministic code retrieves and verifies those meanings against the
+real catalog, applies one atomic state transaction, and renders a fixed template only when the
+interpretation is verified. A vague phrase can preserve multiple category hypotheses.
+
+An ambiguous value is not forced into one label. For example, `poly` can remain a single probability
+mixture over `polyester`, `polyurethane`, `polycarbonate`, and `polymer`. These hypotheses receive
+soft attribute evidence and can never receive the exact-match gain. This costs some pilot score
+relative to unsafe forced canonicalization, but prevents silent semantic corruption.
+
+The clean-path control was rerun over all 2,800 validation sessions after the implementation and
+remained exactly **0.927023 with zero LLM calls**. On identical stratified 20-session validation
+pilots:
+
+| language condition | mode | score | Hit@10 | MRR | model interactions | live tokens | elapsed |
+|---|---|---:|---:|---:|---:|---:|---:|
+| clean | deterministic | **0.940500** | 1.000 | 0.941667 | 0 | 0 | 1.27 s |
+| clean | always-review LLM | **0.940500** | 1.000 | 0.941667 | 71 (25 cached) | 21,360 | 59.88 s |
+| clean | gated template restoration | **0.940500** | 1.000 | 0.941667 | 0 | 0 | 1.33 s |
+| strong paraphrase | deterministic | **0.436750** | 0.500 | 0.372500 | 0 | 0 | 5.69 s |
+| strong paraphrase | always-review LLM | **0.520143** | 0.600 | 0.437143 | 145 (53 cached) | 47,620 | 118.52 s |
+| strong paraphrase | **retained one-call ambiguity-safe interpreter** | **0.565750** | 0.600 | 0.562500 | 56 live + 59 cache hits | 59,202 | 81.65 s |
+| strong paraphrase | unsafe forced-canonical prototype (removed) | **0.605875** | 0.650 | 0.606250 | 137 (10 cached) | 67,967 | 138.48 s |
+
+The retained path gained `+0.129000` over deterministic and `+0.045607` over always-review under
+strong paraphrasing, while clean templates remained identical with zero calls. Its bootstrap interval
+(`0.3575–0.7700`) remains wide, so this is a promising robustness result rather than proof of a
+population-wide gain. It deliberately gives up `0.040125` versus the removed forced-canonical
+prototype because that prototype could turn an underspecified phrase such as `poly` into a wrong hard
+constraint. The current path needs at most one intent call per unknown customer message; no LLM
+reranker or question selector is used. Test and public were not read or evaluated during this
+experiment.
+
+The complete flow and the retained/changed/removed components are documented in
+[FINAL-ARCHITECTURE.md](FINAL-ARCHITECTURE.md).
 
 ## Augmentation verdict
 

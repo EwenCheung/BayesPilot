@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_competition_default_does_not_depend_on_llm_availability() -> None:
-    assert Flags().llm_attribute is False
+    assert not hasattr(Flags(), "llm_attribute")
     assert Flags().llm_extract is False
 
 

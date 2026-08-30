@@ -3,9 +3,10 @@
 Examples:
 
     python3 scripts/evaluate_resplit.py --mode offline --splits train,validation
-    python3 scripts/evaluate_resplit.py --mode full-llm --splits train --sample-per-scenario 5
+    python3 scripts/evaluate_resplit.py --mode template-llm --splits validation --stress 3 --sample-per-scenario 5
 
-For full-LLM mode, export the endpoint credentials before running.  The script never loads or prints
+For template-LLM mode, export the endpoint credentials before running. The legacy ``full-llm`` name
+is retained as an alias. The script never loads or prints
 secrets itself.
 """
 from __future__ import annotations
@@ -29,6 +30,8 @@ sys.path[:0] = [str(ROOT), str(KIT)]
 
 from evaluator.local_evaluator import catalog_index, evaluate, load_jsonl  # noqa: E402
 from src.eval.harness import bootstrap_ci  # noqa: E402
+from src.eval.harness import StressedAgent  # noqa: E402
+from src.eval.stress import ParaphraseRewriter  # noqa: E402
 from src.r3.agent import Agent  # noqa: E402
 
 
@@ -49,11 +52,15 @@ def _sample(rows: list[dict], per_scenario: int, seed: int) -> list[dict]:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--mode", choices=("offline", "full-llm"), required=True)
+    parser.add_argument(
+        "--mode", choices=("offline", "template-llm", "full-llm"), required=True,
+        help="template-llm calls the LLM only when fixed evaluator grammar does not match",
+    )
     parser.add_argument("--splits", default="validation")
     parser.add_argument("--sample-per-scenario", type=int, default=0)
     parser.add_argument("--r3-flags", default="")
     parser.add_argument("--seed", type=int, default=20260830)
+    parser.add_argument("--stress", type=int, choices=(0, 1, 2, 3), default=0)
     parser.add_argument("--output")
     args = parser.parse_args()
 
@@ -66,7 +73,7 @@ def main() -> None:
 
     catalog_ids, categories, products = catalog_index(CATALOG)
     output = {"mode": args.mode, "sample_per_scenario": args.sample_per_scenario,
-              "r3_flags": args.r3_flags, "splits": {}}
+              "r3_flags": args.r3_flags, "stress": args.stress, "splits": {}}
     requested = [value.strip() for value in args.splits.split(",") if value.strip()]
     forbidden = sorted(set(requested) - DEVELOPMENT_SPLITS)
     if forbidden:
@@ -77,10 +84,10 @@ def main() -> None:
     for name in requested:
         rows = _sample(load_jsonl(SPLIT_DIR / f"{name}.jsonl"), args.sample_per_scenario, args.seed)
         agent = Agent(CATALOG)
-        agent.flags.llm_attribute = args.mode == "full-llm"
-        agent.flags.llm_extract = False
+        agent.flags.llm_extract = args.mode != "offline"
+        subject = StressedAgent(agent, ParaphraseRewriter(args.stress)) if args.stress else agent
         started = time.time()
-        result = evaluate(agent, rows, catalog_ids, categories, products)
+        result = evaluate(subject, rows, catalog_ids, categories, products)
         summary = {key: value for key, value in result.items() if key != "sessions"}
         summary["bootstrap_95_ci"] = bootstrap_ci(result, resamples=1000, seed=args.seed)
         summary["elapsed_s"] = round(time.time() - started, 2)

@@ -6,6 +6,7 @@ import pytest
 
 from src.common.attributes import normalise
 from src.r1.catalog import CatalogIndex
+from src.r3.index import ItemIndex
 
 CATALOG = Path(__file__).parent.parent / "techjam-conversational-search-main" / "data" / "catalog.jsonl"
 
@@ -13,6 +14,11 @@ CATALOG = Path(__file__).parent.parent / "techjam-conversational-search-main" / 
 @pytest.fixture(scope="session")
 def index():
     return CatalogIndex(CATALOG)
+
+
+@pytest.fixture(scope="session")
+def r3_index():
+    return ItemIndex(CATALOG)
 
 
 def test_index_covers_the_whole_catalog(index):
@@ -68,6 +74,15 @@ def test_normalise_is_paraphrase_tolerant():
     """The point of the ontology: reworded text yields the same pair as the template form."""
     assert set(normalise("Material: alloy")) & set(normalise("made of alloy"))
     assert set(normalise("color: black")) & set(normalise("I'd like it in black"))
+
+
+def test_r3_canonical_retrieval_corrects_typos_without_forcing_poly(r3_index):
+    assert r3_index.exact_canonical("material", "polyster").lower() == "polyester"
+    assert r3_index.exact_canonical("material", "cotten").lower() == "cotton"
+    assert r3_index.exact_canonical("material", "poly") is None
+    records = r3_index.canonical_candidate_records("material", "poly", limit=6)
+    assert records
+    assert all(row["value"] != "cotton" for row in records)
 
 
 def test_hedge_widens_only_when_the_category_is_uncertain(index):

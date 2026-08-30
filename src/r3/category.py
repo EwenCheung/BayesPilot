@@ -38,6 +38,14 @@ TEMPERATURE = 2.0     # how sharply score differences become belief (chosen on t
 POOL_CAP = 8000       # latency bound (R3-A14), not a modelling choice
 QUOTE_BONUS = 3.0     # the whole category name present verbatim is much stronger than token overlap
 
+CATEGORY_ALIASES = (
+    (re.compile(r"\bkicks\b", re.I), "shoes sneakers"),
+    (re.compile(r"\btrainers\b", re.I), "sneakers"),
+    (re.compile(r"\bt\s*-?\s*shirts?\b", re.I), "tees shirts"),
+    (re.compile(r"\bactivewear\b", re.I), "active workout wear"),
+    (re.compile(r"\bknits?\b", re.I), "knitwear sweaters"),
+)
+
 
 def stem(word: str) -> str:
     """Crude, consistent, applied to BOTH sides. `womens`->`women`, `tees`->`tee`.
@@ -51,6 +59,8 @@ def stem(word: str) -> str:
 
 
 def stems(text: str) -> set[str]:
+    for pattern, replacement in CATEGORY_ALIASES:
+        text = pattern.sub(replacement, text or "")
     return {stem(w) for w in tokens(text)}
 
 
@@ -121,6 +131,44 @@ class CategoryBelief:
     def best(self, message: str) -> str:
         post = self.posterior(message)
         return self.categories[max(range(len(post)), key=lambda i: post[i])]
+
+    def resolve_phrase(self, phrase: str) -> str | None:
+        """Map an extracted shopper category phrase to a real catalog category, or abstain.
+
+        ``best`` always returns something because ranking needs a fallback. Template restoration is
+        different: accepting an unrelated popular category as quoted evidence would be fabrication,
+        so at least one normalized category token must actually be shared.
+        """
+        rows = self.resolve_candidates(phrase)
+        if not rows:
+            return None
+        if rows[0][1] >= 0.75:
+            return rows[0][0]
+        if len(rows) == 1 or rows[0][1] >= 3.0 * rows[1][1]:
+            return rows[0][0]
+        return None
+
+    def resolve_candidates(self, phrase: str, limit: int = 12) -> list[tuple[str, float]]:
+        """Return real category hypotheses without forcing a vague phrase to one taxonomy leaf."""
+        key = (phrase or "").strip().lower()
+        if not key:
+            return []
+        exact = next((category for category in self.categories if category.lower() == key), None)
+        if exact:
+            return [(exact, 1.0)]
+        wanted = stems(phrase)
+        if not wanted:
+            return []
+        rows = [
+            (category, probability)
+            for category, probability in self.ranked(phrase)
+            if wanted & self._stems[self._idx[category]]
+        ][:limit]
+        mass = sum(probability for _, probability in rows)
+        return [
+            (category, probability / mass)
+            for category, probability in rows
+        ] if mass else []
 
     def pool(self, message: str, tau: float = TAU_MASS, cap: int = POOL_CAP) -> list[str]:
         """Smallest set of categories covering `tau` of the posterior, as ASINs.

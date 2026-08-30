@@ -88,6 +88,11 @@ class TestR3A27CategoryBelief(unittest.TestCase):
         self.assertLess(sum(clean) / len(clean), sum(stressed) / len(stressed),
                         "the pool does not widen under uncertainty")
 
+    def test_vague_tees_keeps_multiple_taxonomy_hypotheses(self) -> None:
+        rows = self.belief.resolve_candidates("tees")
+        self.assertGreater(len(rows), 1)
+        self.assertIsNone(self.belief.resolve_phrase("tees"))
+
 
 if __name__ == "__main__":
     unittest.main()
