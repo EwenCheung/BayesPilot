@@ -34,7 +34,7 @@ on validation, versus `0.920248` and `0.923199` for the legacy `0.18` value. The
 ## Locked final results
 
 At configuration lock, after 129 passing tests, the final evaluator ran test first and public second.
-The current regression suite contains 153 passing tests; the holdouts were not rerun for the later
+The current regression suite contains 161 passing tests; the holdouts were not rerun for the later
 intent-router work:
 
 | split | rows | Hit@10 | MRR | MTTC | TechnicalScore | 95% CI |
@@ -53,6 +53,27 @@ routing, and the repeated holdout results are not eligible for further tuning.
 Historical limitation: the public 200 was used during earlier development, so it cannot be made
 statistically pristine retroactively. It is frozen as a golden regression set from this protocol
 forward; its score must not be used for further parameter or architecture selection.
+
+## Free-form language corpus
+
+`data/freeform_v1` is derived without crossing the locked source splits. It contains 1,200 train,
+400 validation, and 800 sealed-test sessions with the same 40/40/15/5 scenario proportions. The
+target-ASIN intersections between all three splits are empty.
+
+A dataset row alone cannot make this benchmark free-form: the official evaluator dynamically writes
+customer messages from fixed templates. `src.eval.freeform.FreeFormDatasetAgent` therefore rewrites
+only the text delivered to the agent while the original `local_evaluator.evaluate()` still owns the
+turn loop, hidden state, override behavior, hit checks, and scoring. The evaluation runner rejects a
+score unless `local_evaluator.py` retains SHA-256
+`79a5ea06f9a1b8c5036f30efa85dc1f36b8f6b06eb8feb8f545dfa767bc45564`.
+
+The deterministic offline baseline scored `0.514799` on the 400-session free-form validation split
+(95% bootstrap CI `0.4722–0.5592`). The 800-session free-form test remains unopened. Tune on free-form
+train, select on free-form validation, and use `--acknowledge-sealed-test` exactly once after lock.
+
+This is a reproducible synthetic stress benchmark, not a sample of real shoppers. Its finite style
+grammar may understate real language diversity; model-generated or human-reviewed variants can be
+added later, but they must be generated separately inside each source split.
 
 Reproduce fitting and the one-way final evaluation with:
 

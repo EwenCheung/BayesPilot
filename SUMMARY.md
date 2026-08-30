@@ -29,7 +29,20 @@ Other relevant validation results:
 | gated ambiguity-safe LLM | same paraphrase pilot | **0.565750** | `+0.129000`; CI `0.3575–0.7700` |
 | always-on router fallback | clean pilot, 8 | `0.938750` | invalid as LLM evidence: all 25 calls failed |
 
-The current regression suite has `154` passing tests.
+The current regression suite has `161` passing tests.
+
+### Free-form robustness corpus
+
+A separate `freeform_v1` corpus now contains 1,200 train, 400 validation, and 800 sealed-test
+sessions. Every first turn is non-template, and an agent-side adapter also rewrites every later
+evaluator-generated reply with slang, shorthand, reordered phrases, filler-word typos, casual
+punctuation, or occasional emoji. Scenario ratios remain 40% buying, 40% browsing, 15% override, and
+5% boundary; target-ASIN overlap between splits is zero.
+
+The byte-identical official `local_evaluator.py` scored the zero-LLM deterministic baseline at
+**0.514799** on free-form validation (95% CI `0.4722–0.5592`). The 800-session free-form test has not
+been evaluated. This synthetic corpus is a controlled language stress test, not evidence sampled
+from real customers.
 
 ## Data protocol
 
@@ -54,6 +67,7 @@ later choices.
 | `c816bfd` | gated ambiguity-safe LLM interpreter | clean `0.927023`; paraphrase-20 `0.565750` | safe code rollback |
 | `05fb5c2` | checkpoint documentation | no new score | records rollback state |
 | working tree | always-on one-call router | no valid online score | current experiment |
+| working tree | free-form v1 corpus + message adapter | validation `0.514799`; test unopened | language-robustness experiment |
 
 ## Are we still on the old graph?
 
