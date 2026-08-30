@@ -17,14 +17,23 @@ or invented.
 The dataset does not replace or modify the official evaluator. Run:
 
 ```bash
-# Development
-python scripts/evaluate_freeform.py --mode offline --splits validation
+# Rebuild all three datasets deterministically
+python scripts/build_freeform_dataset.py
+
+# Development (set R3_OFFLINE=1 only when deliberately measuring deterministic fallback)
+R3_OFFLINE=1 python scripts/evaluate.py \
+  --model src/r3/agent.py \
+  --test-data techjam-conversational-search-main/data/freeform_v1/validation.jsonl \
+  --output runs/freeform_validation.json
 
 # Final use only
-python scripts/evaluate_freeform.py --mode always-router --splits test \
-  --acknowledge-sealed-test --output runs/freeform_test_final.json
+python scripts/evaluate.py \
+  --model src/r3/agent.py \
+  --test-data techjam-conversational-search-main/data/freeform_v1/test.jsonl \
+  --output runs/freeform_test_final.json
 ```
 
-Both commands import and execute the unchanged `evaluator/local_evaluator.py`. The runner rejects the
+Both commands import and execute the unchanged `evaluator/local_evaluator.py`. Supplying an explicit
+`--test-data` path is the acknowledgement that this dataset will be evaluated. The runner rejects the
 score unless that file's SHA-256 remains
 `79a5ea06f9a1b8c5036f30efa85dc1f36b8f6b06eb8feb8f545dfa767bc45564`.

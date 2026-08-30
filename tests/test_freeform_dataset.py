@@ -76,7 +76,9 @@ def test_all_official_turn_kinds_are_rewritten() -> None:
         assert not is_official_grammar(rewritten)
 
 
-def test_test_split_requires_explicit_acknowledgement() -> None:
-    source = (ROOT / "scripts" / "evaluate_freeform.py").read_text(encoding="utf-8")
-    assert "--acknowledge-sealed-test" in source
+def test_generic_runner_uses_explicit_model_data_and_output_paths() -> None:
+    source = (ROOT / "scripts" / "evaluate.py").read_text(encoding="utf-8")
+    assert 'parser.add_argument("--model", required=True' in source
+    assert 'parser.add_argument("--test-data", required=True' in source
+    assert 'parser.add_argument("--output", required=True' in source
     assert "from evaluator.local_evaluator import catalog_index, evaluate, load_jsonl" in source

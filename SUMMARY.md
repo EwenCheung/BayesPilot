@@ -437,6 +437,15 @@ paraphrase performance and candidate recall.
 ## Reproduction
 
 ```bash
+# Rebuild the synthetic free-form corpus; this does not evaluate it
+python scripts/build_freeform_dataset.py
+
+# Generic model-versus-dataset evaluation through the official evaluator
+R3_OFFLINE=1 python scripts/evaluate.py \
+  --model src/r3/agent.py \
+  --test-data techjam-conversational-search-main/data/freeform_v1/validation.jsonl \
+  --output runs/freeform_validation.json
+
 # Development only
 python scripts/fit_resplit.py
 python scripts/evaluate_resplit.py --mode offline --splits validation

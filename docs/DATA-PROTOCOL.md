@@ -69,7 +69,8 @@ score unless `local_evaluator.py` retains SHA-256
 
 The deterministic offline baseline scored `0.514799` on the 400-session free-form validation split
 (95% bootstrap CI `0.4722–0.5592`). The 800-session free-form test remains unopened. Tune on free-form
-train, select on free-form validation, and use `--acknowledge-sealed-test` exactly once after lock.
+train, select on free-form validation, and pass the sealed file explicitly through
+`scripts/evaluate.py --test-data ...` exactly once after lock.
 
 This is a reproducible synthetic stress benchmark, not a sample of real shoppers. Its finite style
 grammar may understate real language diversity; model-generated or human-reviewed variants can be
