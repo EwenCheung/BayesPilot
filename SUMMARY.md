@@ -66,8 +66,8 @@ later choices.
 | `8260052` | locked deterministic R3 | validation `0.927023`; test `0.933979`; public `0.973075` | data-protocol checkpoint |
 | `c816bfd` | gated ambiguity-safe LLM interpreter | clean `0.927023`; paraphrase-20 `0.565750` | safe code rollback |
 | `05fb5c2` | checkpoint documentation | no new score | records rollback state |
-| working tree | always-on one-call router | no valid online score | current experiment |
-| working tree | free-form v1 corpus + message adapter | validation `0.514799`; test unopened | language-robustness experiment |
+| `4385ef0` | always-on one-call router | no valid online score | current experiment |
+| `71c2b09` | free-form v1 corpus + message adapter | validation `0.514799`; test unopened | language-robustness checkpoint |
 
 ## Are we still on the old graph?
 

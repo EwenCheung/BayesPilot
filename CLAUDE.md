@@ -6,6 +6,6 @@
 | `c816bfd` | Gated ambiguity-safe LLM for unknown wording; deterministic ranker | clean validation `0.927023`; paraphrase-20 `0.565750` vs deterministic `0.436750` | Safe rollback; `152` tests |
 | `05fb5c2` | Checkpoint documentation only | no new score | Documentation checkpoint |
 | `4385ef0` | Always-on one-call LLM router: `deterministic` or `hybrid` | no valid online LLM score; deterministic fallback test `0.933979`, public `0.973075` | Credentials missing; `154` tests |
-| working tree | Free-form v1: 1,200 train / 400 validation / 800 sealed test; unchanged evaluator | offline validation `0.514799`; test unopened | Synthetic stress corpus; `161` tests |
+| `71c2b09` | Free-form v1: 1,200 train / 400 validation / 800 sealed test; unchanged evaluator | offline validation `0.514799`; test unopened | Synthetic stress corpus; `161` tests |
 
 Fit on train only; select on validation only. Never tune on test or `public_set.jsonl`.
