@@ -437,6 +437,12 @@ paraphrase performance and candidate recall.
 ## Reproduction
 
 ```bash
+# One-time environment setup (Python 3.11)
+python3.11 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+
 # Rebuild the synthetic free-form corpus; this does not evaluate it
 python scripts/build_freeform_dataset.py
 
