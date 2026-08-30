@@ -23,7 +23,7 @@ IMAGE = ("PIL", "cv2", "torchvision", "clip", "open_clip")
 class TestRuntimeDependencies(unittest.TestCase):
     def test_shipped_agent_never_imports_torch(self) -> None:
         """R3-A21: the default path is numpy-only. Guarded at import time, not by inspection."""
-        from src.eval import race
+        from src.r3.agent import Agent
 
         real = builtins.__import__
 
@@ -33,7 +33,7 @@ class TestRuntimeDependencies(unittest.TestCase):
 
         builtins.__import__ = guard
         try:
-            agent = race.ROADS["r3"]()
+            agent = Agent(str(ROOT / "assets" / "catalog.jsonl"))
             agent.reset("s", {})
             agent.respond("s", "I'm looking for Belts. A key requirement is: Material: leather.", 1, 10)
         finally:
@@ -77,12 +77,12 @@ class TestOfflineIsEnforced(unittest.TestCase):
     def test_r3_offline_keeps_the_router_shape_but_never_calls_or_reads_cache(self) -> None:
         import os
 
-        from src.eval import race
+        from src.r3.agent import Agent
 
         previous = os.environ.get("R3_OFFLINE")
         os.environ["R3_OFFLINE"] = "1"
         try:
-            agent = race.ROADS["r3"]()
+            agent = Agent(str(ROOT / "assets" / "catalog.jsonl"))
             self.assertIsNotNone(agent.llm, "one submitted agent always owns the routing layer")
             agent.reset("offline-router", {})
             agent.respond(

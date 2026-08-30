@@ -10,11 +10,14 @@ results.json
 assets/catalog.jsonl
 assets/catalog.jsonl.gz
 
-# The run registry is the race's shared record and IS committed (IDEA.md §0.5, merge plan §4).
-# Raw per-run dumps are not. `runs/*` not `runs/` — git cannot un-ignore a file inside an
-# ignored DIRECTORY, only inside an ignored glob.
+# Benchmark evaluation outputs
 runs/*
-!runs/registry.jsonl
+!runs/public_set_eval.json
+!runs/resplit_test_eval.json
+!runs/freeform_v1_test_eval.json
+!runs/r3_current_router_fallback_final.json
+!runs/r3_locked_final.json
+!runs/r3_resplit_locked.json
 
 .cache/
 
@@ -24,3 +27,5 @@ artifacts/
 
 # BLaIR embeddings: 71 MB, rebuild with scripts/embed_blair.py (~5 min). Never in git.
 artifacts/
+
+.venv/

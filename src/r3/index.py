@@ -80,6 +80,16 @@ class ItemIndex:
             parts.extend(_flatten_values(product.get("features"))[:8])
             self.lexical_text[asin] = " ".join(parts)
 
+    @property
+    def asins(self) -> set[str]:
+        """Set of all 50,000 product ASINs."""
+        return set(self.title)
+
+    @property
+    def products(self) -> dict[str, str]:
+        """Dictionary mapping ASIN to product title."""
+        return self.title
+
     @staticmethod
     def _canonical_key(value: str) -> str:
         return re.sub(r"[^a-z0-9%$]+", " ", value.lower()).strip()

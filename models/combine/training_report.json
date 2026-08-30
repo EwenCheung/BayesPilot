@@ -1,0 +1,244 @@
+{
+  "dataset_train": "/Users/ewencheung/Documents/GitHub/techjam-track4/techjam-conversational-search-main/data/combine/train.jsonl",
+  "dataset_validation": "/Users/ewencheung/Documents/GitHub/techjam-track4/techjam-conversational-search-main/data/combine/validation.jsonl",
+  "catalog_path": "/Users/ewencheung/Documents/GitHub/techjam-track4/assets/catalog.jsonl",
+  "device": "mps",
+  "device_description": "User requested device: mps",
+  "total_elapsed_s": 8922.83,
+  "total_elapsed_min": 148.71,
+  "best_configuration_name": "baseline_neutral",
+  "best_configuration_overrides": {
+    "exact_gain": 3.2,
+    "prior_weight": 0.1,
+    "v_continue": 0.9,
+    "stall_decay": 0.2,
+    "stall_decay_clean": 0.8,
+    "temperature": 2.0,
+    "tau_mass": 0.9,
+    "rescue_lexical": false,
+    "rescue_semantic": false,
+    "use_rrf": false
+  },
+  "best_validation_metrics": {
+    "recommended_technical_score": 0.926272,
+    "hit_rate_at_10": 0.974688,
+    "mrr": 0.926365,
+    "mttc": 2.949063,
+    "efficiency": 0.805094
+  },
+  "all_validation_results": [
+    {
+      "name": "baseline_neutral",
+      "overrides": {
+        "exact_gain": 3.2,
+        "prior_weight": 0.1,
+        "v_continue": 0.9,
+        "stall_decay": 0.2,
+        "stall_decay_clean": 0.8,
+        "temperature": 2.0,
+        "tau_mass": 0.9,
+        "rescue_lexical": false,
+        "rescue_semantic": false,
+        "use_rrf": false
+      },
+      "sample_count": 3200,
+      "hit_rate_at_10": 0.974688,
+      "mrr": 0.926365,
+      "mttc": 2.949063,
+      "efficiency": 0.805094,
+      "recommended_technical_score": 0.926272,
+      "elapsed_s": 422.68
+    },
+    {
+      "name": "gain_400_rrf",
+      "overrides": {
+        "exact_gain": 4.0,
+        "rescue_lexical": true,
+        "rescue_semantic": true,
+        "use_rrf": true
+      },
+      "sample_count": 3200,
+      "hit_rate_at_10": 0.930312,
+      "mrr": 0.823068,
+      "mttc": 3.990625,
+      "efficiency": 0.700937,
+      "recommended_technical_score": 0.852264,
+      "elapsed_s": 2423.1
+    },
+    {
+      "name": "tau_095_rrf",
+      "overrides": {
+        "tau_mass": 0.95,
+        "rescue_lexical": true,
+        "rescue_semantic": true,
+        "use_rrf": true
+      },
+      "sample_count": 3200,
+      "hit_rate_at_10": 0.930312,
+      "mrr": 0.821756,
+      "mttc": 4.004375,
+      "efficiency": 0.699563,
+      "recommended_technical_score": 0.851595,
+      "elapsed_s": 2441.4
+    }
+  ],
+  "training_sweep_results": [
+    {
+      "name": "baseline_neutral",
+      "overrides": {
+        "exact_gain": 3.2,
+        "prior_weight": 0.1,
+        "v_continue": 0.9,
+        "stall_decay": 0.2,
+        "stall_decay_clean": 0.8,
+        "temperature": 2.0,
+        "tau_mass": 0.9,
+        "rescue_lexical": false,
+        "rescue_semantic": false,
+        "use_rrf": false
+      },
+      "sample_count": 800,
+      "hit_rate_at_10": 0.97375,
+      "mrr": 0.917461,
+      "mttc": 3.1,
+      "efficiency": 0.79,
+      "recommended_technical_score": 0.920113,
+      "elapsed_s": 3519.6
+    },
+    {
+      "name": "tau_095_rrf",
+      "overrides": {
+        "tau_mass": 0.95,
+        "rescue_lexical": true,
+        "rescue_semantic": true,
+        "use_rrf": true
+      },
+      "sample_count": 800,
+      "hit_rate_at_10": 0.94125,
+      "mrr": 0.793404,
+      "mttc": 4.2825,
+      "efficiency": 0.67175,
+      "recommended_technical_score": 0.842996,
+      "elapsed_s": 6216.47
+    },
+    {
+      "name": "gain_400_rrf",
+      "overrides": {
+        "exact_gain": 4.0,
+        "rescue_lexical": true,
+        "rescue_semantic": true,
+        "use_rrf": true
+      },
+      "sample_count": 800,
+      "hit_rate_at_10": 0.9375,
+      "mrr": 0.79394,
+      "mttc": 4.28625,
+      "efficiency": 0.671375,
+      "recommended_technical_score": 0.841207,
+      "elapsed_s": 6212.23
+    },
+    {
+      "name": "v_continue_095",
+      "overrides": {
+        "v_continue": 0.95,
+        "rescue_lexical": true,
+        "rescue_semantic": true,
+        "use_rrf": true
+      },
+      "sample_count": 800,
+      "hit_rate_at_10": 0.935,
+      "mrr": 0.794361,
+      "mttc": 4.2775,
+      "efficiency": 0.67225,
+      "recommended_technical_score": 0.840258,
+      "elapsed_s": 6214.37
+    },
+    {
+      "name": "prior_005_rrf",
+      "overrides": {
+        "prior_weight": 0.05,
+        "rescue_lexical": true,
+        "rescue_semantic": true,
+        "use_rrf": true
+      },
+      "sample_count": 800,
+      "hit_rate_at_10": 0.93125,
+      "mrr": 0.797065,
+      "mttc": 4.26375,
+      "efficiency": 0.673625,
+      "recommended_technical_score": 0.839469,
+      "elapsed_s": 6201.52
+    },
+    {
+      "name": "prior_015_rrf",
+      "overrides": {
+        "prior_weight": 0.15,
+        "rescue_lexical": true,
+        "rescue_semantic": true,
+        "use_rrf": true
+      },
+      "sample_count": 800,
+      "hit_rate_at_10": 0.9375,
+      "mrr": 0.789241,
+      "mttc": 4.3225,
+      "efficiency": 0.66775,
+      "recommended_technical_score": 0.839072,
+      "elapsed_s": 6214.36
+    },
+    {
+      "name": "rescue_lexical_only",
+      "overrides": {
+        "rescue_lexical": true,
+        "rescue_top_k": 200,
+        "use_rrf": true,
+        "rrf_weight_category": 1.0,
+        "rrf_weight_lexical": 0.5
+      },
+      "sample_count": 800,
+      "hit_rate_at_10": 0.87875,
+      "mrr": 0.756231,
+      "mttc": 4.49,
+      "efficiency": 0.651,
+      "recommended_technical_score": 0.796444,
+      "elapsed_s": 4115.81
+    },
+    {
+      "name": "rescue_full_rrf",
+      "overrides": {
+        "rescue_lexical": true,
+        "rescue_semantic": true,
+        "rescue_normalized": true,
+        "rescue_top_k": 200,
+        "use_rrf": true,
+        "rrf_k": 60,
+        "rrf_weight_category": 1.0,
+        "rrf_weight_lexical": 0.5,
+        "rrf_weight_semantic": 0.5
+      },
+      "sample_count": 800,
+      "hit_rate_at_10": 0.88625,
+      "mrr": 0.724897,
+      "mttc": 4.95625,
+      "efficiency": 0.604375,
+      "recommended_technical_score": 0.781469,
+      "elapsed_s": 6450.43
+    },
+    {
+      "name": "rescue_semantic_only",
+      "overrides": {
+        "rescue_semantic": true,
+        "rescue_top_k": 200,
+        "use_rrf": true,
+        "rrf_weight_category": 1.0,
+        "rrf_weight_semantic": 0.5
+      },
+      "sample_count": 800,
+      "hit_rate_at_10": 0.775,
+      "mrr": 0.63641,
+      "mttc": 5.7275,
+      "efficiency": 0.52725,
+      "recommended_technical_score": 0.683873,
+      "elapsed_s": 4232.85
+    }
+  ]
+}

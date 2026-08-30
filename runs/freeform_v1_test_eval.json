@@ -1,0 +1,6463 @@
+{
+  "efficiency": 0.436625,
+  "evaluation_metadata": {
+    "catalog_path": "/Users/ewencheung/Documents/GitHub/techjam-track4/assets/catalog.jsonl",
+    "catalog_sha256": "da979b05a68af864cb0dcf9ee6a81c010c7e66a57978ad286c7a2e005fc69a67",
+    "elapsed_s": 9694.85,
+    "evaluator_path": "/Users/ewencheung/Documents/GitHub/techjam-track4/techjam-conversational-search-main/evaluator/local_evaluator.py",
+    "evaluator_sha256": "79a5ea06f9a1b8c5036f30efa85dc1f36b8f6b06eb8feb8f545dfa767bc45564",
+    "free_form_adapter": true,
+    "llm": {
+      "cache_hits": 136,
+      "calls": 3271,
+      "completion_tokens": 531334,
+      "failures": 1587,
+      "latency_p50_ms": 1290.7,
+      "latency_p95_ms": 3545.4,
+      "prompt_tokens": 3445460,
+      "usd": 0.0
+    },
+    "model_path": "/Users/ewencheung/Documents/GitHub/techjam-track4/src/r3/agent.py",
+    "model_sha256": "4eee40b67765c5b5ba3339f57c6085c1c346d1ad6ae65927787d170e65c92458",
+    "test_data_path": "/Users/ewencheung/Documents/GitHub/techjam-track4/techjam-conversational-search-main/data/freeform_v1/test.jsonl",
+    "test_data_sha256": "a60dfaccb562a4b65ddd635f23d1619d142dc2616008a449d2c46c5b812996b7"
+  },
+  "hit_rate_at_10": 0.59375,
+  "mrr": 0.431638,
+  "mttc": 6.63375,
+  "recommended_technical_score": 0.513691,
+  "reported_token_usage": {
+    "completion_tokens": 531334,
+    "prompt_tokens": 3445460,
+    "total_tokens": 3976794
+  },
+  "sample_count": 800,
+  "scenario_metrics": {
+    "boundary": {
+      "hit_rate_at_10": 0.575,
+      "mrr": 0.404167,
+      "mttc": 7.15,
+      "sample_count": 40
+    },
+    "browsing": {
+      "hit_rate_at_10": 0.578125,
+      "mrr": 0.410427,
+      "mttc": 6.79375,
+      "sample_count": 320
+    },
+    "buying": {
+      "hit_rate_at_10": 0.575,
+      "mrr": 0.421265,
+      "mttc": 6.475,
+      "sample_count": 320
+    },
+    "intent_override": {
+      "hit_rate_at_10": 0.691667,
+      "mrr": 0.52502,
+      "mttc": 6.458333,
+      "sample_count": 120
+    }
+  },
+  "sessions": [
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_04425",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 3,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "sample_id": "dev_00713",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_01741",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 6,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_07240",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 4,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.25,
+      "sample_id": "train_11111",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_02730",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_08987",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_09421",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_09442",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_04323",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_04220",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_02944",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_00417",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_00369",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_07513",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_11560",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_01129",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_00134",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_07067",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_03750",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_04794",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_00017",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 1,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_05050",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_03734",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_10803",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "dev_01994",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_08517",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 4,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 0.25,
+      "sample_id": "train_03149",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_10926",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_07319",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 5,
+      "first_hit_turn": 10,
+      "hit": true,
+      "reciprocal_rank": 0.2,
+      "sample_id": "train_00416",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 1,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_01847",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_00042",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_07151",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_05656",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_08828",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 6,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 0.16666666666666666,
+      "sample_id": "train_10939",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_01667",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_09621",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 7,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.14285714285714285,
+      "sample_id": "train_04372",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_00022",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_09566",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_08677",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_11556",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 1,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_06555",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 3,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "sample_id": "train_03101",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_06931",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_01352",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_00698",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_03891",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_06159",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_01486",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_11091",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 4,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.25,
+      "sample_id": "dev_00049",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_00482",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_01943",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 1,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_03950",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 6,
+      "first_hit_turn": 10,
+      "hit": true,
+      "reciprocal_rank": 0.16666666666666666,
+      "sample_id": "train_03636",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_04099",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_10936",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_10557",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 1,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_11542",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_03911",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_07693",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_06513",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 5,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 0.2,
+      "sample_id": "train_07883",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_08972",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_08811",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_04412",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_02559",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 3,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "sample_id": "train_00513",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_10707",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_10938",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_02955",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 6,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_11117",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_00092",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_05079",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_07226",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_02035",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 6,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "dev_00043",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_07314",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": 5,
+      "first_hit_turn": 9,
+      "hit": true,
+      "reciprocal_rank": 0.2,
+      "sample_id": "dev_01062",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_03823",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_07802",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_10611",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 6,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_07349",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_11168",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_08544",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_07646",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_01966",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_00849",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_06550",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_11721",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 6,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.16666666666666666,
+      "sample_id": "dev_01184",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_01024",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_07430",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_02761",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_02116",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_04538",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_03926",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_04626",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_03796",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_07109",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_01953",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_11377",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 4,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 0.25,
+      "sample_id": "train_11481",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 10,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.1,
+      "sample_id": "dev_01061",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_02241",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_03046",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_08078",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_11026",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_01281",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_03191",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_00234",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_03523",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_02609",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 4,
+      "first_hit_turn": 8,
+      "hit": true,
+      "reciprocal_rank": 0.25,
+      "sample_id": "dev_00846",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_08850",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 4,
+      "first_hit_turn": 10,
+      "hit": true,
+      "reciprocal_rank": 0.25,
+      "sample_id": "train_09472",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 3,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "sample_id": "train_00542",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 7,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_07194",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_11706",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 6,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "dev_00483",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_07297",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_09338",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_11845",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_07189",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_02186",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 4,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 0.25,
+      "sample_id": "dev_00028",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": 6,
+      "first_hit_turn": 6,
+      "hit": true,
+      "reciprocal_rank": 0.16666666666666666,
+      "sample_id": "train_03643",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_09219",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_04218",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 8,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.125,
+      "sample_id": "train_08343",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_07176",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_01960",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_06147",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_04236",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_11371",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_11361",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 7,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_06389",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_05353",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_01088",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 6,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_08656",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_06188",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_07611",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_08563",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_06508",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_03398",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_00251",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_07164",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_01969",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 8,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 0.125,
+      "sample_id": "train_01294",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_07373",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_03215",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_01766",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_04633",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 1,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_02892",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_00216",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 7,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_11511",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "dev_00368",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_09364",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 7,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_04057",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": 4,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.25,
+      "sample_id": "train_07244",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_01990",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_11206",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_00407",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_05949",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_06868",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_05102",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 1,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_01133",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_10664",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_11907",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_04495",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_07587",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 4,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 0.25,
+      "sample_id": "train_08499",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 3,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "sample_id": "train_00243",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 7,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_05529",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_00945",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_00596",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_00691",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_00807",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_10492",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_08731",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 6,
+      "first_hit_turn": 10,
+      "hit": true,
+      "reciprocal_rank": 0.16666666666666666,
+      "sample_id": "train_09848",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_06631",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_01564",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_08617",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_00021",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_06901",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_04149",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 1,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_10787",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_08045",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_11329",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_04456",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_03487",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_03114",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_06173",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_09333",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 3,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "sample_id": "dev_01270",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_00015",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_07957",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 3,
+      "first_hit_turn": 8,
+      "hit": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "sample_id": "train_10380",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_09198",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_11508",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 1,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_01472",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_01384",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 4,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 0.25,
+      "sample_id": "dev_00255",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 6,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_11088",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 7,
+      "first_hit_turn": 10,
+      "hit": true,
+      "reciprocal_rank": 0.14285714285714285,
+      "sample_id": "train_00472",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_07105",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_08211",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 3,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "sample_id": "train_04936",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_00877",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_08259",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_06943",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_06644",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_00313",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_01440",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_08585",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_09865",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_01257",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_06096",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 3,
+      "first_hit_turn": 8,
+      "hit": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "sample_id": "train_04990",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_01316",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 3,
+      "first_hit_turn": 8,
+      "hit": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "sample_id": "train_09631",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 4,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.25,
+      "sample_id": "train_08194",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_03639",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_07975",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_01195",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_00958",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_01894",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_01692",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_07334",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_01068",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_00700",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_09481",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_02642",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_07914",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_11404",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 5,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 0.2,
+      "sample_id": "train_11992",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_10207",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_10434",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 6,
+      "first_hit_turn": 10,
+      "hit": true,
+      "reciprocal_rank": 0.16666666666666666,
+      "sample_id": "dev_01863",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_07074",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_08638",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_01146",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_10229",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_11624",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_00849",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_01612",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_07588",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_09512",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_10841",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 5,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 0.2,
+      "sample_id": "train_05592",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_00613",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_00903",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 4,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 0.25,
+      "sample_id": "train_02905",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 8,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_01099",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_09348",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_05271",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 6,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 0.16666666666666666,
+      "sample_id": "train_00645",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 8,
+      "first_hit_turn": 10,
+      "hit": true,
+      "reciprocal_rank": 0.125,
+      "sample_id": "train_10026",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_03913",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 4,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 0.25,
+      "sample_id": "train_08722",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_00372",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_03586",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_01520",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 6,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 0.16666666666666666,
+      "sample_id": "train_05121",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_06053",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_08583",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 6,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_03583",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_00378",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_07534",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_09000",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 4,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.25,
+      "sample_id": "dev_01906",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_00800",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_01645",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_07841",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_02435",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_01607",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_08619",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_08281",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_00883",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 10,
+      "first_hit_turn": 6,
+      "hit": true,
+      "reciprocal_rank": 0.1,
+      "sample_id": "train_04167",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_01307",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_00510",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_04034",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_04575",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_00272",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_03647",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_10172",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 8,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 0.125,
+      "sample_id": "train_06429",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_01082",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_01450",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_00032",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_11084",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 6,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "dev_01436",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 7,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "dev_01116",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_10868",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_11905",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_00764",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 6,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "dev_00682",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_00030",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_08500",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_00756",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_01872",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_06119",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_02915",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_01698",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_00992",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_06140",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_09642",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 9,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 0.1111111111111111,
+      "sample_id": "train_06446",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_00447",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_01743",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 4,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.25,
+      "sample_id": "train_05290",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_03838",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_08479",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_07439",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_03056",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_10708",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_06032",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_01135",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 1,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_00203",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_10617",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": 3,
+      "first_hit_turn": 7,
+      "hit": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "sample_id": "train_09444",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_06257",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_09372",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 3,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "sample_id": "dev_01561",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_04512",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_00742",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_07617",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 7,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 0.14285714285714285,
+      "sample_id": "dev_00392",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 1,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_00382",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_05296",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_08723",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_08062",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_05803",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 1,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_10473",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_00446",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_01215",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_02666",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_08058",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_11428",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_01857",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_07193",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_04965",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_00404",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_00539",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_04155",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_00303",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_01848",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_11189",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_05135",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 4,
+      "first_hit_turn": 9,
+      "hit": true,
+      "reciprocal_rank": 0.25,
+      "sample_id": "train_11731",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_05134",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 7,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_08966",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_06302",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_02184",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_02832",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_01947",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_08018",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 5,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 0.2,
+      "sample_id": "train_09938",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_10613",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_04337",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 1,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_11505",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_03706",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_01265",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 3,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "sample_id": "train_07873",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_00560",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_09794",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 3,
+      "first_hit_turn": 8,
+      "hit": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "sample_id": "train_00221",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 6,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_08503",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_03128",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_00036",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_02813",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_10927",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_00683",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 1,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_08684",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 1,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_04723",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_10256",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 1,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_01314",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 7,
+      "first_hit_turn": 10,
+      "hit": true,
+      "reciprocal_rank": 0.14285714285714285,
+      "sample_id": "train_08698",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 3,
+      "first_hit_turn": 7,
+      "hit": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "sample_id": "train_01810",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_11017",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_07186",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 5,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 0.2,
+      "sample_id": "train_08149",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_10410",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_06663",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_00004",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_04120",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 6,
+      "first_hit_turn": 10,
+      "hit": true,
+      "reciprocal_rank": 0.16666666666666666,
+      "sample_id": "train_06881",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_01818",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_01928",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_01059",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_04168",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_08552",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 3,
+      "first_hit_turn": 7,
+      "hit": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "sample_id": "train_11722",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_00497",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_04605",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 3,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "sample_id": "train_11942",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_01640",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_07993",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 4,
+      "first_hit_turn": 9,
+      "hit": true,
+      "reciprocal_rank": 0.25,
+      "sample_id": "train_11083",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 3,
+      "first_hit_turn": 8,
+      "hit": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "sample_id": "train_05954",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 6,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_06452",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_08579",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_02567",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_07853",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_05289",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_06623",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_00203",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_05509",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_01804",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_04477",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_05047",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_06069",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_08152",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_10418",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_00560",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_08082",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_07444",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 10,
+      "first_hit_turn": 10,
+      "hit": true,
+      "reciprocal_rank": 0.1,
+      "sample_id": "train_10006",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 4,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 0.25,
+      "sample_id": "train_06427",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_02792",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 4,
+      "first_hit_turn": 9,
+      "hit": true,
+      "reciprocal_rank": 0.25,
+      "sample_id": "dev_00785",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_08560",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_07352",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 4,
+      "first_hit_turn": 9,
+      "hit": true,
+      "reciprocal_rank": 0.25,
+      "sample_id": "train_01465",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_09393",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_07016",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_09532",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_02826",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 10,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 0.1,
+      "sample_id": "train_02264",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 8,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 0.125,
+      "sample_id": "train_01054",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 1,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_00594",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 10,
+      "first_hit_turn": 6,
+      "hit": true,
+      "reciprocal_rank": 0.1,
+      "sample_id": "train_05857",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_00387",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 7,
+      "first_hit_turn": 9,
+      "hit": true,
+      "reciprocal_rank": 0.14285714285714285,
+      "sample_id": "train_11089",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_02269",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 8,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 0.125,
+      "sample_id": "train_08924",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_02581",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_06184",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_06260",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_06261",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_06810",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_11066",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_00629",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 1,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_03803",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_06532",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_05855",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_01902",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_01268",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_06111",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_11462",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 6,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "dev_00356",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 4,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 0.25,
+      "sample_id": "train_11480",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_04330",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 6,
+      "first_hit_turn": 10,
+      "hit": true,
+      "reciprocal_rank": 0.16666666666666666,
+      "sample_id": "train_04004",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_11210",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 1,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_05392",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_01353",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_00115",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 4,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 0.25,
+      "sample_id": "train_05802",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_06733",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_11832",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_04747",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 1,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_00873",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_07673",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_07586",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_01839",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 6,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_08823",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 1,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_05582",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_09461",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_06572",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 4,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 0.25,
+      "sample_id": "train_10646",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 3,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "sample_id": "train_02726",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_05144",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_04247",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_09390",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_08856",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_04631",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_08706",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 5,
+      "first_hit_turn": 8,
+      "hit": true,
+      "reciprocal_rank": 0.2,
+      "sample_id": "train_11328",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_08277",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 7,
+      "first_hit_turn": 10,
+      "hit": true,
+      "reciprocal_rank": 0.14285714285714285,
+      "sample_id": "train_09707",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_06416",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 5,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 0.2,
+      "sample_id": "train_09723",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_00504",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_01143",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_03363",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 1,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_05125",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_11415",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_01918",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_10219",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_01662",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 7,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 0.14285714285714285,
+      "sample_id": "train_02290",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_08607",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_11268",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 7,
+      "first_hit_turn": 10,
+      "hit": true,
+      "reciprocal_rank": 0.14285714285714285,
+      "sample_id": "train_03858",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_06748",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 5,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.2,
+      "sample_id": "dev_01890",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_02980",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_01884",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_10539",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_00014",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 4,
+      "first_hit_turn": 8,
+      "hit": true,
+      "reciprocal_rank": 0.25,
+      "sample_id": "train_04598",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 4,
+      "first_hit_turn": 10,
+      "hit": true,
+      "reciprocal_rank": 0.25,
+      "sample_id": "train_00853",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_00403",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 7,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_04876",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_11922",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_01778",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_11843",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 1,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_03871",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_03366",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_04162",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_02024",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 10,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 0.1,
+      "sample_id": "train_04315",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 6,
+      "first_hit_turn": 10,
+      "hit": true,
+      "reciprocal_rank": 0.16666666666666666,
+      "sample_id": "train_09431",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 6,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_01883",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 3,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "sample_id": "train_08661",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_11037",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_00159",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 7,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_01034",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_01312",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 1,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_10689",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_01519",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_10009",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_10240",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_11960",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_03818",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_07933",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_08465",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_07716",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 8,
+      "first_hit_turn": 10,
+      "hit": true,
+      "reciprocal_rank": 0.125,
+      "sample_id": "train_07056",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_01113",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_11424",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_01943",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 9,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 0.1111111111111111,
+      "sample_id": "train_09560",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_03485",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_04423",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_10030",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_09945",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_09861",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_00989",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 10,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.1,
+      "sample_id": "train_05278",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_09086",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_09914",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_11009",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_10883",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_10327",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_01326",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_01589",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_05319",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_00801",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_09185",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_05088",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_06334",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_01832",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_03941",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 1,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_08657",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 5,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.2,
+      "sample_id": "train_08358",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_02526",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 5,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 0.2,
+      "sample_id": "train_01897",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_08790",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_02939",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_10737",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_11622",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 7,
+      "first_hit_turn": 10,
+      "hit": true,
+      "reciprocal_rank": 0.14285714285714285,
+      "sample_id": "train_05906",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_00196",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_00152",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_07125",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_03675",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_08960",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_07685",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 6,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "dev_01907",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_10287",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_07526",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_10806",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_03766",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "dev_01357",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_10893",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_07221",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_01813",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_09665",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_03849",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_08498",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 3,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "sample_id": "train_02659",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_08983",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_00143",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_04815",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_01721",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_05435",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_08507",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_07742",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 1,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_06358",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_02951",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 3,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "sample_id": "train_02288",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 10,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 0.1,
+      "sample_id": "train_07507",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_03007",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_04718",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_03341",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_01215",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_01095",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 3,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "sample_id": "train_11106",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_01930",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_08750",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_10544",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_03873",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_03035",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_08940",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 1,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_05016",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_03178",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_10468",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 4,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 0.25,
+      "sample_id": "train_01609",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_07542",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_11954",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_07842",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_06459",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 3,
+      "first_hit_turn": 6,
+      "hit": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "sample_id": "dev_01554",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_00176",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_09253",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_11868",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_09143",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_04107",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_05990",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_03104",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_06430",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 9,
+      "first_hit_turn": 6,
+      "hit": true,
+      "reciprocal_rank": 0.1111111111111111,
+      "sample_id": "train_03441",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 5,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 0.2,
+      "sample_id": "dev_00384",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 1,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_00099",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_10108",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_02361",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_08009",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_00883",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "dev_00934",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_09389",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 6,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 0.16666666666666666,
+      "sample_id": "dev_00649",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_09709",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_02657",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_05614",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_00207",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_08615",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_06910",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_08377",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 3,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "sample_id": "train_07428",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_03664",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_00734",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_00032",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_07826",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 1,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_04195",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_05282",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 9,
+      "first_hit_turn": 6,
+      "hit": true,
+      "reciprocal_rank": 0.1111111111111111,
+      "sample_id": "train_09904",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "dev_00502",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_00450",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_02916",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_11337",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_02935",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 4,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 0.25,
+      "sample_id": "train_01026",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_05717",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 5,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.2,
+      "sample_id": "train_09660",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_10715",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_11112",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_08931",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 1,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_05986",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_11869",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 6,
+      "first_hit_turn": 10,
+      "hit": true,
+      "reciprocal_rank": 0.16666666666666666,
+      "sample_id": "train_09582",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_00339",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 1,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_10276",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_01036",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_05332",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_04463",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_04841",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_08497",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_00954",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 10,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 0.1,
+      "sample_id": "train_03899",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_08595",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 10,
+      "first_hit_turn": 6,
+      "hit": true,
+      "reciprocal_rank": 0.1,
+      "sample_id": "train_10857",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 4,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 0.25,
+      "sample_id": "train_02332",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_09123",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_04144",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 1,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_11451",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_00520",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 4,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 0.25,
+      "sample_id": "train_05760",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_10862",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 8,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.125,
+      "sample_id": "train_10377",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_00321",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_01843",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_01519",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 1,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_01157",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_06767",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 7,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.14285714285714285,
+      "sample_id": "train_06598",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_03412",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_05559",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_00947",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_07909",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_10863",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 5,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 0.2,
+      "sample_id": "train_00183",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 5,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 0.2,
+      "sample_id": "train_07147",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_08660",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 3,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "sample_id": "train_07789",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_06523",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_08428",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_10350",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_04690",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_11221",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_09781",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_01857",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_04763",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_07680",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_11693",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_06246",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_00412",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_05471",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_06818",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_08182",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_09734",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_09623",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 3,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "sample_id": "train_06364",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_04160",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_02563",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 4,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 0.25,
+      "sample_id": "train_07811",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_07807",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_05011",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_00448",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_02727",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_11881",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_10204",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_05421",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_02381",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_00046",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_02086",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_00620",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 1,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_08798",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_08071",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_09028",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_10520",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_09522",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_01222",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_03308",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 9,
+      "first_hit_turn": 6,
+      "hit": true,
+      "reciprocal_rank": 0.1111111111111111,
+      "sample_id": "train_06842",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_05616",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_01320",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_01622",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_01355",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 7,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 0.14285714285714285,
+      "sample_id": "train_03857",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_10143",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_04903",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_11952",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_00029",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "dev_01530",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_08991",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 1,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_11139",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_00490",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_07201",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 5,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.2,
+      "sample_id": "train_02544",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_01737",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_00468",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_07645",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_10581",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_01681",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_04825",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_05126",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_07821",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_01112",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_01434",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_03433",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_09504",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_05265",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_11806",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 1,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_09944",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_02819",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 1,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_01040",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 5,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 0.2,
+      "sample_id": "train_08776",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_01820",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_03148",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_00320",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_10619",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_00080",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_02600",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_03240",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_05157",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_02524",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_05705",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_01629",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_11613",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 6,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.16666666666666666,
+      "sample_id": "train_07755",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_04877",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 4,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_03187",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_00497",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 2,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.5,
+      "sample_id": "train_02465",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_03484",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_00962",
+      "scenario_type": "boundary"
+    },
+    {
+      "best_rank": 4,
+      "first_hit_turn": 6,
+      "hit": true,
+      "reciprocal_rank": 0.25,
+      "sample_id": "dev_01397",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 3,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "train_01248",
+      "scenario_type": "intent_override"
+    },
+    {
+      "best_rank": 6,
+      "first_hit_turn": 5,
+      "hit": true,
+      "reciprocal_rank": 0.16666666666666666,
+      "sample_id": "train_02656",
+      "scenario_type": "browsing"
+    },
+    {
+      "best_rank": 1,
+      "first_hit_turn": 1,
+      "hit": true,
+      "reciprocal_rank": 1.0,
+      "sample_id": "dev_00192",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "dev_01988",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": 3,
+      "first_hit_turn": 2,
+      "hit": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "sample_id": "train_07406",
+      "scenario_type": "buying"
+    },
+    {
+      "best_rank": null,
+      "first_hit_turn": null,
+      "hit": false,
+      "reciprocal_rank": 0.0,
+      "sample_id": "train_01152",
+      "scenario_type": "buying"
+    }
+  ]
+}

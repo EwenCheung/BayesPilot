@@ -17,6 +17,12 @@ from src.r3.category import CategoryBelief
 from src.r3.flags import Flags
 from src.r3.index import ItemIndex
 from src.r3.question import best_question
+from src.r3.rescue import (
+    GlobalLexicalRescue,
+    GlobalSemanticRescue,
+    candidate_union,
+    reciprocal_rank_fusion,
+)
 
 
 QUESTION_TEXT = {
@@ -58,6 +64,8 @@ class Agent:
         self._stalls: dict[str, int] = {}
         self._lexical = None
         self._semantics = None
+        self._global_lexical: GlobalLexicalRescue | None = None
+        self._global_semantic: GlobalSemanticRescue | None = None
         # popularity-ordered fallback, so a crashed turn still ships something plausible
         self._fallback = sorted(self.index.log_pop, key=lambda a: -self.index.log_pop[a])[:50]
 
@@ -74,13 +82,47 @@ class Agent:
     @property
     def semantics(self):
         if self._semantics is None and self.flags.semantic_gain > 0:
-            if self.flags.semantic_backend == "blair":
-                from src.r3.semantic import BlairSemantics
-                self._semantics = BlairSemantics(self.index, query_mode=self.flags.query_mode)
+            if getattr(self.flags, "semantic_backend", "svd") == "blair":
+                try:
+                    from src.r3.semantic import BlairSemantics
+                    self._semantics = BlairSemantics(self.index, query_mode=getattr(self.flags, "query_mode", "model"))
+                except Exception:
+                    from src.r3.semantic import SvdSemantics
+                    self._semantics = SvdSemantics(self.index)
             else:
                 from src.r3.semantic import SvdSemantics
                 self._semantics = SvdSemantics(self.index)
         return self._semantics
+
+    @property
+    def global_lexical(self):
+        """Built on first use, only when lexical rescue is enabled."""
+        if self._global_lexical is None and getattr(self.flags, "rescue_lexical", False):
+            self._global_lexical = GlobalLexicalRescue(self.index)
+        return self._global_lexical
+
+    @property
+    def global_semantic(self):
+        """Built on first use, only when semantic rescue is enabled. Reuses the in-pool backend."""
+        if self._global_semantic is None and (
+            getattr(self.flags, "rescue_semantic", False) or getattr(self.flags, "rescue_normalized", False)
+        ):
+            # Force semantics to build if not already done (we need the embeddings)
+            if self._semantics is None:
+                backend = getattr(self.flags, "semantic_backend", "svd")
+                if backend == "blair":
+                    try:
+                        from src.r3.semantic import BlairSemantics
+                        self._semantics = BlairSemantics(self.index, query_mode=getattr(self.flags, "query_mode", "model"))
+                    except Exception:
+                        from src.r3.semantic import SvdSemantics
+                        self._semantics = SvdSemantics(self.index)
+                else:
+                    from src.r3.semantic import SvdSemantics
+                    self._semantics = SvdSemantics(self.index)
+            if self._semantics is not None:
+                self._global_semantic = GlobalSemanticRescue(self._semantics)
+        return self._global_semantic
 
     def reset(self, session_id: str, user_profile: dict) -> None:
         self.sessions[session_id] = SessionState(profile=user_profile or {})
@@ -100,10 +142,8 @@ class Agent:
     def _candidate_pool(self, state: SessionState, user_message: str) -> list[str]:
         """Rebuild retrieval from the catalog-backed category index on every turn.
 
-        The previous turn's ranked list is deliberately not an input. A correction or replacement
-        therefore reranks the complete category pool and can recover an item that was outside the
-        earlier top 10/200. If the category itself changes, ``opener`` changes and ``pool`` performs
-        a new global category-posterior lookup before returning the new product universe.
+        When rescue flags are enabled, the pool is the UNION of:
+          C_category ∪ TopK_lexical(q_raw) ∪ TopK_semantic(q_raw) ∪ TopK_semantic(q_norm)
         """
         opener = (
             state.category
@@ -112,10 +152,54 @@ class Agent:
             or (state.history[0] if state.history else user_message)
         )
         if self.flags.belief_pool:
-            candidates = self.categories.pool(opener, tau=self.flags.tau_mass)
+            cat_pool = self.categories.pool(opener, tau=self.flags.tau_mass)
         else:
-            candidates = self.categories.by_category[self.categories.best(opener)]
-        return list(candidates) if candidates else list(self._fallback)
+            cat_pool = self.categories.by_category[self.categories.best(opener)]
+        cat_pool = list(cat_pool) if cat_pool else list(self._fallback)
+
+        flags = self.flags
+        rescue_lex = getattr(flags, "rescue_lexical", False)
+        rescue_sem = getattr(flags, "rescue_semantic", False)
+        rescue_norm = getattr(flags, "rescue_normalized", False)
+        rescue_top_k = getattr(flags, "rescue_top_k", 200)
+
+        any_rescue = rescue_lex or rescue_sem or rescue_norm
+        if not any_rescue:
+            return cat_pool
+
+        # Build the query from all accumulated evidence
+        query_raw = " ".join(
+            [state.category or state.category_surface or ""]
+            + list(state.history)
+        ).strip() or user_message
+
+        rescue_results: list[list[tuple[str, float]]] = []
+        cat_set = set(cat_pool)
+
+        # RAWLEX: global IDF/BM25 rescue
+        if rescue_lex and self.global_lexical is not None:
+            rescue_results.append(
+                self.global_lexical.rescue(query_raw, top_k=rescue_top_k, exclude=cat_set)
+            )
+
+        # RAWSEM: global semantic rescue from raw text
+        if rescue_sem and self.global_semantic is not None:
+            rescue_results.append(
+                self.global_semantic.rescue(query_raw, top_k=rescue_top_k, exclude=cat_set)
+            )
+
+        # NORMSEM: global semantic rescue from LLM-normalized text
+        if rescue_norm and self.global_semantic is not None:
+            normalized_query = " ".join(
+                state.normalized_messages.values()
+            ).strip()
+            if normalized_query and normalized_query != query_raw:
+                rescue_results.append(
+                    self.global_semantic.rescue(normalized_query, top_k=rescue_top_k, exclude=cat_set)
+                )
+
+        # UNION: merge category pool + all rescue candidates
+        return candidate_union(cat_pool, rescue_results)
 
     def respond(self, session_id: str, user_message: str, turn: int, top_k: int) -> dict:
         try:
@@ -135,7 +219,7 @@ class Agent:
         parse(
             user_message,
             state,
-            erase=self.flags.erase,
+            erase=getattr(self.flags, "erase", "demote"),
             intent_pipeline=self.intent_pipeline,
         )
         # Pillar III, concretely: "is this conversation still teaching me anything?" A turn that
@@ -161,12 +245,56 @@ class Agent:
         # because the abstention rule in likelihood.py already does that job: a term whose evidence
         # matches nothing simply stops voting.
         flags = self.flags
-        belief = Belief(self.index, candidates, use_prior=flags.prior,
-                        prior_weight=flags.prior_weight,
-                        pool_normalised=flags.pool_normalised_prior)
+        belief = Belief(self.index, candidates, use_prior=getattr(flags, "prior", True),
+                        prior_weight=getattr(flags, "prior_weight", 0.10),
+                        pool_normalised=getattr(flags, "pool_normalised_prior", False))
         belief.update(state, flags, self.semantics, self.lexical)
-        ranked = belief.ranked()
         entropy = belief.entropy()
+
+        # --- optional RRF fusion across routes ---
+        use_rrf = getattr(flags, "use_rrf", False)
+        rescue_lex = getattr(flags, "rescue_lexical", False)
+        rescue_sem = getattr(flags, "rescue_semantic", False)
+        rescue_norm = getattr(flags, "rescue_normalized", False)
+        rescue_top_k = getattr(flags, "rescue_top_k", 200)
+
+        if use_rrf and (rescue_lex or rescue_sem or rescue_norm):
+            ranked_lists: dict[str, list[str]] = {}
+            rrf_weights: dict[str, float] = {}
+
+            # Route 1: Bayesian posterior (always present)
+            ranked_lists["bayesian"] = belief.ranked()
+            rrf_weights["bayesian"] = getattr(flags, "rrf_weight_category", 1.0)
+
+            # Route 2: Global lexical rescue ranking
+            query_raw = " ".join(
+                [state.category or state.category_surface or ""]
+                + list(state.history)
+            ).strip() or user_message
+            if rescue_lex and self.global_lexical is not None:
+                lex_results = self.global_lexical.rescue(query_raw, top_k=rescue_top_k)
+                if lex_results:
+                    ranked_lists["lexical"] = [a for a, _ in lex_results]
+                    rrf_weights["lexical"] = getattr(flags, "rrf_weight_lexical", 0.5)
+
+            # Route 3: Global semantic rescue ranking (raw + normalized)
+            if rescue_sem and self.global_semantic is not None:
+                sem_results = self.global_semantic.rescue(query_raw, top_k=rescue_top_k)
+                if sem_results:
+                    ranked_lists["semantic_raw"] = [a for a, _ in sem_results]
+                    rrf_weights["semantic_raw"] = getattr(flags, "rrf_weight_semantic", 0.5)
+
+            if rescue_norm and self.global_semantic is not None:
+                normalized_query = " ".join(state.normalized_messages.values()).strip()
+                if normalized_query:
+                    sem_norm = self.global_semantic.rescue(normalized_query, top_k=rescue_top_k)
+                    if sem_norm:
+                        ranked_lists["semantic_norm"] = [a for a, _ in sem_norm]
+                        rrf_weights["semantic_norm"] = getattr(flags, "rrf_weight_semantic", 0.5)
+
+            ranked = reciprocal_rank_fusion(ranked_lists, rrf_weights, k=getattr(flags, "rrf_k", 60))
+        else:
+            ranked = belief.ranked()
 
         # --- the policy, from one number ---
         # An override session cannot convert before the override lands: the evaluator discards every

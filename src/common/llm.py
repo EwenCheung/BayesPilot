@@ -22,6 +22,21 @@ from pathlib import Path
 # warm .cache/llm while R3 was offline (D24).
 OFFLINE_ENV = "R3_OFFLINE"
 
+# Automatically load .env if present and keys are missing from environment
+_env_path = Path(__file__).resolve().parents[2] / ".env"
+if _env_path.exists():
+    try:
+        for line in _env_path.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            k, _, v = line.partition("=")
+            k, v = k.strip(), v.strip()
+            if k and k not in os.environ:
+                os.environ[k] = v
+    except Exception:
+        pass
+
 # absolute: runs execute with cwd=<kit>, and a cache written in there would both contaminate the
 # kit we promise to keep pristine and be invisible to the next run
 CACHE_DIR = Path(__file__).resolve().parents[2] / ".cache" / "llm"

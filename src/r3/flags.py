@@ -33,6 +33,16 @@ class Flags:
     stall_decay_clean: float = 0.8  # ...and when templates are still matching (fitted separately)
     deadline: int = 3          # override silence ends here — structural, see agent._respond
     max_turns: int = 10        # the evaluator's hard limit; ship everything on the last turn
+    # --- green nodes: global rescue + fusion ---
+    rescue_lexical: bool = False     # RAWLEX — global IDF/BM25 rescue across full catalog
+    rescue_semantic: bool = False    # RAWSEM — global semantic rescue from raw text
+    rescue_normalized: bool = False  # NORMSEM — global semantic rescue from LLM-normalized text
+    rescue_top_k: int = 200          # how many rescue candidates each route contributes
+    use_rrf: bool = False            # RRF — reciprocal-rank fusion across routes
+    rrf_k: int = 60                  # RRF constant (standard default)
+    rrf_weight_category: float = 1.0   # weight for category-pool Bayesian route in RRF
+    rrf_weight_lexical: float = 0.5    # weight for lexical rescue route in RRF
+    rrf_weight_semantic: float = 0.5   # weight for semantic rescue route in RRF
 
     @classmethod
     def from_env(cls) -> "Flags":

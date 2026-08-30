@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from src.common.simulator import ALLOWED_ATTRIBUTES  # noqa: E402
-from src.r2.agent import Agent  # noqa: E402
+from src.r3.agent import Agent  # noqa: E402
 
 CATALOG = ROOT / "assets" / "catalog.jsonl"
 
@@ -23,10 +23,10 @@ CATALOG = ROOT / "assets" / "catalog.jsonl"
 class TestAgentContract(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        cls.agent = Agent(str(CATALOG), dense="none")
+        cls.agent = Agent(str(CATALOG))
 
     def test_init_takes_catalog_path_positionally_with_a_default(self) -> None:
-        """R2-A5: the evaluator does Agent(args.catalog). Get this wrong and nothing runs at all."""
+        """The evaluator does Agent(args.catalog). Get this wrong and nothing runs at all."""
         params = list(inspect.signature(Agent.__init__).parameters.values())
         self.assertEqual(params[1].name, "catalog_path")
         self.assertNotEqual(params[1].default, inspect.Parameter.empty)
@@ -64,7 +64,7 @@ class TestAgentContract(unittest.TestCase):
         self.assertLessEqual(len(out["recommendations"]), 100)
         for rec in out["recommendations"]:
             self.assertIsInstance(rec["parent_asin"], str)
-            self.assertIn(rec["parent_asin"], self.agent.index.products)
+            self.assertIn(rec["parent_asin"], self.agent.index.asins)
 
     def test_never_ships_an_empty_list(self) -> None:
         """R2-A5: top-1 weakly dominates holding, so there is never a reason to ship nothing."""
@@ -81,10 +81,10 @@ class TestAgentContract(unittest.TestCase):
         """R2-A5: one Agent serves every session, so state leaks unless reset wipes it."""
         self.agent.reset("s3", {})
         self.agent.respond("s3", "I'm looking for Belts. A key requirement is: leather.", 1, 10)
-        self.assertTrue(self.agent._sessions["s3"].constraints)
+        self.assertTrue(self.agent.sessions["s3"].constraints)
         self.agent.reset("s3", {})
-        self.assertEqual(self.agent._sessions["s3"].constraints, [])
-        self.assertIsNone(self.agent._sessions["s3"].category)
+        self.assertEqual(self.agent.sessions["s3"].constraints, [])
+        self.assertIsNone(self.agent.sessions["s3"].category)
 
     def test_respond_without_reset_does_not_raise(self) -> None:
         """R2-A5: an exception is a silently forfeited turn, so nothing may escape respond()."""
@@ -114,8 +114,8 @@ class TestAgentContract(unittest.TestCase):
         self.agent.reset("b", {})
         self.agent.respond("a", "I'm looking for Belts. A key requirement is: leather.", 1, 10)
         self.agent.respond("b", "I'm looking for Watches Wrist Watches, but I'm still exploring.", 1, 10)
-        self.assertEqual(self.agent._sessions["b"].constraints, [])
-        self.assertTrue(self.agent._sessions["a"].constraints)
+        self.assertEqual(self.agent.sessions["b"].constraints, [])
+        self.assertTrue(self.agent.sessions["a"].constraints)
 
 
 if __name__ == "__main__":

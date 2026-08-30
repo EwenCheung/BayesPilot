@@ -38,10 +38,10 @@ class TestA0HarnessCalibration(unittest.TestCase):
         )
         self.assertEqual(result["sample_count"], 40)
 
-    def test_a0_runs_r1_incumbent_on_train(self) -> None:
-        r1 = load_module(ROOT / "experiments" / "agent_best_0.9607.py", "r1_incumbent")
+    def test_a0_runs_r3_agent_on_train(self) -> None:
+        r3 = load_module(ROOT / "src" / "r3" / "agent.py", "r3_agent")
         result = harness.run(
-            r1.Agent(str(harness.CATALOG)),
+            r3.Agent(str(harness.CATALOG)),
             dataset=harness.TRAIN_DATASET,
             sample_limit=40,
         )

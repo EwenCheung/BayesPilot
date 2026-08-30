@@ -1,0 +1,12 @@
+{
+  "exact_gain": 3.2,
+  "prior_weight": 0.1,
+  "v_continue": 0.9,
+  "stall_decay": 0.2,
+  "stall_decay_clean": 0.8,
+  "temperature": 2.0,
+  "tau_mass": 0.9,
+  "rescue_lexical": false,
+  "rescue_semantic": false,
+  "use_rrf": false
+}
