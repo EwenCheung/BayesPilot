@@ -1,7 +1,9 @@
 # Tested with Python 3.11.9.
-# Runtime and local semantic/retrieval dependencies.
+#
+# The shipped agent needs numpy and the standard library. scikit-learn and torch were requirements
+# until the SVD and BLaIR semantic routes were deleted — four independent negatives on semantic
+# retrieval for this benchmark, so the code is gone rather than gated off.
 numpy==2.3.3
-scikit-learn==1.7.2
 
 # Development and regression suite.
 pytest==8.3.5

@@ -14,6 +14,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+SRC = ROOT / "src"
 sys.path.insert(0, str(ROOT))
 
 HEAVY = ("torch", "transformers", "sentence_transformers")
@@ -23,7 +24,7 @@ IMAGE = ("PIL", "cv2", "torchvision", "clip", "open_clip")
 class TestRuntimeDependencies(unittest.TestCase):
     def test_shipped_agent_never_imports_torch(self) -> None:
         """R3-A21: the default path is numpy-only. Guarded at import time, not by inspection."""
-        from src.r3.agent import Agent
+        from src.eval import measure
 
         real = builtins.__import__
 
@@ -33,7 +34,7 @@ class TestRuntimeDependencies(unittest.TestCase):
 
         builtins.__import__ = guard
         try:
-            agent = Agent(str(ROOT / "assets" / "catalog.jsonl"))
+            agent = measure.build()
             agent.reset("s", {})
             agent.respond("s", "I'm looking for Belts. A key requirement is: Material: leather.", 1, 10)
         finally:
@@ -55,11 +56,16 @@ class TestRuntimeDependencies(unittest.TestCase):
                 for name in names:
                     self.assertFalse(name.split(".")[0] in IMAGE, f"{path}: multi-modal import {name}")
 
-    def test_semantic_term_is_off_by_default(self) -> None:
-        """D19/D20: both semantic backends were measured and neither earns its place."""
-        from src.r3.flags import Flags
+    def test_no_semantic_backend_exists_to_turn_on(self) -> None:
+        """Four independent negatives on semantic retrieval here, so the code is gone, not gated.
 
-        self.assertEqual(Flags().semantic_gain, 0.0)
+        A default-off flag is a promise someone will eventually flip it; a deleted module cannot be
+        flipped. The measurements survive in SUMMARY.md §3.6.
+        """
+        from src.copilot.flags import Flags
+
+        self.assertNotIn("semantic_gain", vars(Flags()))
+        self.assertFalse(list(SRC.rglob("semantic.py")))
 
 
 if __name__ == "__main__":
@@ -71,31 +77,21 @@ class TestOfflineIsEnforced(unittest.TestCase):
 
     A warm `.cache/llm` makes the default path score 0.8926 at L3 with **zero network calls** and 380
     cache hits — indistinguishable from the published offline 0.8297 unless you count cache hits. Every
-    headline number is measured under `R3_OFFLINE=1`; this is what makes that reproducible.
+    headline number is measured under `COPILOT_OFFLINE=1`; this is what makes that reproducible.
     """
 
-    def test_r3_offline_keeps_the_router_shape_but_never_calls_or_reads_cache(self) -> None:
+    def test_offline_env_disables_the_llm_entirely(self) -> None:
         import os
 
-        from src.r3.agent import Agent
+        from src.eval import measure
 
-        previous = os.environ.get("R3_OFFLINE")
-        os.environ["R3_OFFLINE"] = "1"
+        previous = os.environ.get("COPILOT_OFFLINE")
+        os.environ["COPILOT_OFFLINE"] = "1"
         try:
-            agent = Agent(str(ROOT / "assets" / "catalog.jsonl"))
-            self.assertIsNotNone(agent.llm, "one submitted agent always owns the routing layer")
-            agent.reset("offline-router", {})
-            agent.respond(
-                "offline-router",
-                "I'm looking for Belts, but I'm still exploring.",
-                1,
-                10,
-            )
-            report = agent.llm.report()
-            self.assertEqual(report["calls"], 0)
-            self.assertEqual(report["cache_hits"], 0)
+            agent = measure.build()
+            self.assertIsNone(agent.llm, "COPILOT_OFFLINE=1 must disable the LLM tier and its disk cache")
         finally:
             if previous is None:
-                os.environ.pop("R3_OFFLINE", None)
+                os.environ.pop("COPILOT_OFFLINE", None)
             else:
-                os.environ["R3_OFFLINE"] = previous
+                os.environ["COPILOT_OFFLINE"] = previous

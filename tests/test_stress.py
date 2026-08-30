@@ -65,7 +65,7 @@ def test_l3_keeps_the_category_recognisable():
     Every L3 opener must still share at least one content word with the original category, or we are
     measuring the agent against a customer who changed their mind.
     """
-    from src.common.attributes import tokens
+    from src.understand.attributes import tokens
     from src.eval.stress import paraphrase
 
     for category in ("Shirts T-Shirts", "Novelty Clothing", "Girls Swimwear Sets", "Belts"):
