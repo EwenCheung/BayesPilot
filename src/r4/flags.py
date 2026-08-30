@@ -29,19 +29,7 @@ class Flags(R3Flags):
     # not the target. R3 re-ships them anyway: measured, 43/43 sessions alive at turn 5 shipped a
     # depth-1 list identical to turn 4's, which had already been proven wrong. See 03-decisions.md D8.
     exclude_shipped: bool = False
-    # Log-odds penalty for an item shipped on a turn we cannot prove was hit-checked.
-    # ⚠️ MEASURED NEGATIVE, and instructively so (D9). "Penalise what is probably wrong" sounds
-    # safer than "ignore it", but an unchecked turn's top item is the one MOST likely to be the
-    # target — an intent_override session ships it at turn 1-2, the evaluator discards it, and a
-    # penalty then buries the right answer before the override lands. At 10.0 override MRR falls
-    # 0.983 -> 0.504 and the public clean score 0.9801 -> 0.9124. The correct rule is binary.
-    shipped_penalty: float = 0.0
 
-    # --- later phases, declared here so the ablation vocabulary is stable ---------------------
-    # --- Phase S: scale the prior by how discriminative the evidence is (D13) --------------------
-    # 0.0 = R3's constant prior weight. >0 damps it when the constraints match most of the pool,
-    # which is exactly the regime where the missed targets live (median rating_number 7).
-    prior_damp: float = 0.0
 
     # --- Phase T: soft card matching, the paraphrase-tolerant twin of the exact term ------------
     # 0.0 = off. Token-Jaccard against each item's OWN card strings, which is what the simulator
@@ -56,8 +44,6 @@ class Flags(R3Flags):
     soft_card_gain: float = 1.5
     soft_card_floor: float = 0.34   # below this, overlap is noise (mirrors likelihood.TOKEN_FLOOR)
 
-    calibrate: bool = False    # Phase C — NOT BUILT; R4-A8 capped it at +0.0033 (D12)
-    exhaustion: bool = False   # Phase S — ship early once the card cannot yield more
     truncate: int = 0          # Phase D — 0 = always ship 10. MEASURED NEGATIVE (D4), default off.
 
     @classmethod

@@ -77,8 +77,7 @@ class Agent(R3Agent):
         flags = self.flags
         belief = SelectiveBelief(self.index, candidates, use_prior=flags.prior,
                                  prior_weight=flags.prior_weight,
-                                 pool_normalised=flags.pool_normalised_prior,
-                                 damp=flags.prior_damp)
+                                 pool_normalised=flags.pool_normalised_prior)
         belief.update(state, flags, self.semantics, self.lexical)
 
         # --- R4: survival is evidence (R4-A0 / D8) ---------------------------------------------
@@ -89,17 +88,18 @@ class Agent(R3Agent):
         # always knowable: paraphrase degrades route detection, and a first version that excluded on
         # `state.route` alone turned 9 intent_override hits into outright misses at L3 (D9). So the
         # two cases are kept apart: PROVEN exclusions are hard, unproven ones do nothing at all.
-        # ⚠️ `shipped_penalty` defaults to 0.0 deliberately. Softening the unproven case to a penalty
-        # was measured WORSE than ignoring it (override MRR 0.983 -> 0.504), because an unchecked
-        # turn's top item is the one most likely to BE the target. The rule has to be binary.
+        # ⚠️ The rule is BINARY, and that is a measurement not a preference. Softening the unproven
+        # case to a penalty was measured WORSE than ignoring it (override MRR 0.983 -> 0.504,
+        # clean 0.9801 -> 0.9124), because an unchecked turn's top item is the one most likely to BE
+        # the target. `shipped_penalty` existed to hold that knob and was removed once it was clear
+        # no non-zero value could ever be wanted: PROVEN exclusions are hard, unproven do nothing.
         shipped = self._shipped.setdefault(session_id, {})
         if flags.exclude_shipped and shipped:
             live = [a for a in candidates if not shipped.get(a)]
             if live:                      # never empty the pool; a bad rank still beats no rank
                 for asin, proven in shipped.items():
-                    if asin in belief.log_p:
-                        belief.log_p[asin] = (-math.inf if proven
-                                              else belief.log_p[asin] - flags.shipped_penalty)
+                    if proven and asin in belief.log_p:
+                        belief.log_p[asin] = -math.inf
 
         ranked = belief.ranked()
         entropy = belief.entropy()
