@@ -18,7 +18,7 @@ fully offline path.
 
 | dataset | n | LLM | Hit@10 | MRR | MTTC | **TechnicalScore** | 95% CI |
 |---|---|---|---|---|---|---|---|
-| `freeform_v1/test` | 800 | ✅ fallback | 0.9738 | 0.9573 | 3.00 | **0.9341** | (0.9292, 0.9471) |
+| `freeform_v1/test` | 800 | ✅ fallback | 0.9738 | 0.9573 | 3.00 | **0.9341** | (0.9233, 0.9444) |
 | `resplit_60_20_20/test` | 2,800 | offline | 0.9911 | 0.9783 | 2.64 | **0.9562** | (0.9526, 0.9599) |
 | **`public_set.jsonl`** | 200 | offline | **1.0000** | 0.9942 | 2.19 | **0.9744** | (0.9692, 0.9789) |
 | `dev.jsonl` | 2,000 | offline | 0.9865 | 0.9721 | 2.71 | **0.9506** | (0.9449, 0.9554) |
@@ -33,6 +33,13 @@ the check that the harness is stable and the repair touched only the free-form p
 
 ⚠️ **`llm_calls` was 0 on all three templated datasets** and 800 on freeform — direct confirmation
 that the escalation tier fires per unreadable message and nowhere else.
+
+⚠️ **A CI defect was found and fixed while producing this table.** A hand-rolled bootstrap in
+`scripts/` averaged MTTC over *hits only*; the evaluator counts a **miss as turn 11**
+(`local_evaluator.py:193`). That inflated Efficiency whenever Hit@10 < 1 and produced an interval
+that did not contain its own point estimate. Both scripts now call `harness.bootstrap_ci`, which was
+already correct. Point estimates were never affected — they come from the evaluator's own
+`recommended_technical_score`.
 
 🔑 **Free-form language costs ~0.021.** `freeform_v1/test` (0.9351) and `resplit/test` (0.9562) are
 drawn from the *same* source split, so the difference is language style alone and nothing else.
