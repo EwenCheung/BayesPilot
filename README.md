@@ -26,8 +26,8 @@ Zero network calls, zero tokens, ~4–20 ms/session. Every number is one run of 
 cp /path/to/catalog.jsonl data/catalog.jsonl
 shasum -a 256 data/catalog.jsonl     # da979b05a68af864cb0dcf9ee6a81c010c7e66a57978ad286c7a2e005fc69a67
 
-python3 -m pytest tests/ -q                                  # 91 tests
-COPILOT_OFFLINE=1 PYTHONHASHSEED=0 python3 scripts/evaluate.py   # the table above
+python3 -m pytest tests/ -q                                  # 85 tests
+COPILOT_OFFLINE=1 PYTHONHASHSEED=0 python3 scripts/evaluate.py --all   # the table above
 ```
 
 No dependencies beyond numpy and the standard library. `.env` is needed only for the optional
@@ -37,11 +37,13 @@ language tier, which never fires on templated input.
 
 | command | what it does |
 |---|---|
-| `python3 scripts/evaluate.py` | the four-dataset table above → `runs/final_r5.json` |
-| `python3 -m src.eval.measure --dataset dev --ci --scenarios` | one dataset, with CI and per-scenario breakdown |
-| `python3 -m src.eval.measure --dataset public --stress 3` | the same under L3 paraphrase |
-| `python3 -m src.eval.measure --dataset dev --ablate no_spec_phrase` | an ablation from the shared vocabulary |
-| `python3 scripts/fit.py` | re-fit the policy constants on `data/train.jsonl` |
+| `python3 scripts/evaluate.py` | the submission score on `public_set`, defaults only |
+| `python3 scripts/evaluate.py --all --ci --output runs/final_r5.json` | the four-dataset table above |
+| `python3 scripts/evaluate.py --dataset data/dev.jsonl --ci --scenarios` | one dataset, with CI and per-scenario breakdown |
+| `python3 scripts/evaluate.py --levels 0,1,2,3,4` | the full paraphrase ladder |
+| `python3 scripts/evaluate.py --ablate no_spec_phrase --levels 0,2,3` | any row of the ablation table |
+| `python3 scripts/evaluate.py --set bm25_gain=2.0` | override any fitted constant |
+| `python3 scripts/refit.py --dataset data/train.jsonl --n 3000` | re-fit **all 8** constants from scratch |
 | `python3 scripts/fit_bm25.py` | the BM25 gain sweep and the tokenizer isolation |
 | `python3 scripts/earlyhit.py` | the EarlyHit curve — what a perfect stopping rule would be worth |
 
@@ -60,8 +62,8 @@ src/
   state/              what the customer told us, and what we still believe about it
   eval/               the harness around the organizer's evaluator; never imported by the agent
   simulator.py        a mirror of the evaluator's own shopper, for generating sessions
-scripts/              evaluate · fit · fit_bm25 · earlyhit · llm_tier
-tests/                91 tests
+scripts/              evaluate · refit · fit_bm25 · earlyhit · llm_tier
+tests/                85 tests
 techjam-conversational-search-main/   the official kit — never edited, hash-verified before every run
 ```
 
@@ -74,7 +76,7 @@ techjam-conversational-search-main/   the official kit — never edited, hash-ve
    the catalog actually contains. An ambiguous span is carried as a probability **mixture** over real
    catalog strings rather than resolved to a guess.
 3. **Choose a pool with a distribution.** `P(category | opener)` over 1,115 shelves, widened until it
-   covers 85% of the mass. 50,000 items become ~335, and the target is in that pool ~100% of the time.
+   covers 85% of the mass. 50,000 items become a median of 182, and the target is in that pool 200/200 on the public set.
 4. **Score with one log-posterior.** Exact card strings, normalised attribute pairs, token overlap and
    soft-card Jaccard, every factor bounded. A term with no opinion cancels; no term may zero an item.
 5. **Use survival as evidence.** The evaluator stops on the first hit, so a session that is still

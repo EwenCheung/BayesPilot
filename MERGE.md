@@ -1,6 +1,6 @@
 # MERGE.md — one agent from three branches
 
-**Status: proposal, v2.** Nothing here has been built or measured. v1 was written before I had read
+**Status: v3 — Tier 0 and Tier 1 are BUILT and measured; Tier 2 and 3 are not.** v1 was written before I had read
 [`SUMMARY.md`](SUMMARY.md) (592 lines, now identical to `docs/SUMMARY.md`). That document changed the
 plan substantially — see [§8](#8-what-changed-from-v1). The headline change: **this is a polish job,
 not a rebuild.**
@@ -80,7 +80,7 @@ structural: sessions genuinely need turns to disclose their constraints.
 | ⬛ **grey** | **built in Approach1 or Approach2 and NOT used here.** Source branch named in the label. |
 
 **Font = what the node needs at runtime.** 🔵 blue = an LLM call · 🟣 purple = parameters fitted by our
-own code (`scripts/fit_r4.py`) · ⚫ black = deterministic, no model.
+own code (`scripts/refit.py`) · ⚫ black = deterministic, no model.
 
 **Solid arrows are the live path. Every dotted arrow means *this is where that part sat*** — it points
 from the surviving node to the red one it replaces, or to the grey one from another branch that does
@@ -102,12 +102,12 @@ flowchart TD
     subgraph UNDERSTAND["1 — Understand the turn · cheapest tier first"]
         T1["tier 1 TEMPLATE · 5 simulator regexes<br/>exact and authoritative"]:::common
         T2["tier 2 ONTOLOGY · normalise to attribute, value"]:::common
-        GATE{"handled?<br/>escalate only on THIS message"}:::daeren
+        GATE{"no template matched?<br/>the ONLY gate — ontology does not gate"}:::daeren
         T3["tier 3 LLM FALLBACK · qwen3.6:35b pinned<br/>returns attribute, value, evidence<br/>0 calls on templated · 1 per unreadable opener"]:::daerenllm
         VERIFY["Catalog vocabulary verification<br/>no real catalog label ⇒ no evidence"]:::a1
         MIX["Grouped ambiguity mixture<br/>2-4 alternatives, sum p = 1"]:::a1
         TXN["Typed op transaction<br/>add · remove · replace · confirm"]:::a1
-        RENDER["TIER 2 WORK · restore to a fixed template<br/>own counter restored_hits, NEVER template_hits"]:::a1
+        RENDER["DONE · restore to a fixed template<br/>own counter restored_hits, NEVER template_hits"]:::a1
     end
     GB6["LLM query normaliser · category resolver · listwise rerank<br/>(Approach2)"]:::unusedllm
     GA1["Always-on router · one LLM call every message<br/>(Approach1) — measured -0.0270, 127x slower"]:::unusedllm
@@ -121,19 +121,19 @@ flowchart TD
 
     subgraph LEVEL1["3 — Level 1 · the pool, from the RAW opener"]
         CAT["Category posterior over 1,115 shelves<br/>IDF x coverage + quote bonus · softmax T=2.0"]:::daerenfit
-        POOL["Mass pool tau=0.85 → ~335 items<br/>target is in the pool ~100% of the time"]:::daerenfit
+        POOL["Mass pool tau=0.85 → median 182 items<br/>target in pool 200/200 on the public set"]:::daerenfit
     end
     GB2["Dense route + dense category centroids · bge-small<br/>(Approach2)"]:::unusedfit
     GA3["Global rescue RAWLEX · RAWSEM · NORMSEM + union<br/>(Approach1)"]:::unused
     X5["pool_normalised_prior · belief_pool=False · truncate"]:::cut
 
     subgraph LEVEL2["4 — Level 2 · evidence terms, all bounded"]
-        TOK["TIER 1 WORK · numeric-preserving tokenizer<br/>keeps % and 1-char tokens · list, not a frozenset"]:::a2
+        TOK["DONE · numeric-preserving tokenizer<br/>keeps % and 1-char tokens · list, not a frozenset"]:::a2
         EXACT["EXACT card string · tuple equality · gain 3.2"]:::commonfit
         ATTR["ATTRIBUTE pair · gain 1.5"]:::daerenfit
         LEX["LEXICAL token overlap · floor 0.34 · gain 0.9"]:::commonfit
         SOFT["SOFT CARD Jaccard vs the item's OWN cards<br/>gain 1.5 · +0.0621 L2 / +0.0727 L3"]:::daerenfit
-        BM25["BM25 Okapi k1=1.5 b=0.75 · built, gain 0.0<br/>TIER 1 WORK · sweep after the tokenizer fix"]:::commonfit
+        BM25["BM25 Okapi · SWEPT, SHIPS OFF at gain 0.0<br/>train +0.0189, but dev .9506→.9489 and public .9744→.9697"]:::commonfit
         ABST["Bounded factors · L_MIN 0.02 · abstention<br/>a term with no opinion CANCELS"]:::daeren
     end
     GB1["LightGBM LambdaRank x2 + runtime regime gate<br/>(Approach2)"]:::unusedfit
@@ -142,8 +142,8 @@ flowchart TD
     X2["lexical.py · IdfLexical · idf_gain 0.0<br/>measured harmful, monotonically"]:::cut
 
     subgraph DECIDE["5 — Decide"]
-        POST["log P(item) = log P0 + SUM w · log L<br/>ranked"]:::daeren
-        EXCL["SURVIVAL IS EVIDENCE · proven-shipped → log p = -inf<br/>+0.027 train / +0.028 dev · D2 DEFAULT BUG"]:::daeren
+        POST["log P(item) = SUM w · log L<br/>ranked · no prior term, P0 deleted"]:::daeren
+        EXCL["SURVIVAL IS EVIDENCE · proven-shipped → log p = -inf<br/>+0.027 train / +0.028 dev · D2 FIXED, defaults to True"]:::daeren
         ENT["Normalised entropy H<br/>picks the reply SENTENCE only, not the depth"]:::daeren
         HOPE["hope = decay ^ stalls<br/>0.8 if a template EVER matched · 0.2 if none ever did"]:::daerenfit
         UK["V = 0.75 · hope - 0.0667<br/>depth = largest k with 1/k > V"]:::daerenfit
@@ -153,7 +153,7 @@ flowchart TD
     X3["Popularity prior · prior_weight 0.0 · arithmetically inert<br/>ablation moves the score by exactly 0.000000"]:::cut
     GB4["log_pop popularity features<br/>(Approach2)"]:::unused
     GB3["Depth schedule as a SHIPPED policy k = 1,1,10,10<br/>(Approach2) — kept only as the offline audit"]:::unusedfit
-    AUDIT["TIER 2 WORK · OFFLINE audit, never at inference<br/>rank trajectories score every depth policy exactly"]:::a2fit
+    AUDIT["TIER 2, NOT BUILT · offline audit, never at inference<br/>rank trajectories score every depth policy exactly"]:::a2fit
 
     subgraph REPLY["6 — Reply"]
         ASK["ask_attribute = 'other'<br/>returns TWO undisclosed constraints, not one"]:::common
@@ -167,9 +167,10 @@ flowchart TD
     %% ---------------- the live path ----------------
     IN --> T1
     T1 -- "handled · stop, templates are exact" --> ST
-    T1 -- "not handled" --> T2 --> GATE
-    GATE -- "handled · zero LLM calls" --> ST
-    GATE -- "not handled · unreadable turn" --> T3
+    T1 -- "handled · zero LLM calls" --> ST
+    T1 -- "not handled" --> GATE
+    GATE --> T2
+    T2 -- "runs, but gates nothing" --> T3
     T3 --> VERIFY
     VERIFY -- "one catalog label" --> TXN --> ST
     VERIFY -- "several plausible" --> MIX --> ST
@@ -220,6 +221,12 @@ flowchart TD
     classDef unusedfit  fill:#e0e0e0,stroke:#757575,stroke-width:1px,color:#6a1b9a
 ```
 
+> ⚠️ **This diagram is about provenance, not runtime.** Fill colour answers *"where did this part come
+> from?"*, and it deliberately draws things that are **not** in the running system — red for deleted,
+> grey for never taken. [SUMMARY.md](SUMMARY.md) §4 draws the same agent as a **runtime** diagram:
+> every node white, font colour carrying deterministic / fitted / model-call, and only what executes.
+> Two views of one system; neither is a redraw of the other.
+
 **Read it in one line:** the orange spine stays untouched; Approach1 adds a *safety and ambiguity*
 layer **downstream** of the LLM tier that already exists; Approach2 contributes one tokenizer and one
 offline audit; five dead switches get deleted, and deleting them removes `sklearn` and `torch`.
@@ -242,7 +249,7 @@ opener and never on a templated turn. Approach1's contribution is what happens t
 | **`exclude_shipped`** | +0.027 train, +0.028 dev. The rule must be **binary** — a soft penalty cost −0.0607 and took override MRR 0.983 → 0.504 |
 | **soft-card Jaccard** | +0.0621 L2, +0.0727 L3 — the largest single win in R4 |
 | **abstention + `L_MIN`** | letting soft matches delete candidates dropped Hit@10 to 0.79, *below* the 0.815 do-nothing baseline |
-| **category posterior + mass pool** | 50,000 → ~335, target in pool **~100%**. A naive-Bayes alternative lost 0.525 vs 0.825 |
+| **category posterior + mass pool** | 50,000 → **median 182**, target in pool **200/200**. A naive-Bayes alternative lost 0.525 vs 0.825 |
 | **`hope` / `V` / depth** | 3 fitted numbers for the entire stopping policy. `turn_cost = 0.0667` is read off the scoring formula, not tuned. A **constant** `V` degenerates to shipping one item forever — 0.6216 at L3 |
 | **override silence** | the evaluator discards every list shipped before the override lands |
 
@@ -287,7 +294,7 @@ opener and never on a templated turn. Approach1's contribution is what happens t
 
 ## 6. The three open mechanism questions
 
-### 6.1 🟨 The tokenizer — the one finding that can overturn a settled negative
+### 6.1 🟨 The tokenizer — the finding that did NOT overturn a settled negative ✅ resolved
 
 ```python
 # src/common/attributes.py:94
@@ -318,10 +325,27 @@ and it already failed to earn a positive gain." That argument is sound **only if
 surface correctly.** They read it damaged, through the same tokenizer. `tokens()` also feeds the
 `lexical` term and `softcard`'s Jaccard, so the loss is three-way.
 
-**The fix is surgical:** a BM25/lexical-specific tokenizer, leaving `tokens()` untouched so the
-`R4-A1` / `R5-A1` reduction tests still pass.
+**The fix was surgical** — a BM25/lexical-specific tokenizer in `src/understand/tokens.py`, leaving
+`tokens()` untouched — **and the hypothesis it was built to test is false.**
 
-⚠️ **`SUMMARY.md` contradicts itself and the code on BM25.** §2's chart says *"BM25 Okapi,
+| | L0 | L2 | L3 | mean |
+|---|---|---|---|---|
+| no BM25 | 0.9513 | 0.8281 | 0.7880 | 0.8558 |
+| BM25 @2.0, **legacy** tokenizer | 0.9498 | 0.8545 | 0.8112 | 0.8718 (+0.0160) |
+| BM25 @2.0, **repaired** tokenizer | 0.9516 | 0.8570 | 0.8141 | 0.8742 (+0.0184) |
+
+The repair is worth **+0.0024**; BM25 itself is worth +0.0160 — and the legacy row reproduces the
+previously published +0.0160 exactly, which is the check that the harness is stable. But none of it
+holds out. On the clean discriminating sets BM25 is **monotonically negative at every gain**:
+`dev` 0.9506 → 0.9495 → 0.9494 → 0.9489 and `public` 0.9744 → 0.9700 → 0.9700 → 0.9697 for gains
+0.0 / 0.5 / 1.0 / 2.0.
+
+🔑 **So the earlier lexical negatives were not an artefact of the damaged surface.** The mechanism was
+right all along: the shopper quotes the catalog, so a fuzzy lexical route is a blurrier view of
+evidence the exact terms already read. `bm25_gain` ships at **0.0** with the full sweep recorded in
+`src/copilot/flags.py`, and `--ablate bm25` reproduces the loss.
+
+⚠️ **RESOLVED.** `SUMMARY.md` used to contradict itself and the code on BM25. §2's chart says *"BM25 Okapi,
 `src/r5/bm25.py` — BUILT (D24), +0.0160 mean on train at gain 2.0, gain 0.0 OFF pending held-out
 confirmation."* §3.6 and §4 say *"There is no BM25"* / *"not present."* The file exists and is wired
 into `r4/belief.py:43`. Whichever way 6.1 resolves, this needs one correction.
@@ -383,23 +407,23 @@ if the merge changes which branch fires, they need a re-fit.
 
 ## 7. Work order
 
-**Tier 0 — before any merging**
+**Tier 0 — before any merging** ✅ **complete**
 
 | # | step | gate |
 |---|---|---|
-| 0.1 | **Fix D2.** Make the shipped configuration the *constructed* configuration: `Agent(catalog_path)` with no environment must reproduce 0.9744 / 0.9562 / 0.9348 | all three reproduce to 4 dp; `R4-A1` / `R5-A1` reduction tests still pass |
-| 0.2 | Reconcile the BM25 contradiction in `SUMMARY.md` §2 vs §3.6/§4 | one statement, matching the code |
-| 0.3 | Produce the missing `runs/final_r5.json` and register the row | registry newest row is `r5_ship`, not `r4_ship` |
+| 0.1 | ✅ **DONE** — **Fix D2.** Make the shipped configuration the *constructed* configuration: `Agent(catalog_path)` with no environment must reproduce 0.9744 / 0.9562 / 0.9348 | all three reproduce to 4 dp; `R4-A1` / `R5-A1` reduction tests still pass |
+| 0.2 | ✅ **DONE** — `SUMMARY.md` rewritten; BM25 now has one statement backed by the held-out sweep | one statement, matching the code |
+| 0.3 | ✅ **DONE** — Produce the missing `runs/final_r5.json` and register the row | registry newest row is `r5_ship`, not `r4_ship` |
 
-**Tier 1 — cheap, strong evidence**
+**Tier 1 — cheap, strong evidence** ✅ **complete.** Outcome: 0.9345 / 0.9562 / 0.9744 / 0.9506, 85 tests. BM25 was swept and **ships off** — it wins on train and loses on every held-out set.
 
 | # | step | gate |
 |---|---|---|
-| 1.1 | BM25/lexical tokenizer (§6.1) + re-sweep `bm25_gain`, `idf_gain` and `soft_card_floor` on the repaired surface | `resplit/test` + `dev`, **never** the saturated 200. Ship only if a **paired** bootstrap CI excludes zero |
-| 1.2 | Approach1's catalog verification + ambiguity mixtures, downstream of the existing tier-3 | `freeform_v1/validation`; `llm_calls` must stay **0** on all three templated sets |
-| 1.3 | `QUESTION_TEXT` prose | no score change of any kind — cosmetic by design |
+| 1.1 | ✅ **DONE** — BM25/lexical tokenizer (§6.1) + re-sweep `bm25_gain`, `idf_gain` and `soft_card_floor` on the repaired surface | `resplit/test` + `dev`, **never** the saturated 200. Ship only if a **paired** bootstrap CI excludes zero |
+| 1.2 | ✅ **DONE** — Approach1's catalog verification + ambiguity mixtures, downstream of the existing tier-3 | `freeform_v1/validation`; `llm_calls` must stay **0** on all three templated sets |
+| 1.3 | ✅ **DONE** — `QUESTION_TEXT` prose | no score change of any kind — cosmetic by design |
 
-**Tier 2 — measurement first, mechanism only if it earns it**
+**Tier 2 — measurement first, mechanism only if it earns it** ⏳ **not started**, except 2.4's `restored_hits` guard, which shipped with 1.2 because `_render` came in with the rest of the pipeline.
 
 | # | step | gate |
 |---|---|---|
@@ -408,11 +432,11 @@ if the merge changes which branch fires, they need a re-fit.
 | 2.3 | belief-aware `V`, and a ramp instead of the 1 → 10 cliff | must beat the Tier-1 config on `resplit/test` **and** `dev` |
 | 2.4 | `_render` + `restored_hits` three-way decay (§6.3) | `freeform_v1/validation`; a wrong restoration must **not** buy the patient branch |
 
-**Tier 3 — only if Tier 1 and 2 leave a gap**
+**Tier 3 — only if Tier 1 and 2 leave a gap** ⏳ **not started**
 
 | # | step | gate |
 |---|---|---|
-| 3.1 | GBDT reranker over the ~335-item pool | **requires retraining.** Ceiling is 0.014 on templated data — must beat Tier 2 with a CI excluding zero |
+| 3.1 | GBDT reranker over the ~180-item pool | **requires retraining.** Ceiling is 0.014 on templated data — must beat Tier 2 with a CI excluding zero |
 | 3.2 | if 3.1 ships, port Approach2's **numpy tree export** | `max abs(lightgbm − numpy) == 0` over ≥512 rows |
 
 > ⚠️ 3.2 is not optional if 3.1 ships. `Booster.predict` **segfaults (exit 139)** and dataset
