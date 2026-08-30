@@ -181,12 +181,10 @@ Each cell: **Hit@10 / MRR / MTTC / TechnicalScore.** Offline unless stated.
 | **R2** retrieve & rank | public 200 | 0.7725 · 0.7189<br>4.57 · **0.7306** | 0.9775 · 0.9120<br>2.68 · **0.9288** | 1.0000 · 0.9746<br>2.08 · **0.9707** |
 | **R3** Bayesian fusion | public 120-split | 0.9587 · 0.9083<br>3.30 · **0.9059** | 0.9775 · 0.9311<br>2.90 · **0.9301** | 1.0000 · 0.9829<br>2.09 · **0.9731** |
 | **R4** + survival + soft card | `train.jsonl` 12,000 | 0.9725 · 0.9604<br>2.98 · **0.9348** | 0.9911 · 0.9783<br>2.64 · **0.9562** | 1.0000 · 0.9942<br>2.19 · **0.9744** |
-| **merged**<br>**← SUBMITTED** | `train.jsonl` 12,000 | 0.9725 · 0.9596<br>2.98 · **0.9345** | 0.9911 · 0.9783<br>2.64 · **0.9562** | 1.0000 · 0.9942<br>2.19 · **0.9744** |
+| **merged**<br>**← SUBMITTED** | `combine` / `resplit` | 0.9725 · 0.9596<br>2.98 · **0.9345** | 0.9911 · 0.9783<br>2.64 · **0.9562** | 1.0000 · 0.9942<br>2.19 · **0.9744** |
 | *organizer baseline* | — | — | — | 0.1250 · 0.0680<br>9.81 · *0.1067* |
 
-Also **`dev.jsonl` (2,000): 0.9865 · 0.9721 · 2.71 · 0.9506.**
-95% bootstrap CI, 1,000 resamples — freeform (0.9230, 0.9446) · resplit (0.9526, 0.9599) ·
-public (0.9692, 0.9789) · dev (0.9449, 0.9554).
+95% bootstrap CI, 1,000 resamples — freeform (0.9230, 0.9446) · resplit (0.9526, 0.9599) · public (0.9692, 0.9789).
 
 > Reference points: starter `0.1067` · popularity-only `0.7133` · paraphrase-proof floor `0.826` ·
 > **theoretical max `0.9922`** — perfect Hit and MRR against the structural MTTC floor of 1.39 that
@@ -196,14 +194,11 @@ public (0.9692, 0.9789) · dev (0.9449, 0.9554).
 
 | dataset | scenario | n | Hit@10 | MRR | MTTC |
 |---|---|---|---|---|---|
-| **train** | buying | 4,800 | 0.9883 | 0.9710 | 2.24 |
-| | browsing | 4,800 | 0.9898 | 0.9722 | 2.70 |
-| | intent_override | 1,800 | **0.9911** | 0.9788 | 3.79 |
-| | boundary | 600 | 0.9867 | 0.9773 | 3.61 |
-| **dev** | buying | 800 | 0.9900 | 0.9765 | 2.21 |
-| | browsing | 800 | 0.9825 | 0.9660 | 2.73 |
-| | intent_override | 300 | **0.9933** | 0.9735 | 3.81 |
-| | boundary | 100 | 0.9700 | 0.9650 | 3.74 |
+| **resplit/test** | buying | 1,120 | 0.9920 | 0.9801 | 2.18 |
+| | browsing | 1,120 | 0.9911 | 0.9774 | 2.68 |
+| | intent_override | 420 | **0.9929** | 0.9795 | 3.76 |
+| | boundary | 140 | 0.9786 | 0.9678 | 3.65 |
+| **public_set** | all four | 200 | **1.0000** | 0.9942 | 2.19 |
 
 🔑 **`intent_override` is the *strongest* scenario on Hit@10**, having been the weakest for every
 earlier road. Those sessions get turns 1–2 free — the evaluator discards any list shipped before the
@@ -214,14 +209,13 @@ and excludes them (§5.4).
 
 | dataset | n | wall | ms/session | model calls | USD |
 |---|---|---|---|---|---|
-| `public_set` | 200 | 3.9 s | 19.5 | **0** | 0.00 |
-| `dev` | 2,000 | 18.1 s | 9.1 | **0** | 0.00 |
-| `resplit/test` | 2,800 | 22.5 s | 8.0 | **0** | 0.00 |
-| `freeform_v1/test` | 800 | 32.7 s | 40.9 | **0** | 0.00 |
+| `public_set` | 200 | 4.0 s | 20.0 | **0** | 0.00 |
+| `resplit/test` | 2,800 | 22.0 s | 7.9 | **0** | 0.00 |
+| `freeform_v1/test` | 800 | 77.0 s | 96.2 | **0** | 0.00 |
 
 Per-session cost *falls* as the set grows because the ~20 s index build amortises — the evaluator
 constructs **one** `Agent` for all sessions. Free-form is slower per session because those sessions run
-more turns, not because anything extra runs.
+more turns and have longer conversational payloads.
 
 ⚠️ **`llm_calls = 0` on every templated dataset is measured, not asserted.** It is the direct
 confirmation that the escalation gate fires per unreadable message and nowhere else.
