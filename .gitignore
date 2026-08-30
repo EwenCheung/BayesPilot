@@ -3,29 +3,19 @@ __pycache__/
 *.py[cod]
 .DS_Store
 CLAUDE.local.md
-results.json
-
-# Catalog: 60 MB, re-downloadable from the official release and verified by assets/SHA256SUMS.
-# Keeping it out avoids GitHub's >50 MB warning on the public submission repo.
-assets/catalog.jsonl
-assets/catalog.jsonl.gz
-
-# Benchmark evaluation outputs
-runs/*
-!runs/public_set_eval.json
-!runs/resplit_test_eval.json
-!runs/freeform_v1_test_eval.json
-!runs/r3_current_router_fallback_final.json
-!runs/r3_locked_final.json
-!runs/r3_resplit_locked.json
-
 .cache/
-
-# Derived artifacts: regenerable via scripts/embed_all.py (~14 min, ~$0.10).
-# emb.npy alone is 98 MB and must never enter git history.
-artifacts/
-
-# BLaIR embeddings: 71 MB, rebuild with scripts/embed_blair.py (~5 min). Never in git.
-artifacts/
-
 .venv/
+
+# The catalog: 60 MB, re-downloadable from the official release.
+# sha256 da979b05a68af864cb0dcf9ee6a81c010c7e66a57978ad286c7a2e005fc69a67
+# Kept out of git to avoid GitHub's >50 MB warning on the public submission repo.
+data/catalog.jsonl
+
+# Run outputs. The registry and the split manifest ARE committed — they are the record every
+# held-out number depends on. Raw dumps and progress logs are not.
+# ⚠️ `runs/*` not `runs/`: git cannot un-ignore a file inside an ignored DIRECTORY, only inside an
+# ignored glob. holdout.json was silently ignored for a while precisely because of this.
+runs/*
+!runs/registry.jsonl
+!runs/holdout.json
+!runs/final_r5.json

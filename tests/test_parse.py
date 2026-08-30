@@ -1,6 +1,6 @@
 """Spec 3.4 — every simulator template parses exactly; paraphrases degrade gracefully."""
-from src.common.contracts import SessionState
-from src.common.parse import parse
+from src.state.session import SessionState
+from src.understand.parse import parse
 
 BUY = "I'm looking for Shirts T-Shirts. A key requirement is: Material: cotton."
 BROWSE = "I'm looking for Shoes Fashion Sneakers, but I'm still exploring."
@@ -57,7 +57,7 @@ def test_override_erases_the_old_slot_and_adds_the_new_one():
     fresh = next(c for c in state.constraints if c.text == "Material: alloy")
     assert retired[0].weight(state.turn) < fresh.weight(state.turn)
 
-    from src.common.parse import parse as _parse
+    from src.understand.parse import parse as _parse
     hard = SessionState()
     hard.turn = 1
     _parse(OVERRIDE_OPEN, hard, erase="delete")

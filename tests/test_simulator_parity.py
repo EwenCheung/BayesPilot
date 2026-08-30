@@ -15,7 +15,7 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "techjam-conversational-search-main"))
 
 from evaluator import local_evaluator as kit  # noqa: E402
-from src.common import simulator as ours  # noqa: E402
+from src import simulator as ours  # noqa: E402
 
 
 class TestSimulatorParity(unittest.TestCase):
@@ -23,7 +23,7 @@ class TestSimulatorParity(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.products = [
             json.loads(line)
-            for line in (ROOT / "assets" / "catalog.jsonl").open(encoding="utf-8")
+            for line in (ROOT / "data" / "catalog.jsonl").open(encoding="utf-8")
         ]
 
     def test_intent_card_parity_all_rows(self) -> None:
