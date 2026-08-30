@@ -20,6 +20,20 @@ from src.r3.index import ItemIndex
 from src.r3.question import best_question
 
 
+QUESTION_TEXT = {
+    "category": "What exact type of product are you looking for?",
+    "material": "Do you have a preferred material or any material you want to avoid?",
+    "color": "Do you have a preferred color or pattern?",
+    "size": "What size, dimensions, or fit do you need?",
+    "style": "What style, cut, or level of formality do you prefer?",
+    "brand": "Is there a brand you prefer or want to avoid?",
+    "budget": "What budget range would you like me to stay within?",
+    "feature": "What must-have feature or compatibility requirement matters most?",
+    "use_case": "What occasion, activity, environment, or season is this for?",
+    "other": "What other requirement matters most to your decision?",
+}
+
+
 class Agent:
     def __init__(self, catalog_path: str | Path = "data/catalog.jsonl") -> None:
         self.index = ItemIndex(catalog_path)
@@ -31,7 +45,7 @@ class Agent:
         # offline number (0.8297) unless you count cache hits. Every headline figure in
         # docs/R3-RESULTS.md §1 is measured with the tier explicitly off.
         self.llm = None
-        if self.flags.llm_extract and os.environ.get("R3_OFFLINE") != "1":
+        if (self.flags.llm_extract or self.flags.llm_attribute) and os.environ.get("R3_OFFLINE") != "1":
             try:
                 from src.common.llm import LLMClient
                 self.llm = LLMClient()
@@ -84,8 +98,8 @@ class Agent:
         state = self.sessions.setdefault(session_id, SessionState())
         state.turn = turn
         before = len(state.constraints)
-        llm = self.llm if (self.flags.llm_extract and state.paraphrased()) else None
-        parse(user_message, state, llm=llm, erase=self.flags.erase)
+        extraction_llm = self.llm if (self.flags.llm_extract and state.paraphrased()) else None
+        parse(user_message, state, llm=extraction_llm, erase=self.flags.erase)
         # Pillar III, concretely: "is this conversation still teaching me anything?" A turn that
         # revealed nothing new means the belief will not improve by waiting, and the policy below
         # reads that directly instead of consulting a hand-tuned deadline.
@@ -147,16 +161,49 @@ class Agent:
             decay = flags.stall_decay if state.paraphrased() else flags.stall_decay_clean
             depth = belief.depth(top_k, v_continue=flags.v_continue, hope=decay ** stalls)
 
-        question = best_question(self.index, state, belief) if flags.infogain else "other"
+        if flags.critical_questions:
+            question = best_question(self.index, state, belief, include_other=False)
+        elif flags.infogain:
+            question = best_question(self.index, state, belief, include_other=True)
+        else:
+            question = "other"
+        # The model sees only accumulated known/missing state and returns one attribute. It never sees
+        # product candidates, BM25/semantic scores, or ranks, and cannot change the search pipeline.
+        if flags.llm_attribute and self.llm is not None and hasattr(self.llm, "select_attribute"):
+            known_attributes = sorted(set(state.slots) | ({"category"} if state.category else set()))
+            exhausted = sorted(
+                attribute for attribute, useful in state.asked.items() if useful is False
+            )
+            state_summary = {
+                "turn": state.turn,
+                "route": state.route,
+                "override_seen": state.override_seen,
+                "category": state.category,
+                "known_slots": state.slots,
+                "known_attributes": known_attributes,
+                "missing_attributes": sorted(
+                    set(QUESTION_TEXT) - set(known_attributes) - set(exhausted)
+                ),
+                "live_constraints": [
+                    {"attribute": item.attribute, "value": item.value, "demoted": item.demoted}
+                    for item in state.live()
+                ],
+                "exhausted": exhausted,
+                "previous_question": self._last_asked.get(session_id),
+            }
+            selected = self.llm.select_attribute(state.profile, state_summary)
+            if selected and selected not in known_attributes and selected not in exhausted:
+                question = selected
+        message = QUESTION_TEXT.get(question, QUESTION_TEXT["other"])
         self._last_asked[session_id] = question
         usage = {"prompt_tokens": 0, "completion_tokens": 0}
-        if llm is not None:
-            prompt, completion = getattr(llm, "totals", lambda: (0, 0))()
+        if self.llm is not None:
+            prompt, completion = getattr(self.llm, "totals", lambda: (0, 0))()
             usage = {"prompt_tokens": prompt - self._prompt,
                      "completion_tokens": completion - self._completion}
             self._prompt, self._completion = prompt, completion
 
-        return {"message": self._message(state, depth, entropy),
+        return {"message": message,
                 "ask_attribute": question,
                 "recommendations": [{"parent_asin": a} for a in ranked[:depth]],
                 "usage": usage}

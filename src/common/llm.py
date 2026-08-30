@@ -40,6 +40,40 @@ RERANK_SYSTEM = (
     "numbers, best first, every number used exactly once. No prose."
 )
 
+# Domain importance is a tie-breaker. Candidate answer probability and information gain are stronger
+# signals: size matters enormously for shoes but often not at all for jewellery.
+ATTRIBUTE_PRIORITY = (
+    ("category", 100, "exact product type, only if still unknown"),
+    ("size", 90, "size, dimensions, width, or fit"),
+    ("use_case", 85, "occasion, activity, environment, recipient, or season"),
+    ("feature", 80, "non-negotiable function or compatibility requirement"),
+    ("budget", 75, "maximum price or acceptable range"),
+    ("material", 70, "material, construction, allergies, or care needs"),
+    ("style", 60, "style, cut, silhouette, or formality"),
+    ("color", 50, "colour or pattern"),
+    ("brand", 40, "brand only when explicitly important"),
+    ("other", 10, "fallback only when no useful specific field remains"),
+)
+ATTRIBUTE_NAMES = frozenset(name for name, _, _ in ATTRIBUTE_PRIORITY)
+ATTRIBUTE_SYSTEM = """You select the next attribute for a conversational shopping agent to ask.
+Return JSON only: {{"ask_attribute":"<one allowed field>"}}.
+
+Rules:
+1. Never select a field that is already known or exhausted.
+2. Use the current category, known slots, profile, route, turn, and previous questions as context.
+3. Follow domain priority, but skip an attribute that is irrelevant to the known product type.
+4. "Season" maps to use_case.
+5. Select other only when no useful specific missing field remains.
+
+Priority guide:
+{guide}
+""".format(
+    guide="\n".join(
+        f"- {name} (priority {priority}): {description}"
+        for name, priority, description in ATTRIBUTE_PRIORITY
+    ),
+)
+
 
 def _http(path: str, body: dict, timeout: float) -> dict:
     request = urllib.request.Request(
@@ -161,11 +195,6 @@ class LLMClient:
         # silently lifted R1's L3 from 0.7241 to 0.7893 in a table headed "no network" (D22, D24).
         if os.environ.get(OFFLINE_ENV) == "1":
             return []
-        # ⚠️ OFFLINE_ENV is checked HERE, not in an agent, so it holds for every road. Gating it
-        # per-agent let R1 and R2 keep reading a warm `.cache/llm` while R3 was offline, which
-        # silently lifted R1's L3 from 0.7241 to 0.7893 in a table headed "no network" (D22, D24).
-        if os.environ.get(OFFLINE_ENV) == "1":
-            return None
         content = self.chat(
             [{"role": "system", "content": EXTRACT_SYSTEM}, {"role": "user", "content": message[:1500]}],
             max_tokens=300,
@@ -189,6 +218,44 @@ class LLMClient:
         if not pairs:
             self.failures += 1
         return pairs
+
+    def select_attribute(
+        self,
+        profile: dict,
+        state: dict,
+    ) -> str | None:
+        """Choose one field from known/missing state; never sees or changes retrieval/ranking."""
+        if os.environ.get(OFFLINE_ENV) == "1":
+            return None
+        user = (
+            "Profile: " + json.dumps(profile or {}, sort_keys=True)[:1200]
+            + "\nAgent state: " + json.dumps(state, sort_keys=True)[:3500]
+        )
+        content = self.chat(
+            [{"role": "system", "content": ATTRIBUTE_SYSTEM}, {"role": "user", "content": user}],
+            max_tokens=80,
+        )
+        if not content:
+            return None
+        match = re.search(r"\{.*\}", content, re.S)
+        if not match:
+            self.failures += 1
+            return None
+        try:
+            payload = json.loads(match.group(0))
+        except Exception:
+            self.failures += 1
+            return None
+        attribute = str(payload.get("ask_attribute") or "").strip().lower()
+        if attribute not in ATTRIBUTE_NAMES:
+            self.failures += 1
+            return None
+        known = set(state.get("known_attributes") or [])
+        exhausted = set(state.get("exhausted") or [])
+        if attribute in known or attribute in exhausted:
+            self.failures += 1
+            return None
+        return attribute
 
     def rerank(self, query: str, candidates: list[str], labels: list[str] | None = None) -> list[str] | None:
         """The brief's named 'LLM Semantic Ranking' stage. Returns None on any malformed answer."""
@@ -227,6 +294,10 @@ class LLMClient:
         return ranked
 
     # --- disclosure --------------------------------------------------------
+    def totals(self) -> tuple[int, int]:
+        """Cumulative paid-token totals; callers convert these to per-turn deltas."""
+        return self.prompt_tokens, self.completion_tokens
+
     def report(self) -> dict:
         latencies = sorted(self.latencies)
         percentile = lambda p: latencies[min(len(latencies) - 1, int(p * len(latencies)))] if latencies else 0.0

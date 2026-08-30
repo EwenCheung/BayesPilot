@@ -16,14 +16,21 @@ class Flags:
     query_mode: str = "model"        # model = encode with BLaIR | prf = torch-free centroid
     semantic_gain: float = 0.0  # 0 disables the term entirely (and skips building the index)
     erase: str = "demote"      # override: demote (R1, best) | delete (R2) | keep — D23
-    prior_weight: float = 0.18       # scales log1p(rating) onto the evidence's units (fitted, D16)
+    # Refit on the target-disjoint 8,400 train split and selected on the 2,800 validation split.
+    # 0.10 scored 0.924447/0.927023 versus 0.920248/0.923199 for the legacy 0.18 value.
+    prior_weight: float = 0.10       # scales log1p(rating) onto the evidence's units
     # ⚠️ Both below are R2 mechanisms, ported and MEASURED, and neither earns its place (D23).
     # Kept as switches so the negative reproduces; both default off.
     pool_normalised_prior: bool = False  # R2's "well reviewed FOR A HOOP EARRING" form
     idf_gain: float = 0.0                # R2's IDF lexical route as an evidence term
     belief_pool: bool = True   # level-1 posterior chooses the pool (else: argmax category, R1-style)
     infogain: bool = False     # ⚠️ OFF: measured worse at every stress level — see D18
-    llm_extract: bool = True   # LLM constraint extraction, escalation only
+    critical_questions: bool = False  # opt-in real-UX mode; specific asks score worse in the simulator
+    llm_extract: bool = False  # optional fallback extraction; off when LLM only selects attributes
+    # Competition default is deterministic.  The public evaluator's ``other`` attribute reveals up
+    # to two constraints, while an LLM-selected specific attribute often reveals none.  Enable this
+    # explicitly only for real-UX experiments; never let endpoint availability change a scored run.
+    llm_attribute: bool = False
     temperature: float = 2.0
     tau_mass: float = 0.9
     v_continue: float = 0.9   # expected reciprocal rank if the session continues (fitted)

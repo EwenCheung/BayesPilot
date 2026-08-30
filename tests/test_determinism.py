@@ -24,7 +24,7 @@ from src.eval import race  # noqa: E402
 PROBE = (
     "import sys; sys.path.insert(0, {root!r});"
     "from src.eval import race;"
-    "print('%.10f' % race.score_road({road!r}))"
+    "print('%.10f' % race.score_road({road!r}, sample_limit=40))"
 )
 
 

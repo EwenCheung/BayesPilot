@@ -47,19 +47,40 @@ def _r3(ablate: tuple[str, ...] = (), **kwargs):
 ROADS = {"r1": _r1, "r2": _r2, "r3": _r3}
 
 
-def run_road(road: str, stress: int = 0, ablate: str | tuple[str, ...] = (), **kwargs) -> dict:
+def run_road(
+    road: str,
+    stress: int = 0,
+    ablate: str | tuple[str, ...] = (),
+    *,
+    sample_limit: int | None = None,
+    **kwargs,
+) -> dict:
     """Score one road at one paraphrase level, under one shared ablation vocabulary."""
     assert road in ROADS, f"unknown road {road!r}; have {sorted(ROADS)}"
     if isinstance(ablate, str):
         ablate = (ablate,)
     rewriter = ParaphraseRewriter(stress) if stress else None
-    result = harness.run(ROADS[road](ablate=ablate, **kwargs), rewriter)
+    result = harness.run(
+        ROADS[road](ablate=ablate, **kwargs),
+        rewriter,
+        dataset=harness.TRAIN_DATASET,
+        sample_limit=sample_limit,
+    )
     assert harness.kit_is_pristine(), "kit drifted — this score is unverifiable"
     return result
 
 
-def score_road(road: str, stress: int = 0, ablate: str | tuple[str, ...] = (), **kwargs) -> float:
-    return harness.score(run_road(road, stress, ablate, **kwargs))
+def score_road(
+    road: str,
+    stress: int = 0,
+    ablate: str | tuple[str, ...] = (),
+    *,
+    sample_limit: int | None = None,
+    **kwargs,
+) -> float:
+    return harness.score(
+        run_road(road, stress, ablate, sample_limit=sample_limit, **kwargs)
+    )
 
 
 def main() -> None:

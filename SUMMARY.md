@@ -26,9 +26,23 @@ margin is large.**
 The clean scores are saturated (theoretical max 0.9922, noise floor ~0.02) and the paraphrase columns are
 what estimate the private 800.
 
-⚠️ **Leakage audit: [03-decisions.md D22](docs/r3-exploration/03-decisions.md).** Fitted parameters used
-the 140 only; the all-200 rows above are partly in-sample; two structural decisions made on all-200 were
-re-tested per half.
+⚠️ **Leakage audit: [03-decisions.md D22](docs/r3-exploration/03-decisions.md).** The initial audit used
+a 140/60 split and the final refit used 120/80; the all-200 rows above are partly in-sample, and two
+structural decisions made on all 200 were re-tested per half.
+
+## New 14,000-session evidence (2026-08-30)
+
+The separately supplied `train.jsonl` and `dev.jsonl` were merged and re-split 60/20/20 without target
+overlap. R3 scores **0.920248 train / 0.923199 validation / 0.930050 test**. These are the better
+generalisation estimates; the public-200 `0.973075` is a reproducible but contaminated development
+score. In the optional online mode, the LLM selects only the next `ask_attribute` from accumulated
+agent state; search, ranking, and question wording stay deterministic. See
+[the resplit and LLM results](docs/RESPLIT-LLM-RESULTS.md).
+
+The competition configuration has since been refit under the locked
+[train/validation/test protocol](docs/DATA-PROTOCOL.md). LLM selection is opt-in, and neither test nor
+public data is addressable by the fitting script. The locked result is **0.933979 on the 2,800-row
+test split** and **0.973075 on the public golden regression set**, with zero LLM calls.
 
 ⚠️ **R1's and R2's originally published stress and ablation numbers were never comparable** — different
 rewriters, different `no_spec_phrase` definitions (R1 defect 2, R2 defect A8). Everything above is on

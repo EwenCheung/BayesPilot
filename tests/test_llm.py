@@ -6,6 +6,12 @@ import pytest
 from src.common.llm import LLMClient
 
 
+@pytest.fixture(autouse=True)
+def _unit_tests_control_offline_mode(monkeypatch):
+    """Do not let a benchmark-level R3_OFFLINE setting bypass fake transports in unit tests."""
+    monkeypatch.delenv("R3_OFFLINE", raising=False)
+
+
 class FakeTransport:
     """Stands in for the network. Records calls, replays canned payloads."""
 
@@ -80,6 +86,28 @@ def test_rerank_returns_a_permutation_or_nothing(tmp_path):
 
     bad = LLMClient(cache_dir=tmp_path / "bad", transport=FakeTransport(chat_payload("[9, 9, 9]")))
     assert bad.rerank("query", candidates) is None, "a malformed permutation must fall back, not corrupt the list"
+
+
+def test_llm_selects_one_unknown_answerable_attribute(tmp_path):
+    body = json.dumps({"ask_attribute": "size"})
+    client = LLMClient(cache_dir=tmp_path, transport=FakeTransport(chat_payload(body)))
+    attribute = client.select_attribute(
+        {"preference_tags": ["style"]},
+        {"known_slots": {"use_case": ["wedding"]}, "known_attributes": ["use_case"],
+         "missing_attributes": ["size", "material"], "exhausted": []},
+    )
+    assert attribute == "size"
+    assert client.totals() == (10, 5)
+
+
+def test_llm_selector_rejects_known_or_exhausted_attribute(tmp_path):
+    body = json.dumps({"ask_attribute": "budget"})
+    client = LLMClient(cache_dir=tmp_path, transport=FakeTransport(chat_payload(body)))
+    assert client.select_attribute(
+        {}, {"known_slots": {"budget": ["50"]}, "known_attributes": ["budget"],
+             "missing_attributes": ["size"], "exhausted": []},
+    ) is None
+    assert client.failures == 1
 
 
 def test_model_ids_are_pinned_not_aliases(tmp_path):

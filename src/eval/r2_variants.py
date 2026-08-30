@@ -61,13 +61,15 @@ HEADER = f"{'variant':<34s} {'hit@10':>6s}  {'MRR':>6s}  {'MTTC':>5s}  {'SCORE':
 
 def evaluate(label: str, dense: str = "svd", stress: bool = False, **kwargs) -> dict:
     agent = build(dense, **kwargs)
-    clean = harness.run(agent)
+    clean = harness.run(agent, dataset=harness.TRAIN_DATASET)
     print(row(label, clean), flush=True)
     out = {"clean": clean}
     if stress:
         for level in ("scaffold", "full"):
             agent = build(dense, **kwargs)  # fresh state, same indices
-            stressed = harness.run(agent, ParaphraseRewriter(level))
+            stressed = harness.run(
+                agent, ParaphraseRewriter(level), dataset=harness.TRAIN_DATASET
+            )
             print(row(f"  └ paraphrase:{level}", stressed), flush=True)
             out[level] = stressed
     return out

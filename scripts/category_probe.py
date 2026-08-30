@@ -28,7 +28,7 @@ def opening(sample: dict, category: str) -> str:
 
 
 def main() -> None:
-    samples, _, categories, products = harness.load_world()
+    samples, _, categories, products = harness.load_world(harness.TRAIN_DATASET)
     index = CatalogIndex(str(harness.CATALOG))
     # the evaluator materialises the hidden intent card from the product before writing turn 1
     from evaluator.local_evaluator import materialize_hidden_fields

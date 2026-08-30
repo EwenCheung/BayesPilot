@@ -20,7 +20,7 @@ if __name__ == "__main__":
             if not on:
                 agent.llm = None
             subject = harness.StressedAgent(agent, ParaphraseRewriter(level)) if level else agent
-            r = harness.run(subject)
+            r = harness.run(subject, dataset=harness.TRAIN_DATASET)
             calls = getattr(agent.llm, "calls", 0) if agent.llm else 0
             fails = getattr(agent.llm, "failures", 0) if agent.llm else 0
             print(f"L{level:<5d} {'on' if on else 'off':<5s} | {r['hit_rate_at_10']:>6.3f} "

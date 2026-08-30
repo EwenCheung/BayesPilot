@@ -22,7 +22,7 @@ from src.r3.category import CategoryBelief
 
 def openings(level):
     from evaluator.local_evaluator import materialize_hidden_fields
-    samples, _, categories, products = harness.load_world()
+    samples, _, categories, products = harness.load_world(harness.TRAIN_DATASET)
     out = []
     for s in samples:
         target = s["ground_truth"]["parent_asin"]

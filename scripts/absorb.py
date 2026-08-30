@@ -1,4 +1,4 @@
-"""Does R3 get better by absorbing R1's and R2's strengths? One at a time, measured on the 120.
+"""Does R3 improve by absorbing R1/R2 mechanisms? Measured on resplit train only.
 
 Each candidate is a mechanism the other roads have and R3 did not. Kept only if it earns its place;
 the alternative is a system with more parts and no more score.
@@ -12,7 +12,6 @@ sys.path.insert(0, str(ROOT))
 os.environ["R3_OFFLINE"] = "1"          # headline numbers are the offline path (D22)
 
 from scripts.fit_policy import score_on  # noqa: E402
-from src.eval import holdout             # noqa: E402
 
 CANDIDATES = {
     "R3 as-is (baseline)": {},
@@ -29,7 +28,7 @@ CANDIDATES = {
 }
 
 if __name__ == "__main__":
-    train = set(holdout.load()["train"])
+    train = "train"
     print(f"{'variant':<30s} {'clean':>7s} {'L2':>7s} {'L3':>7s} {'mean':>7s}")
     for label, kw in CANDIDATES.items():
         row = [score_on(train, lvl, **kw) for lvl in (0, 2, 3)]
