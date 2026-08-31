@@ -105,7 +105,7 @@ BayesPilot replaces opaque neural architectures with a mathematically grounded, 
   $$\implies (\text{Turn 2, Rank 1}) > (\text{Turn 1, Rank 2})$$
   **MRR weight (0.30) outweighs early turn speed (0.20).** Prematurely guessing with low confidence damages MRR more than asking another clarifying question.
 * **Expected Utility Equation**:
-  $$U(k) = \sum_{i=1}^k \frac{p_i}{i} + \left(1 - \sum_{i=1}^k p_i\right) \left(V_{\text{continue}} \cdot \text{hope} - \text{turn\_cost}\right)$$
+  $$U(k) = \sum_{i=1}^k \frac{p_i}{i} + \left(1 - \sum_{i=1}^k p_i\right) \left(V_{\text{continue}} \cdot \text{hope} - \text{cost}_{\text{turn}}\right)$$
   The agent derives list length $k$ dynamically by choosing the largest $k$ where marginal value $1/k > V$.
 
 ### 4. Hyperparameter Tuning via TPE (Tree-structured Parzen Estimator)
