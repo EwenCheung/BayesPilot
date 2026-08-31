@@ -91,9 +91,11 @@ def _git(*args: str) -> str:
 def provenance(catalog: Path, agent_spec: str) -> dict:
     """What FAQ §1 asks a team to retain beside the scores: the commit the run came from, proof the
     evaluator was unmodified, and enough environment detail to reproduce it."""
-    kit = (ROOT / "techjam-conversational-search-main" / "evaluator" / "local_evaluator.py"
-           if (ROOT / "techjam-conversational-search-main").exists()
-           else ROOT / "evaluator" / "local_evaluator.py")
+    kit = (ROOT / "participant_kit" / "evaluator" / "local_evaluator.py"
+           if (ROOT / "participant_kit").exists()
+           else (ROOT / "techjam-conversational-search-main" / "evaluator" / "local_evaluator.py"
+                 if (ROOT / "techjam-conversational-search-main").exists()
+                 else ROOT / "evaluator" / "local_evaluator.py"))
     return {
         "commit": _git("rev-parse", "HEAD"),
         "branch": _git("rev-parse", "--abbrev-ref", "HEAD"),
