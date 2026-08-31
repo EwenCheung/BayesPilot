@@ -615,7 +615,7 @@ and the ranking share of that is ~0.011.
 
 ### 6.2 The constants, and how they were chosen
 
-`scripts/refit.py` — staged, train only; it refuses to start on a reporting set. Staged rather than a grid because the
+`scripts/training/hyperparameter_tuning.py` — staged, train only; it refuses to start on a reporting set. Staged rather than a grid because the
 prior's units dominate everything downstream, so it is fitted first and the policy underneath it.
 
 **All 8 of them, in full** — this is the entire "learned" content of the system:
@@ -792,7 +792,9 @@ before anyone counted actual invocations.
 | `src/state/` | `session` — constraints, ambiguities, slots, decay, override |
 | `src/simulator.py` | a mirror of the evaluator's own shopper, for generating sessions |
 | `src/eval/` | the harness around the official evaluator — **never imported by the agent** |
-| `scripts/` | `evaluate` (any agent/set/level/flag) · `refit` (all 8 constants) · `fit_bm25` · `earlyhit` · `llm_tier` |
+| `scripts/evaluation/` | `evaluate` — any agent/set/level/flag |
+| `scripts/training/` | `hyperparameter_tuning` — all 8 constants |
+| `scripts/` | `earlyhit` · `llm_tier` |
 | `tests/` | 85 tests across 16 files |
 | `data/` | `train` (12,000) · `dev` (2,000) · `public_set` (200) · `resplit_60_20_20` · `freeform_v1` · `combine` |
 | `techjam-conversational-search-main/` | ⚠️ **the official kit — never edited**, hash-verified before every run |
@@ -823,7 +825,7 @@ python3 -m pytest tests/ -q                  # 83 tests
 Run evaluation with model, dataset, and output paths:
 
 ```bash
-python3 scripts/evaluate.py --model agent.py --dataset data/public_set.jsonl --output runs/eval.json
+python3 scripts/evaluation/evaluate.py --model agent.py --dataset data/public_set.jsonl --output runs/eval.json
 ```
 
 The script is streamlined for evaluation flexibility across three key parameters:
@@ -837,13 +839,13 @@ The script is streamlined for evaluation flexibility across three key parameters
 To evaluate across all three standard testing datasets (`resplit_60_20_20/test`, `freeform_v1/test`, `public_set.jsonl`), use `--all`:
 
 ```bash
-python3 scripts/evaluate.py --all
+python3 scripts/evaluation/evaluate.py --all
 ```
 
 ### 2. Refit the constants
 
 ```bash
-python3 scripts/refit.py --dataset data/combine/train.jsonl --n 3000
+python3 scripts/training/hyperparameter_tuning.py --dataset data/combine/train.jsonl --n 3000
 ```
 
 Re-derives **all 8 tuned constants** from scratch by staged coordinate descent. There are no trained

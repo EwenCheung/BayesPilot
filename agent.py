@@ -4,7 +4,7 @@
 environment. Everything the graded configuration needs is therefore a default in
 `src/copilot/flags.py` — nothing here reads `os.environ` to reach the measured setup.
 
-    python3 scripts/evaluate.py          # the four-dataset table in SUMMARY.md §5
+    python3 scripts/evaluation/evaluate.py          # the four-dataset table in SUMMARY.md §5
 """
 from __future__ import annotations
 

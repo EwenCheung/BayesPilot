@@ -80,7 +80,7 @@ structural: sessions genuinely need turns to disclose their constraints.
 | ⬛ **grey** | **built in Approach1 or Approach2 and NOT used here.** Source branch named in the label. |
 
 **Font = what the node needs at runtime.** 🔵 blue = an LLM call · 🟣 purple = parameters fitted by our
-own code (`scripts/refit.py`) · ⚫ black = deterministic, no model.
+own code (`scripts/training/hyperparameter_tuning.py`) · ⚫ black = deterministic, no model.
 
 **Solid arrows are the live path. Every dotted arrow means *this is where that part sat*** — it points
 from the surviving node to the red one it replaces, or to the grey one from another branch that does

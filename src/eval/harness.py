@@ -28,6 +28,25 @@ if str(KIT) not in sys.path:
 
 from evaluator.local_evaluator import catalog_index, evaluate, load_jsonl  # noqa: E402
 
+
+def load_env() -> None:
+    """`.env` into the process environment, without overriding what is already set.
+
+    ⚠️ Only runner scripts call this. The organizer runs `Agent(catalog)` with no environment at
+    all, so anything reaching the agent this way is a LOCAL experiment — the submission is whatever
+    `src/copilot/flags.py` says (SUMMARY.md D2).
+    """
+    import os
+
+    env_file = ROOT / ".env"
+    if not env_file.exists():
+        return
+    for line in env_file.read_text().splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            key, value = line.split("=", 1)
+            os.environ.setdefault(key.strip(), value.strip())
+
 CATALOG = ROOT / "data" / "catalog.jsonl"
 DATASET = KIT / "data" / "public_set.jsonl"
 REGISTRY = ROOT / "runs" / "registry.jsonl"

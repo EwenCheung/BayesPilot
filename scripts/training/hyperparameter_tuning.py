@@ -1,6 +1,6 @@
 """Re-fit every tuned constant from scratch, on a dataset you choose.
 
-    python3 scripts/refit.py --dataset data/train.jsonl --n 3000 --output runs/refit.json
+    python3 scripts/training/hyperparameter_tuning.py --dataset data/train.jsonl --n 3000 --output runs/refit.json
 
 There are **8 tuned constants** in this system and no trained weights, so this script *is* the
 training pipeline. It searches the TechnicalScore itself — every objective evaluation is a full run of
@@ -15,7 +15,21 @@ read for reporting only; pointing this at one of them silently invalidates every
 SUMMARY.md. The script refuses.
 
 ⚠️ **This writes JSON, not code.** The fitted values are literals in `src/copilot/flags.py`; adopting
-a result is a deliberate edit, so a bad sweep cannot silently become the submission.
+a result is a deliberate edit, so a bad sweep cannot silently become the submission. The run ends by
+printing both forms of the result — a `COPILOT_FLAGS=` line for `.env` to try it locally, and the
+`flags.py` literals to actually ship it.
+
+**One flag, one range** — `--sweep` replaces the staged fit with a single parameter's curve. This is
+what `scripts/fit_bm25.py` was, and it was a second implementation of `objective()` that did not set
+`COPILOT_OFFLINE` and averaged its levels by hand, so its numbers were not comparable with the ones
+here. The BM25 run it existed for:
+
+    python3 scripts/training/hyperparameter_tuning.py --dataset data/combine/train.jsonl --n 3000 \
+        --levels 0,2,3 --sweep bm25_gain=0,2,3,4,6,8
+
+    # ...and how much of that was BM25 vs the tokenizer repair in understand/tokens.py
+    python3 scripts/training/hyperparameter_tuning.py --dataset data/combine/train.jsonl --n 3000 \
+        --levels 0,2,3 --sweep bm25_gain=2,4 --legacy-tokens
 """
 from __future__ import annotations
 
@@ -26,11 +40,13 @@ import sys
 import time
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 os.environ.setdefault("COPILOT_OFFLINE", "1")   # fit on the offline path — a warm cache is not a run
 
 from src.eval import harness                    # noqa: E402  harness puts the kit on sys.path
+
+harness.load_env()                              # so a COPILOT_FLAGS you already adopted is the baseline
 from evaluator.local_evaluator import evaluate  # noqa: E402  must follow harness
 from src.eval.stress import ParaphraseRewriter  # noqa: E402
 from src.copilot.agent import Agent             # noqa: E402
@@ -91,6 +107,41 @@ def objective(samples, catalog: Path, levels: tuple[int, ...], **kw) -> float:
     return sum(score_on(samples, catalog, lvl, **kw) for lvl in levels) / len(levels)
 
 
+def sweep(samples, catalog: Path, levels: tuple[int, ...], spec: str, legacy: bool) -> None:
+    """One flag's curve, measured by the same `objective()` the staged fit uses.
+
+    ⚠️ Reports, fits nothing. A boundary winner is called out for the same reason it is in the
+    stages: the first BM25 sweep put its optimum at the top of its own range.
+    """
+    from src.copilot.flags import Flags
+
+    name, _, raw = spec.partition("=")
+    current = getattr(Flags(), name)          # raises on a flag that does not exist
+    cast = type(current)
+    values = [cast(v) for v in raw.split(",") if v]
+    assert len(values) > 1, f"--sweep needs a range, got {raw!r}"
+
+    if legacy:
+        # The original `attributes.tokens()`: a frozenset, `len > 2`, no `%`. Sorted into a list so
+        # the call shape matches, but it is still a set — term frequency collapses to 1.
+        import src.retrieve.bm25 as bm25_module
+        from src.understand.attributes import tokens as legacy_tokens
+        bm25_module.terms = lambda text: sorted(legacy_tokens(text))
+        _agent(catalog).index.__dict__.pop("_bm25", None)
+        print("⚠️ LEGACY TOKENIZER — pre-tokens.py surface\n")
+
+    print(f"── sweeping {name} over {values}, levels {levels}")
+    base = None
+    for value in values:
+        t0 = time.time()
+        obj = objective(samples, catalog, levels, **{name: value})
+        base = obj if base is None else base
+        edge = " ⚠️ EDGE" if value in (values[0], values[-1]) else ""
+        print(f"   {name:<18} {value:>6} | obj {obj:.4f}  ({obj - base:+.4f}){edge}  "
+              f"[{time.time()-t0:.0f}s]", flush=True)
+    print("\n⚠️ Nothing was changed, and a sweep is not an adoption — see flags.py.")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--dataset", default="data/train.jsonl", help="fitting set (default: data/train.jsonl)")
@@ -98,6 +149,11 @@ def main() -> None:
     ap.add_argument("--n", type=int, default=3000, help="first N sessions (0 = all). Stress is ~40x clean")
     ap.add_argument("--levels", default="0,2,3", help="paraphrase levels in the objective, 0-4")
     ap.add_argument("--output", default="runs/refit.json")
+    ap.add_argument("--sweep", default="", metavar="FLAG=V1,V2,...",
+                    help="sweep ONE flag through a range and stop; skips the staged fit")
+    ap.add_argument("--legacy-tokens", action="store_true",
+                    help="run the sweep against the pre-repair tokenizer, to price tokens.py apart "
+                         "from whatever is being swept")
     args = ap.parse_args()
 
     dataset = Path(args.dataset)
@@ -118,6 +174,11 @@ def main() -> None:
         samples = samples[:args.n]
 
     from src.copilot.flags import Flags
+
+    if args.sweep:
+        sweep(samples, catalog, levels, args.sweep, args.legacy_tokens)
+        return
+
     tuned = [name for _, block in STAGES for name, _ in block]
     inherited = {k: getattr(Flags(), k) for k in tuned}
 
@@ -164,8 +225,31 @@ def main() -> None:
         "per_level": per_level,
     }, indent=2))
     print(f"\n-> {out}")
-    print("⚠️ Nothing was changed. To adopt a value, edit src/copilot/flags.py — the defaults ARE the "
-          "submission, so adopting is a deliberate act.")
+    adopt(chosen, inherited)
+
+
+def adopt(chosen: dict, inherited: dict) -> None:
+    """Print the result in both forms it can be adopted in. Changes nothing itself.
+
+    ⚠️ The two are NOT equivalent. `.env` reaches a local runner through `Flags.from_env()`; the
+    organizer constructs `Agent(catalog)` with no environment whatsoever, so a value that lives only
+    in `.env` is an experiment and a value in `flags.py` is the submission. Printing only the first
+    would recreate D2, where every published number came from a switch the constructed agent did not
+    have.
+    """
+    from src.copilot.flags import Flags
+
+    fields = Flags.__dataclass_fields__
+    print("\n── to try it locally: paste into .env")
+    print("COPILOT_FLAGS=" + ",".join(f"{k}={v}" for k, v in chosen.items()))
+    print("\n── to SHIP it: edit src/copilot/flags.py — the evaluator passes no environment")
+    for name, value in chosen.items():
+        was = inherited[name]
+        note = "" if value == was else f"   # was {was}"
+        print(f"    {name}: {fields[name].type} = {value}{note}")
+    changed = [k for k, v in chosen.items() if v != inherited[k]]
+    print(f"\n⚠️ Nothing was changed. {len(changed)} of {len(chosen)} constants moved"
+          f"{': ' + ', '.join(changed) if changed else ''}.")
 
 
 if __name__ == "__main__":
