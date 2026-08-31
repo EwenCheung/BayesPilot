@@ -173,6 +173,7 @@
   .cand.sent{border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
   .cand.is-target{background:var(--rule-soft)}
   .cand .rk{font-family:"IBM Plex Mono",monospace;color:var(--faint);font-size:12px}
+  .cand .asin{font-size:10.5px;color:var(--faint);letter-spacing:.02em}
   .cand .conf{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--muted);
               font-variant-numeric:tabular-nums;white-space:nowrap}
   .cand .nm{line-height:1.35}
@@ -5165,7 +5166,8 @@ function candidates(t, s){
     const reveal = sent && r.is_target;
     return `<div class="cand ${sent?"sent":""} ${reveal?"is-target":""}">
       <span class="rk">${i+1}</span>
-      <span class="nm">${esc(r.title)}${reveal?'<span class="badge b-target">TARGET &middot; session ends here</span>':""}</span>
+      <span class="nm">${esc(r.title)}${reveal?'<span class="badge b-target">TARGET &middot; session ends here</span>':""}
+        <br><code class="asin">${esc(r.asin)}</code></span>
       <span class="conf">${(r.p*100).toFixed(1)}%</span></div>`;
   }).join("");
   const cap = t.depth === 0
@@ -5179,7 +5181,7 @@ function candidates(t, s){
     ? `<div class="quiet" style="margin-top:7px">Right product, but it does not score yet — the
        customer has not changed their mind, and this session discards answers given before they do.</div>`
     : "";
-  return `${quiet}<div class="cands"><div class="cap">${cap}</div>${rows}${note}</div>`;
+  return `${quiet}<div class="cands"><div class="cap">${cap}</div>${rows}${note}<div class="note" style="margin-top:8px;font-size:12px">Scoring matches on the product <b>code</b>, not the name — 2.9% of the catalog shares a title with a different product, so two rows can read identically and still be different items.</div></div>`;
 }
 
 function tech(t){
