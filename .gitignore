@@ -19,3 +19,16 @@ runs/*
 !runs/registry.jsonl
 !runs/holdout.json
 !runs/final_r5.json
+
+# --- restored after commit 7779b6b resolved a merge conflict by dropping the local side ---
+# Catalog: 60 MB, re-downloadable from the official release and verified by assets/SHA256SUMS.
+# Keeping it out avoids GitHub's >50 MB warning on the public submission repo.
+assets/catalog.jsonl
+assets/catalog.jsonl.gz
+
+# Derived artifacts: regenerable (scripts/embed_all.py ~14 min; scripts/embed_blair.py ~5 min).
+# emb.npy is 98 MB and blair.npz 71 MB — neither may ever enter git history.
+artifacts/
+
+# ...but the split manifest IS the lock on every held-out number, so it stays tracked.
+!runs/holdout.json
