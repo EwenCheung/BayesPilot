@@ -1,0 +1,309 @@
+\documentclass[11pt]{article}
+\usepackage[margin=0.75in]{geometry}
+\usepackage{amsmath,amssymb,booktabs,array,xcolor,hyperref,listings}
+\definecolor{constantred}{HTML}{DC2626}
+\definecolor{codebg}{HTML}{F8FAFC}
+\newcommand{\const}[1]{\textcolor{constantred}{#1}}
+\newenvironment{narration}{\begin{quote}\itshape}{\end{quote}}
+\lstset{
+  basicstyle=\ttfamily\scriptsize,
+  backgroundcolor=\color{codebg},
+  frame=single,
+  breaklines=true,
+  columns=fullflexible,
+  keepspaces=true
+}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.5em}
+
+\title{Three-Minute Technical Pitch Script}
+\author{Shopping Copilot}
+\date{}
+
+\begin{document}
+\maketitle
+
+Read the italic narration. Equations, diagrams, tables, presenter cues, and animation directions \texttt{[like this]} guide the slide deck flow. Replace \texttt{[TEAM NAME]} before presenting.
+
+\subsection*{Legend for On-Slide Colors and Cues}
+\begin{itemize}
+  \item \textbf{\const{Red Numbers} in Slide 1}: Fixed competition evaluation constants set by the organizers (not fitted by our team).
+  \item \textbf{\const{Red Numbers} in Slides 3 \& 4}: Calibrated probabilistic hyperparameters (temperature, cutoffs, decay rates) governing our engine.
+  \item \textbf{Red Dashed Outlines in Diagrams}: Optional/alternative components (e.g. LLM fallback) deliberately disabled in the submitted pipeline.
+  \item \textbf{\texttt{[Animation / Visual Cue]}}: Direct cues for slide transitions, zooms, and spotlight animations.
+\end{itemize}
+
+\section*{Slide 1 - Outcome and problem (0:00-0:28)}
+
+\textbf{[Screen Setup: Clean title slide displaying ``Shopping Copilot'' and key result badge: ``0.9744 TechnicalScore | 0 LLM Calls'']}
+
+\begin{narration}
+Hi everyone, we are [TEAM NAME]. We built Shopping Copilot---a deterministic, offline probabilistic
+agent that finds a target product in a 50,000-item catalog in 10 turns or fewer. On the official public
+leaderboard, we achieved a TechnicalScore of 0.9744 with zero LLM calls. Now, you might wonder if that's
+just overfitting to the public set. To verify that, we tested on 2,800 target-disjoint test sessions
+and scored 0.9562, plus an 800-session free-form opener stress test where we achieved 0.9345.
+\end{narration}
+
+\textbf{[Animation: Pop in the TechnicalScore formula with competition weights highlighted in RED]}
+
+\[
+\operatorname{TechnicalScore}
+=\const{0.50}\,\operatorname{Hit@10}
++\const{0.30}\,\operatorname{MRR}
++\const{0.20}\,\operatorname{clip}\!\left(
+\frac{\const{11}-\operatorname{MTTC}}{\const{10}},0,1\right)
+\]
+
+\textit{(Presenter Note: The red constants above are fixed competition weights defined by the organizer.)}
+
+\textbf{[Animation: Slide in benchmark summary table with glowing highlight on the 0.9744, 0.9562, and 0.9345 scores]}
+
+\begin{center}
+\small
+\begin{tabular}{lrrrrr}
+\toprule
+Reporting set & Sessions & Hit@10 & MRR & MTTC & TechnicalScore \\
+\midrule
+Official public & 200 & 1.0000 & 0.9942 & 2.19 & \textbf{0.9744} \\
+Leakage-safe test & 2,800 & 0.9911 & 0.9783 & 2.64 & \textbf{0.9562} \\
+Free-form-opener stress & 800 & 0.9725 & 0.9596 & 2.98 & \textbf{0.9345} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section*{Slide 2 - System architecture (0:28-0:58)}
+
+\textbf{[Screen Setup: Picture A (High-Level Overview) appears first, then transitions into Picture B (Deep Technical Architecture)]}
+
+\begin{narration}
+When a customer message comes in, we run it through a fast, cheapest-first parsing cascade:
+exact template matching, followed by ontology normalization.
+
+You might wonder why we don't rely on standard tools like BM25, popularity priors, or an LLM fallback.
+We actually built and tested all three. But our rigorous ablation studies proved that our two-level
+probabilistic engine was already so precise that those extra components only added latency and noise
+without improving accuracy. Disabling them gives us identical or higher accuracy, sub-50ms latency,
+and zero LLM API cost.
+\end{narration}
+
+\textbf{[Animation: Flowchart animates left-to-right following the data path; Red dashed box on ``Disabled Components'' pulses with a ``DELIBERATELY ABLATED'' tag]}
+
+\textbf{Picture A - High-level pipeline overview}
+
+\begin{lstlisting}
+flowchart LR
+  Customer --> Cascaded_Parser_Templates_Ontology
+  Cascaded_Parser_Templates_Ontology --> Session_State_Constraints_Decay
+  Session_State_Constraints_Decay --> Level1_Category_Posterior
+  Level1_Category_Posterior --> Level2_Item_Log_Posterior
+  Level2_Item_Log_Posterior --> Expected_Utility_Depth_Policy
+  Expected_Utility_Depth_Policy --> Ranked_ASINs_and_Question
+\end{lstlisting}
+
+\textbf{[Animation: Transition into Picture B --- Deep Technical Blueprint showing exact ML methods, mathematical gates, and probability bounds]}
+
+\textbf{Picture B - Detailed technical architecture and mathematical flow}
+
+\begin{lstlisting}
+1. Deterministic NLP & State Tracking:
+   Utterance -> Regex Template Match (0ms) -> If No -> Ontology Attribute Normalizer
+   -> Session State Tracker (Constraints C_t, Age Decay gamma=0.9, Demote Factor=0.35)
+
+2. Level 1 Bayesian Category Belief (1,115 Categories):
+   Category Score s_c(x) = W_c(x)*coverage_c(x) + 3.0*1[quoted]*W_c(x)
+   Softmax P(c|x) = softmax(s_c(x)/2.0 + 0.25*log(pi_c)) with Temperature T=2.0
+   Prefix Mass Pruning (tau=0.85): sum P(c|x) >= 0.85 (Prunes 50k items -> ~250 candidates)
+
+3. Level 2 Bounded Item Likelihood Fusion:
+   Multi-Source Likelihoods: Exact Card (g=3.2), Soft-Card Jaccard (J>=0.34, g=1.5), Lexical Overlap
+   Bounded Likelihood Floor: log L_r = log(max(0.02, exp(g_r*(s-1))))
+   Item Log-Posterior: log P_t(i) ~ sum 0.9^(t-turn) [log L_main + log L_soft]
+   Hard Exclusion Masking: Proven-inspected ASINs -> log P(i) = -infinity
+
+4. Decision-Theoretic Recommendation Depth Policy:
+   Dynamic Utility: k* = argmax [ sum (p_j/j) + (1 - sum p_j)*V ]
+   Continuation Value: V = max(0, 0.75*d^s - 0.0667)
+   Emit top k* recommendations (k* in 1..10, dynamically optimized per turn)
+\end{lstlisting}
+
+\textbf{Component Ablation and Pruning Analysis}
+
+\begin{center}
+\small
+\begin{tabular}{p{3.5cm}p{4cm}p{4cm}p{3.5cm}}
+\toprule
+Candidate Component & Baseline / Role & Ablation Finding & Decision \& Production Benefit \\
+\midrule
+\textbf{BM25 / SQLite FTS5} & Official starter baseline & High noise across unrelated product categories (scored 0.1067) & \textbf{Disabled} (\texttt{gain=0.0}) --- replaced by Bayesian filter \\
+\textbf{Item Popularity Prior} & E-commerce heuristic & Added $\Delta\text{Score} = +0.000000$ once soft-card evidence was active & \textbf{Disabled} (\texttt{weight=0.0}) --- removes catalogue bias \\
+\textbf{Dense Embeddings (SVD/BLaIR)} & Vector similarity matching & Added memory/latency overhead with zero gain over ontology & \textbf{Disabled} --- keeps in-memory pipeline ultra-light \\
+\textbf{Cloud LLM Fallback} & Edge-case prose parsing & Probabilistic engine scored 0.9562+; LLM added 50+ sec API latency & \textbf{Disabled} --- guarantees 0ms API latency, \$0 cost, 0 hallucinations \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section*{Slide 3 - Two-level probabilistic ranking (0:58-1:42)}
+
+\textbf{[Screen Setup: Split-view showing Level 1 (Category) on top and Level 2 (Item) on bottom. Highlight callout: ``Red numbers = Calibrated Probabilistic Hyperparameters'']}
+
+\begin{narration}
+For ranking, we do two-level probabilistic inference. At Level 1, we compute the category posterior
+across all 1,115 categories using IDF-weighted token overlap and a catalog-share prior. Instead of picking
+just one category and risking hard errors, we accumulate categories until we cover 85\% of the posterior mass.
+
+At Level 2, we score individual items. Exact catalog cards, normalized attributes, lexical overlap, and
+soft-card Jaccard all feed into an item log-posterior as bounded likelihoods. The red numbers you see
+are our calibrated hyperparameters---like setting a likelihood floor of 0.02 so a noisy match never zeros
+out the true target. Old evidence decays by a 0.9 factor each turn, and if a user changes their mind,
+we demote the old constraint rather than completely wiping it.
+\end{narration}
+
+\textbf{[Animation: Zoom in on Level 1 equations; spotlight $\tau = 0.85$ and $T = 2.0$]}
+
+\textbf{Level 1 - category posterior}
+
+\[
+s_c(x)=W_c(x)\,\operatorname{coverage}_c(x)
++\mathbb{1}[c\text{ quoted}]\,\const{3.0}\,W_c(x)
+\]
+
+\[
+P(c\mid x)=\operatorname{softmax}\!\left(
+\frac{s_c(x)}{T}
++\const{0.25}\log \pi_c\right),
+\qquad
+T=\const{2.0},
+\qquad
+\sum_{c\in\mathcal C_{\tau}}P(c\mid x)\geq \tau,
+\quad \tau=\const{0.85}
+\]
+
+Here, $W_c$ is shared-token IDF mass and $\pi_c$ is the category's catalog share.
+
+\textbf{[Animation: Pan down to Level 2 equations; highlight Likelihood floor $L_{\min} = 0.02$ and Age Weight $0.9^{\,t-\operatorname{turn}(e)}$]}
+
+\textbf{Level 2 - bounded evidence and item posterior}
+
+\[
+\log L_r(i\mid e)=
+\log\!\left[\max\!\left(
+L_{\min},
+\exp\{g_r(s_r(i,e)-1)\}
+\right)\right],
+\qquad L_{\min}=\const{0.02}
+\]
+
+\[
+\log P_t(i\mid\mathcal D_t)\propto
+\sum_{e\in\mathcal D_t}
+\underbrace{\const{0.9}^{\,t-\operatorname{turn}(e)}}_{\text{age weight}}
+\left[\log L_{\text{main}}(i\mid e)+\log L_{\text{soft}}(i\mid e)\right]
+\]
+
+\[
+g_{\mathrm{exact}}=\const{3.2},\qquad
+g_{\mathrm{soft}}=\const{1.5},\qquad
+J_{\mathrm{soft}}\geq\const{0.34}
+\]
+
+If a returned item was definitely checked and the dialogue continued, then
+$\log P_t(i)\leftarrow-\infty$. A demoted constraint receives an additional factor $\const{0.35}$.
+
+\section*{Slide 4 - Recommendation depth (1:42-2:10)}
+
+\textbf{[Screen Setup: Display Expected Utility formula $U(k)$ alongside an interactive curve plotting utility vs depth $k$]}
+
+\begin{narration}
+A big question is: how many products should we recommend at each turn? We treat this as an
+expected-utility problem. For any depth k, our utility function balances the immediate reciprocal rank
+against the expected continuation value of asking another question and getting cleaner evidence. We pick
+the k-star that maximizes this trade-off. If we aren't getting new clues, the continuation value drops
+and we widen our recommendations. And whenever the user rejects a suggested product, we know for sure it's
+wrong, so we mask its log-posterior to negative infinity.
+\end{narration}
+
+\textbf{[Animation: On the utility curve, show the peak $k^*$ shifting dynamically from turn to turn; highlight negative infinity mask on rejected items]}
+
+\[
+U(k)=\sum_{j=1}^{k}\frac{p_j}{j}
++\left(1-\sum_{j=1}^{k}p_j\right)V,
+\qquad
+k^*=\underset{0\leq k\leq K}{\arg\max}\;U(k)
+\]
+
+\[
+V=\max\!\left(0,\const{0.75}\,h-\const{0.0667}\right),
+\qquad
+h=d^{\,s},
+\qquad
+d=\begin{cases}
+\const{0.8},&\text{templates are still matching},\\
+\const{0.2},&\text{the deterministic parser is blind}.
+\end{cases}
+\]
+
+\section*{Slide 5 - Optimization and evaluation discipline (2:10-2:35)}
+
+\textbf{[Screen Setup: Clean optimization pipeline diagram with decision gate]}
+
+\begin{narration}
+To tune our hyperparameters, we hooked eight key constants into a Tree-structured Parzen Estimator
+(TPE) offline. But to prevent overfitting to search noise, we set a strict rule: any change had to show
+a statistically significant gain on a 95\% paired-bootstrap confidence interval. When recent proposals
+didn't clear that bar, we kept our solid incumbent baseline. Best of all, running all 3,800 test sessions
+through the official evaluator takes under 58 seconds total, with zero model calls.
+\end{narration}
+
+\textbf{[Animation: Highlight the 95\% CI formula; show green checkmark on solid incumbents and red X on noisy proposals that failed to beat zero]}
+
+\[
+x^*=\underset{x}{\arg\max}\;
+\frac{\ell(x)}{g(x)},
+\qquad
+\text{adopt }x_j
+\iff
+\operatorname{CI}_{95\%}\!\left(\Delta\operatorname{TechnicalScore}_j\right)_{\mathrm{low}}>0
+\]
+
+Here, $\ell(x)=p(x\mid\text{good trials})$ and $g(x)=p(x\mid\text{remaining trials})$.
+
+\begin{lstlisting}
+Training split -> TPE proposal -> official-evaluator objective
+               -> paired per-session bootstrap
+               -> adopt only if the 95% CI clears zero
+               -> otherwise keep the incumbent
+\end{lstlisting}
+
+\section*{Slide 6 - Live demo (2:35-3:00)}
+
+\textbf{[Screen Setup: Full-screen browser window showing demo/index.html replay UI]}
+
+\begin{narration}
+Let's look at the live replay. In this templated browsing session, you can see how each requirement
+sharpens the posterior distribution. Two checked items get eliminated, and our target hits rank 1 by turn
+three. In this second case with a free-form opener, the first guess is wrong, but our agent recovers
+immediately and surfaces the target at rank 1 on turn two. That sums up our whole approach: maintain
+calibrated uncertainty, accumulate bounded evidence, and only recommend when expected utility says it's
+worth it.
+\end{narration}
+
+\textbf{[Animation: Demo Replay 1 (Templated - browsing intent) --- Red bounding box zooms into pool size, excluded items, and highlights target reaching Rank 1 on Turn 3]}
+
+\textbf{[Animation: Demo Replay 2 (Free-form - buying intent) --- Red spotlight highlights dynamic constraint update and target reaching Rank 1 on Turn 2]}
+
+\section*{Accuracy notes - do not narrate unless asked}
+
+\begin{itemize}
+\item Do not call the submitted agent ``model-free.'' The accurate phrase is \textbf{deterministic,
+offline probabilistic agent}.
+\item The 12,000 sessions in the draft were an earlier fitting set, not a test set. The current split
+is 8,400 training, 2,800 validation, and 2,800 test, disjoint by sample ID and target ASIN.
+\item The 800-session stress test rewrites the opener; later turns retain official simulator wording.
+It is not a fully natural multi-turn benchmark and is not an official competition score.
+\item The latest recorded TPE proposals were rejected by the paired-bootstrap gate; do not imply
+that they became submitted constants.
+\item BM25, the item-popularity prior, and the optional LLM are disabled in the submitted path.
+\end{itemize}
+
+\end{document}
