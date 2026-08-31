@@ -21,13 +21,13 @@ The dataset does not replace or modify the official evaluator. Run:
 python scripts/build_freeform_dataset.py
 
 # Development (set R3_OFFLINE=1 only when deliberately measuring deterministic fallback)
-R3_OFFLINE=1 python scripts/evaluate.py \
+R3_OFFLINE=1 python scripts/evaluation/evaluate.py \
   --model src/r3/agent.py \
   --test-data techjam-conversational-search-main/data/freeform_v1/validation.jsonl \
   --output runs/freeform_validation.json
 
 # Final use only
-python scripts/evaluate.py \
+python scripts/evaluation/evaluate.py \
   --model src/r3/agent.py \
   --test-data techjam-conversational-search-main/data/freeform_v1/test.jsonl \
   --output runs/freeform_test_final.json

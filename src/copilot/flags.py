@@ -76,7 +76,7 @@ class Flags:
     # On free-form text it fired once per session and measured -0.0007, so it was not earning its
     # place there either.
     #
-    # Set `llm_extract=True` (or `COPILOT_FLAGS=llm_extract`) to re-enable it for experiments.
+    # Set `llm_extract=True` (or `COPILOT_FLAGS=llm_extract`, or `evaluate.py --llm_call`) to re-enable it for experiments.
     llm_extract: bool = False   # escalation only: fires when tier 1 and tier 2 both fail on a message
     verify: bool = True         # resolve every model-proposed value against real catalog vocabulary
     ambiguity: bool = True      # carry an unresolved span as a probability mixture, not a guess

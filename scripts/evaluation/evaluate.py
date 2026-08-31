@@ -1,7 +1,7 @@
 """Evaluate any agent, on any dataset, at any paraphrase level, with any constant overridden.
 
     # the submission score — defaults only, which is the point
-    python3 scripts/evaluate.py
+    python3 scripts/evaluation/evaluate.py
 
     # evaluation for test data
     python3 scripts/evaluate.py \
@@ -12,7 +12,7 @@
     --output runs/results_final800.json
 
     # one dataset, the full paraphrase ladder, with CI and per-scenario breakdown
-    python3 scripts/evaluate.py \
+    python3 scripts/evaluation/evaluate.py \
         --agent agent:Agent \
         --catalog data/catalog.jsonl \
         --dataset data/public_set.jsonl \
@@ -20,12 +20,15 @@
         --ci --scenarios \
         --output runs/ladder_public200.json
 
+    # the language tier ships OFF; this switches it back on
+    python3 scripts/evaluation/evaluate.py --llm_call True
+
     # override a fitted constant, or reproduce a recorded negative
-    python3 scripts/evaluate.py --dataset data/dev.jsonl --set bm25_gain=2.0
-    python3 scripts/evaluate.py --dataset data/dev.jsonl --ablate no_spec_phrase
+    python3 scripts/evaluation/evaluate.py --dataset data/dev.jsonl --set bm25_gain=2.0
+    python3 scripts/evaluation/evaluate.py --dataset data/dev.jsonl --ablate no_spec_phrase
 
     # the four-dataset table in README.md and SUMMARY.md §3.1
-    python3 scripts/evaluate.py --all --output runs/final_r5.json
+    python3 scripts/evaluation/evaluate.py --all --output runs/final_r5.json
 
 ⚠️ **With no flags this constructs `Agent(catalog)` and changes nothing.** That is deliberate: the
 organizer constructs the agent positionally with no environment, so the defaults in
@@ -50,19 +53,12 @@ import sys
 import time
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-# Auto-load .env if present
-env_file = ROOT / ".env"
-if env_file.exists():
-    for line in env_file.read_text().splitlines():
-        line = line.strip()
-        if line and not line.startswith("#") and "=" in line:
-            k, v = line.split("=", 1)
-            os.environ.setdefault(k.strip(), v.strip())
-
 from src.eval import ablations, harness           # noqa: E402  harness puts the kit on sys.path
+
+harness.load_env()
 from evaluator.local_evaluator import evaluate    # noqa: E402  must follow harness
 from src.eval import freeform                     # noqa: E402
 from src.eval.stress import ParaphraseRewriter    # noqa: E402
@@ -227,6 +223,8 @@ def main() -> None:
     ap.add_argument("--limit", type=int, default=0, help="first N sessions (0 = all)")
     ap.add_argument("--set", action="append", default=[], metavar="FLAG=VALUE",
                     help="override a flag, e.g. --set bm25_gain=2.0. Repeatable")
+    ap.add_argument("--llm_call", nargs="?", const="true", default="",
+                    help="switch the language tier on (it ships off); same as --set llm_extract=true")
     ap.add_argument("--ablate", default="", help=f"comma-separated: {', '.join(sorted(ablations.ABLATIONS))}")
     ap.add_argument("--ci", action="store_true", help="95%% bootstrap CI, 1,000 resamples")
     ap.add_argument("--scenarios", action="store_true", help="per-scenario breakdown")
@@ -253,6 +251,8 @@ def main() -> None:
     harness.CATALOG = catalog
     harness._CACHE.pop("world", None)
     overrides = dict(kv.split("=", 1) for kv in args.set)
+    if args.llm_call:
+        overrides["llm_extract"] = args.llm_call
     ablate = tuple(a.strip() for a in args.ablate.split(",") if a.strip())
     levels = tuple(int(x) for x in args.levels.split(","))
 
@@ -260,7 +260,18 @@ def main() -> None:
         raise SystemExit("kit drifted from its manifest — refusing to report a score")
 
     agent = configure(load_agent(args.model, str(catalog)), overrides, ablate)
-    shown = overrides or ({"ablate": ",".join(ablate)} if ablate else "defaults only — this IS the submission")
+    # ⚠️ `COPILOT_FLAGS` in the environment (or in `.env`) silently reconfigures the agent through
+    # `Flags.from_env()`. Saying "this IS the submission" over a run the environment reconfigured is
+    # how D2 happened, so the header reports the environment rather than assuming it is empty.
+    env_flags = os.environ.get("COPILOT_FLAGS")
+    if overrides:
+        shown = overrides
+    elif ablate:
+        shown = {"ablate": ",".join(ablate)}
+    elif env_flags:
+        shown = f"COPILOT_FLAGS={env_flags} — from the environment, NOT the submission defaults"
+    else:
+        shown = "defaults only — this IS the submission"
     print(f"agent {args.model} · catalog {catalog.name} · config: {shown}\n")
 
     ds_path = Path(args.dataset)
@@ -282,11 +293,12 @@ def main() -> None:
             r, score, wall = run_one(agent, samples, level, wrap, world)
             disclosure = llm_report(agent)
             calls = disclosure.get("calls", 0)
+            failures = disclosure.get("failures", 0)
             row = {"dataset": label, "n": len(samples), "level": level,
                    "hit_rate_at_10": round(r["hit_rate_at_10"], 4), "mrr": round(r["mrr"], 4),
                    "mttc": round(r["mttc"], 2), "technical_score": round(score, 4),
                    "efficiency": round(r["efficiency"], 6),
-                   "llm_calls": calls, "seconds": round(wall, 1),
+                   "llm_calls": calls, "llm_failures": failures, "seconds": round(wall, 1),
                    "llm": disclosure or None,
                    # what generated the customer text for this level — see `rewriter_for`
                    "rewriter": rewriter_info(level),
@@ -309,7 +321,7 @@ def main() -> None:
                 lo, hi = harness.bootstrap_ci(r)
                 row["ci"] = [round(lo, 4), round(hi, 4)]
                 line += f"  CI ({lo:.4f}, {hi:.4f})"
-            print(f"{line}  calls={calls}  {wall:.0f}s", flush=True)
+            print(f"{line}  calls={calls} fails={failures}  {wall:.0f}s", flush=True)
             if args.scenarios:
                 for name in sorted(r["scenario_metrics"]):
                     m = r["scenario_metrics"][name]
