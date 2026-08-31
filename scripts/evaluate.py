@@ -3,6 +3,14 @@
     # the submission score — defaults only, which is the point
     python3 scripts/evaluate.py
 
+    # evaluation for test data
+    python3 scripts/evaluate.py \
+    --agent agent:Agent \
+    --catalog data/catalog.jsonl \
+    --dataset data/final_800.jsonl \
+    --offline --ci --scenarios \
+    --output runs/results_final800.json
+
     # one dataset, the full paraphrase ladder, with CI and per-scenario breakdown
     python3 scripts/evaluate.py \
         --agent agent:Agent \
@@ -209,8 +217,11 @@ def main() -> None:
                     help="path to agent script or module:Attr (default: agent:Agent)")
     ap.add_argument("--dataset", default="data/public_set.jsonl",
                     help="path to dataset (default: data/public_set.jsonl)")
-    ap.add_argument("--output", "--outputs", dest="output", default="",
-                    help="path to write the evaluation output JSON")
+    # ⚠️ Defaults to a real path, not "". The FAQ §1 requires retaining results.json with its
+    # per-session records, and the command most likely to be run is the bare one — so the bare one
+    # must leave an artifact rather than printing to a terminal nobody kept. `--output ""` opts out.
+    ap.add_argument("--output", "--outputs", dest="output", default="runs/results.json",
+                    help="where to write the evaluation JSON (default: runs/results.json; \"\" to skip)")
     ap.add_argument("--catalog", default="data/catalog.jsonl")
     ap.add_argument("--levels", default="0", help="paraphrase levels, 0-4, e.g. 0,1,2,3,4")
     ap.add_argument("--limit", type=int, default=0, help="first N sessions (0 = all)")
@@ -232,7 +243,15 @@ def main() -> None:
         os.environ["COPILOT_OFFLINE"] = "1"
 
     catalog = Path(args.catalog)
+    if not catalog.exists() and (ROOT / args.catalog).exists():
+        catalog = ROOT / args.catalog
     assert catalog.exists(), f"no such catalog: {catalog} — it is 60 MB and gitignored, see README"
+    # ⚠️ The agent got `--catalog` (via load_agent), but the EVALUATOR built its index from
+    # `harness.CATALOG`, which is hardcoded. Passing a different catalog therefore scored the agent
+    # against a different product set than it searched, silently, while provenance recorded the hash
+    # of the one the agent used. Point both at the same file.
+    harness.CATALOG = catalog
+    harness._CACHE.pop("world", None)
     overrides = dict(kv.split("=", 1) for kv in args.set)
     ablate = tuple(a.strip() for a in args.ablate.split(",") if a.strip())
     levels = tuple(int(x) for x in args.levels.split(","))
@@ -257,8 +276,7 @@ def main() -> None:
     for label, samples, wrap in jobs:
         if args.limit:
             samples = samples[:args.limit]
-        harness.DATASET = ROOT / "data" / "public_set.jsonl"
-        harness._CACHE.pop("world", None)
+        # only the catalog-derived parts of `world` are used; samples come from `ds_path` above
         world = harness.load_world()[1:]
         for level in levels:
             r, score, wall = run_one(agent, samples, level, wrap, world)
