@@ -17,10 +17,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from src.common.simulator import coarse_category  # noqa: E402
+from src.simulator import coarse_category  # noqa: E402
 from src.eval import harness  # noqa: E402
 from src.eval.stress import paraphrase  # noqa: E402
-from src.r3.category import CategoryBelief  # noqa: E402
+from src.retrieve.category import CategoryBelief  # noqa: E402
 
 BASELINE_EXACT = 0.825      # R1's lexical resolver at L3
 BASELINE_IN_POOL = 0.925    # R1 hedged

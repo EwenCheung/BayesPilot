@@ -1,13 +1,8 @@
-"""M7 — one ablation vocabulary, meaning the same removal in every road.
+"""The ablation vocabulary is a contract, not a convenience.
 
-Before this, `no_spec_phrase` = 0.9260 (R1) and 0.8315 (R2) were quoted side by side as if comparable.
-They were not: R1's switch disabled only the exact matcher, while its normalised `(attribute, value)`
-matcher went on reading the SAME inverted spec strings and recovered most of the signal — partial
-credit for the inversion, which R2's flag removes. R1 defect 1 puts the overstatement at ~0.09.
-
-The shared definition: `no_spec_phrase` removes all credit derived from the simulator's inverted spec
-strings, exact AND partial. Generic lexical/token overlap survives in both roads, because that is a
-retrieval signal rather than an inversion signal.
+An ablation that silently no-ops is a broken instrument: it will report "no effect" forever regardless
+of the truth, and we would not notice. Every name here must resolve to a flag that exists and must
+actually change it.
 """
 from __future__ import annotations
 
@@ -18,33 +13,41 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from src.eval import ablations, race  # noqa: E402
+from src.copilot.flags import Flags  # noqa: E402
+from src.eval import ablations  # noqa: E402
 
 
-class TestM7SharedVocabulary(unittest.TestCase):
-    def test_every_road_accepts_every_shared_ablation(self) -> None:
-        """M7: an ablation name is meaningless if a road silently ignores it."""
-        for name in ablations.SHARED:
-            for road in race.ROADS:
-                self.assertIn(road, ablations.SHARED[name],
-                              f"road {road} has no translation for {name}")
+class TestAblationVocabulary(unittest.TestCase):
+    def test_every_ablation_names_real_flags(self) -> None:
+        fields = set(vars(Flags()))
+        for name, spec in ablations.ABLATIONS.items():
+            for field in spec:
+                self.assertIn(field, fields, f"{name} sets unknown flag {field!r}")
 
-    def test_no_spec_phrase_removes_partial_credit_in_r1(self) -> None:
-        """M7: R1's flag must disable the normalised-pair matcher too, not just the exact one."""
-        flags = ablations.r1_flags("no_spec_phrase")
-        self.assertFalse(flags.spec_phrase, "exact matcher still live")
-        self.assertFalse(flags.attribute, "partial credit still live - this is R1 defect 1")
-        self.assertTrue(flags.token, "generic lexical overlap is retrieval, not inversion")
+    def test_every_ablation_actually_changes_something(self) -> None:
+        """A default-valued ablation cannot move a score, so it is a broken instrument, not a null."""
+        base = Flags()
+        for name in ablations.ABLATIONS:
+            with self.subTest(name=name):
+                got = ablations.flags(name)
+                self.assertNotEqual(
+                    vars(got), vars(base),
+                    f"{name!r} leaves every flag at its default — it can never move a score")
 
-    def test_no_spec_phrase_is_now_strictly_harsher_for_r1(self) -> None:
-        """M7: the corrected ablation must score BELOW R1's published 0.9260.
+    def test_unknown_ablation_raises(self) -> None:
+        with self.assertRaises(AssertionError):
+            ablations.flags("no_such_ablation")
 
-        If it does not, the flag is still leaking inversion signal and the number is still overstated.
+    def test_no_spec_phrase_removes_partial_credit_too(self) -> None:
+        """The insurance number: it must remove BOTH the exact card string AND its normalised pair.
+
+        Disabling only the exact matcher leaves the normalised `(attribute, value)` matcher reading
+        the same inverted spec strings, which once overstated one road by ~0.09.
         """
-        corrected = race.score_road("r1", ablate="no_spec_phrase")
-        self.assertLess(corrected, 0.9260,
-                        f"corrected no_spec_phrase {corrected:.4f} did not drop below the "
-                        f"published 0.9260 - the leak is still open")
+        flags = ablations.flags("no_spec_phrase")
+        self.assertFalse(flags.exact)
+        self.assertFalse(flags.attribute)
+        self.assertTrue(flags.lexical, "generic token overlap is retrieval, not inversion — it stays")
 
 
 if __name__ == "__main__":

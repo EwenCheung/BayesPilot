@@ -10,9 +10,9 @@ from pathlib import Path
 import pytest
 
 from evaluator import local_evaluator as ref
-from src.common import simulator as ours
+from src import simulator as ours
 
-CATALOG = Path(__file__).parent.parent / "techjam-conversational-search-main" / "data" / "catalog.jsonl"
+CATALOG = Path(__file__).parent.parent / "data" / "catalog.jsonl"
 SAMPLE = 2000
 
 

@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+Goal: Follow the MERGE.md to merge approach 1 and apporoach2 into apporach daeren. 
+
 Working rules for this repository. These override default behaviour.
 
 ---

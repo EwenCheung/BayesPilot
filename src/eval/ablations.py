@@ -1,95 +1,37 @@
-"""One ablation vocabulary for every road (04-merge-plan.md §3.3).
+"""The ablation vocabulary — one name, one meaning.
 
-An ablation name that means something different in each road produces numbers that look comparable and
-are not. That is exactly what happened: `no_spec_phrase` = 0.9260 (R1) beside 0.8315 (R2) overstated R1
-by roughly 0.09, because R1's switch disabled only its exact matcher while its normalised
+An ablation name that means something different in two places produces numbers that look comparable
+and are not. That is exactly what happened once: `no_spec_phrase` read 0.9260 beside 0.8315 and
+overstated one side by ~0.09, because one switch disabled only the exact matcher while its normalised
 `(attribute, value)` matcher went on reading the SAME inverted spec strings.
-
-The definitions below are the contract. Each road translates them; none redefines them.
 
   no_spec_phrase  remove ALL credit derived from the simulator's inverted spec strings — exact AND
                   partial. Generic lexical/token overlap survives: that is a retrieval signal over
                   product text, not an inversion signal. ⚠️ This is the private-set insurance number.
-  no_popularity   remove the log(rating_number) prior.
-  no_dense        remove the semantic/embedding route.
+  no_soft_card    remove the paraphrase-tolerant twin of the exact term.
   no_lexical      remove generic token-overlap retrieval.
+  no_exclude      re-ship items a live session has already proven wrong.
+  bm25            switch the Okapi BM25 term ON at its train-fitted gain. It ships OFF —
+                  this reproduces the held-out loss that kept it off (see copilot/flags.py).
 """
 from __future__ import annotations
 
-# name -> {road: how that road realises it}
-SHARED: dict[str, dict[str, object]] = {
-    "no_spec_phrase": {
-        # both tiers: `phrases` is the exact inverted card string, `pairs` is the same string
-        # normalised — partial credit for the same inversion.
-        "r1": {"spec_phrase": False, "attribute": False},
-        "r2": ("no_spec_phrase",),
-        "r3": {"exact": False, "attribute": False},
-    },
-    "no_popularity": {"r1": {"popularity": False}, "r2": ("no_popularity",),
-                      "r3": {"prior": False}},
-    "no_dense": {"r1": {"dense": False}, "r2": ("no_dense",), "r3": {}},
-    "no_lexical": {"r1": {"token": False}, "r2": ("no_lexical",), "r3": {"lexical": False}},
-    # R3-only: does the level-1 belief earn the pool it asks for? (D14)
-    "no_belief_pool": {"r1": {"hedge": False}, "r2": (), "r3": {"belief_pool": False}},
-    "no_infogain": {"r1": {"infogain": False}, "r2": (), "r3": {"infogain": False}},
-    # R3 ships with EIG OFF (D18), so this switch turns it ON to reproduce the measured loss
-    "infogain": {"r1": {"infogain": True}, "r2": (), "r3": {"infogain": True}},
+ABLATIONS: dict[str, dict[str, object]] = {
+    "no_spec_phrase": {"exact": False, "attribute": False},
+    "no_soft_card": {"soft_card_gain": 0.0},
+    "no_lexical": {"lexical": False},
+    "no_exclude": {"exclude_shipped": False},
+    "bm25": {"bm25_gain": 2.0},
 }
 
-# R4 is R3's posterior with a different stopping rule, and `src.r4.flags.Flags` subclasses R3's, so
-# every shared ablation means exactly what it means in R3. Derived rather than duplicated: a
-# hand-copied second table is a table that drifts, and M7 exists because the roads once disagreed
-# about what `no_spec_phrase` meant.
-for _spec in SHARED.values():
-    _spec.setdefault("r4", _spec["r3"])
-    # R5 subclasses R4's flags, so an ablation name means the same thing again. Derived, not copied.
-    _spec.setdefault("r5", _spec["r4"])
 
+def flags(*names: str):
+    """`Flags` with the named ablations applied. Unknown names raise rather than silently no-op."""
+    from src.copilot.flags import Flags
 
-def r1_flags(*names: str):
-    """R1's Flags with the named shared ablations applied."""
-    from src.r1.flags import Flags
-
-    flags = Flags.from_env()
+    out = Flags.from_env()
     for name in names:
-        assert name in SHARED, f"unknown ablation {name!r}; have {sorted(SHARED)}"
-        for field, value in SHARED[name]["r1"].items():
-            setattr(flags, field, value)
-    return flags
-
-
-def r3_flags(*names: str):
-    """R3's Flags with the named shared ablations applied."""
-    from src.r3.flags import Flags
-
-    flags = Flags.from_env()
-    for name in names:
-        assert name in SHARED, f"unknown ablation {name!r}; have {sorted(SHARED)}"
-        for field, value in SHARED[name]["r3"].items():
-            setattr(flags, field, value)
-    return flags
-
-
-def r2_ablations(*names: str) -> tuple[str, ...]:
-    """R2's ablation tuple for the named shared ablations."""
-    out: list[str] = []
-    for name in names:
-        assert name in SHARED, f"unknown ablation {name!r}; have {sorted(SHARED)}"
-        out.extend(SHARED[name]["r2"])
-    return tuple(out)
-
-
-def r4_flags(*names: str):
-    """R4's Flags with the named shared ablations applied.
-
-    Separate from `r3_flags` only because it must construct `src.r4.flags.Flags` — the field names
-    and values are R3's, by the derivation above.
-    """
-    from src.r4.flags import Flags
-
-    flags = Flags.from_env()
-    for name in names:
-        assert name in SHARED, f"unknown ablation {name!r}; have {sorted(SHARED)}"
-        for field, value in SHARED[name]["r4"].items():
-            setattr(flags, field, value)
-    return flags
+        assert name in ABLATIONS, f"unknown ablation {name!r}; have {sorted(ABLATIONS)}"
+        for field, value in ABLATIONS[name].items():
+            setattr(out, field, value)
+    return out

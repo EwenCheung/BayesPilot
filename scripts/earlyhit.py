@@ -17,8 +17,8 @@ sys.path.insert(0, str(ROOT))
 os.environ.setdefault("R3_OFFLINE", "1")
 
 from src.eval import datasets, harness  # noqa: E402
-from src.r4.agent import Agent as R4Agent  # noqa: E402
-from src.r4.instrument import Recorder, TurnTrace, early_hit_curve, shipped_curve  # noqa: E402
+from src.copilot.agent import Agent as R4Agent  # noqa: E402
+from src.eval.instrument import Recorder, TurnTrace, early_hit_curve, shipped_curve  # noqa: E402
 
 
 class Instrumented(R4Agent):
@@ -83,8 +83,8 @@ def main() -> None:
     # stopping efficiency. That is the ceiling on Phase C.
     oracle, actual = [], []
     for sid, trace in recorder.sessions.items():
-        knew = trace.first_hit(targets[sid], 1)
-        shipped_at = trace.first_shipped(targets[sid])
+        knew = tmeasure.first_hit(targets[sid], 1)
+        shipped_at = tmeasure.first_shipped(targets[sid])
         oracle.append(knew if knew is not None else 11)
         actual.append(shipped_at if shipped_at is not None else 11)
 

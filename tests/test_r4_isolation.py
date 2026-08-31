@@ -59,7 +59,7 @@ class TestR4Isolation(unittest.TestCase):
 
     def test_no_ground_truth_reaches_respond(self) -> None:
         """R4-A2: the evaluator hands `respond` four arguments and none of them is the answer."""
-        from src.r4.agent import Agent
+        from src.copilot.agent import Agent
         import inspect
         params = list(inspect.signature(Agent.respond).parameters)
         self.assertEqual(params, ["self", "session_id", "user_message", "turn", "top_k"])
