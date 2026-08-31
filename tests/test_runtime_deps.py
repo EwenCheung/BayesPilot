@@ -72,6 +72,32 @@ if __name__ == "__main__":
     unittest.main()
 
 
+class TestTheLanguageTierShipsOff(unittest.TestCase):
+    """The submission makes no network call, and the switch that changes that actually works.
+
+    `Agent.llm` is a property for exactly this reason: it used to be built in `__init__`, so a runner
+    that flipped `llm_extract` on a constructed agent silently measured the tier switched OFF.
+    """
+
+    def test_the_default_agent_has_no_language_tier(self) -> None:
+        from src.copilot.flags import Flags
+
+        self.assertFalse(Flags().llm_extract, "the defaults ARE the submission — it ships offline")
+
+    def test_flipping_the_flag_after_construction_reaches_the_builder(self) -> None:
+        """`evaluate.py --llm_call` sets the flag on an agent that already exists."""
+        from unittest import mock
+
+        from src.eval import measure
+
+        agent = measure.build()
+        self.assertIsNone(agent.llm)
+        agent.flags.llm_extract = True
+        with mock.patch("src.understand.llm.LLMClient") as client:
+            self.assertIsNotNone(agent.llm)
+        self.assertEqual(client.call_count, 1)
+
+
 class TestOfflineIsEnforced(unittest.TestCase):
     """The offline claim must be enforceable, not merely true on the day it was measured.
 
@@ -89,6 +115,7 @@ class TestOfflineIsEnforced(unittest.TestCase):
         os.environ["COPILOT_OFFLINE"] = "1"
         try:
             agent = measure.build()
+            agent.flags.llm_extract = True   # the env must win over the flag, or the test is vacuous
             self.assertIsNone(agent.llm, "COPILOT_OFFLINE=1 must disable the LLM tier and its disk cache")
         finally:
             if previous is None:

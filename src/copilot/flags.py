@@ -65,7 +65,9 @@ class Flags:
     max_turns: int = 10         # the evaluator's hard limit; ship everything on the last turn
 
     # --- the language tier ----------------------------------------------------------------------
-    llm_extract: bool = True    # escalation only: fires when tier 1 and tier 2 both fail on a message
+    # SHIPS OFF: measured, the escalation scored below the deterministic cascade it escalates from,
+    # so the submission never makes a network call. `evaluate.py --llm_call` switches it back on.
+    llm_extract: bool = False   # escalation only: fires when tier 1 and tier 2 both fail on a message
     verify: bool = True         # resolve every model-proposed value against real catalog vocabulary
     ambiguity: bool = True      # carry an unresolved span as a probability mixture, not a guess
 

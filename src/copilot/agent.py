@@ -53,17 +53,7 @@ class Agent:
         self.categories = CategoryBelief(catalog_path)
         self.flags = Flags.from_env()
         self.sessions: dict[str, SessionState] = {}
-        # ⚠️ COPILOT_OFFLINE=1 disables the tier AND its disk cache. Without the cache clause, a warm
-        # .cache/llm scores like the online path with zero network calls — which is indistinguishable
-        # from the offline number unless you count cache hits.
-        self.llm = None
-        if self.flags.llm_extract and os.environ.get("COPILOT_OFFLINE") != "1":
-            try:
-                from src.understand.llm import LLMClient
-                from src.understand.extract import AlignedExtractor
-                self.llm = AlignedExtractor(LLMClient())
-            except Exception:
-                self.llm = None
+        self._llm = None
         # Built on first use, and only when the model tier can actually fire: the pipeline builds a
         # canonical index over every card string, and on templated input the tier makes zero calls.
         self._pipeline = None
@@ -75,6 +65,28 @@ class Agent:
         self._shipped: dict[str, dict[str, bool]] = {}
         # popularity-ordered fallback, so a crashed turn still ships something plausible
         self._fallback = sorted(self.index.log_pop, key=lambda a: -self.index.log_pop[a])[:50]
+
+    @property
+    def llm(self):
+        """The language tier, or `None`. Ships OFF — see `Flags.llm_extract`.
+
+        Built on first use rather than in `__init__`, so a runner that flips the flag on an
+        already-constructed agent (`evaluate.py --llm_call`) actually gets the tier.
+
+        ⚠️ COPILOT_OFFLINE=1 disables it AND its disk cache. Without the cache clause, a warm
+        .cache/llm scores like the online path with zero network calls — which is indistinguishable
+        from the offline number unless you count cache hits.
+        """
+        if not self.flags.llm_extract or os.environ.get("COPILOT_OFFLINE") == "1":
+            return None
+        if self._llm is None:
+            try:
+                from src.understand.llm import LLMClient
+                from src.understand.extract import AlignedExtractor
+                self._llm = AlignedExtractor(LLMClient())
+            except Exception:
+                return None
+        return self._llm
 
     def _intent_pipeline(self):
         """The router and its catalog verification. `None` leaves the deterministic path alone.
