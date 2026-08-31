@@ -166,7 +166,7 @@ T=\color{red}{2.0},
 \quad \tau=\color{red}{0.85}
 $$
 
-Here, $W_c$ is shared-token IDF mass and $\pi_c$ is the category's catalog share.
+Here, **W_c** is the shared-token IDF mass and **π_c** is the category's catalog share.
 
 **[Animation: Pan down to Level 2 equations; highlight Likelihood floor L_min = 0.02 and Age Weight 0.9^(t-turn)]**
 
@@ -194,9 +194,13 @@ g_{\mathrm{soft}}=\color{red}{1.5},\qquad
 J_{\mathrm{soft}}\geq\color{red}{0.34}
 $$
 
-If a returned item was definitely checked and the dialogue continued, then
-$\log P_t(i)\leftarrow-\infty$. A demoted constraint receives an additional red factor
-$\color{red}{0.35}$.
+If a returned item was checked and rejected by the user, its log probability is masked to negative infinity:
+
+$$
+\log P_t(i) \leftarrow -\infty
+$$
+
+Demoted constraints from user preference changes receive an additional attenuation factor of **0.35**.
 
 ---
 
@@ -254,7 +258,9 @@ x^*=\underset{x}{\arg\max}\;
 \operatorname{CI}_{95\%}\!\left(\Delta\operatorname{TechnicalScore}_j\right)_{\mathrm{low}}>0
 $$
 
-Here, $\ell(x)=p(x\mid\text{good trials})$ and $g(x)=p(x\mid\text{remaining trials})$.
+$$
+\ell(x) = p(x \mid \text{good trials}), \qquad g(x) = p(x \mid \text{remaining trials})
+$$
 
 ```mermaid
 flowchart LR
