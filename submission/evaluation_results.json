@@ -1,0 +1,47 @@
+{
+  "public_set.jsonl": {
+    "sessions": 200,
+    "hit_rate_at_10": 1.0,
+    "mrr": 0.994167,
+    "mttc": 2.195,
+    "efficiency": 0.8805,
+    "technical_score": 0.97435,
+    "total_time_s": 3.38,
+    "per_session_ms": 16.9,
+    "token_usage": {
+      "prompt_tokens": 0,
+      "completion_tokens": 0,
+      "total_tokens": 0
+    }
+  },
+  "resplit_60_20_20/test": {
+    "sessions": 2800,
+    "hit_rate_at_10": 0.991071,
+    "mrr": 0.978302,
+    "mttc": 2.641429,
+    "efficiency": 0.835857,
+    "technical_score": 0.956198,
+    "total_time_s": 21.74,
+    "per_session_ms": 7.8,
+    "token_usage": {
+      "prompt_tokens": 0,
+      "completion_tokens": 0,
+      "total_tokens": 0
+    }
+  },
+  "freeform_v1/test": {
+    "sessions": 800,
+    "hit_rate_at_10": 0.99125,
+    "mrr": 0.980147,
+    "mttc": 2.62125,
+    "efficiency": 0.837875,
+    "technical_score": 0.957244,
+    "total_time_s": 10.12,
+    "per_session_ms": 12.7,
+    "token_usage": {
+      "prompt_tokens": 0,
+      "completion_tokens": 0,
+      "total_tokens": 0
+    }
+  }
+}
