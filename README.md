@@ -26,9 +26,9 @@ Evaluated with the official unmodified evaluation harness:
 
 | Dataset | Sessions | Hit@10 | MRR | MTTC | **TechnicalScore** | Total Time | Latency / Session | LLM Calls | Cost |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| `public_set.jsonl` | 200 | 1.0000 | 0.9942 | 2.19 | **0.9744** | 3.4s | 16.9 ms | 0 | \$0.00 |
-| `resplit_60_20_20/test` | 2,800 | 0.9911 | 0.9783 | 2.64 | **0.9562** | 21.7s | 7.8 ms | 0 | \$0.00 |
-| `freeform_v1/test` | 800 | 0.9912 | 0.9801 | 2.62 | **0.9572** | 10.1s | 12.7 ms | 0 | \$0.00 |
+| `public_set` | 200 | 1.0000 | 0.9942 | 2.19 | **0.9744** | 3.4s | 16.9 ms | 0 | \$0.00 |
+| `generated_template_set` | 2,800 | 0.9911 | 0.9783 | 2.64 | **0.9562** | 21.7s | 7.8 ms | 0 | \$0.00 |
+| `freeform_set` | 800 | 0.9912 | 0.9801 | 2.62 | **0.9572** | 10.1s | 12.7 ms | 0 | \$0.00 |
 
 - **Official Baseline Comparison**: Official starter agent = `0.1067` · Popularity baseline = `0.7133` · **BayesPilot = 0.9744**
 
@@ -323,6 +323,27 @@ An interactive multi-turn session visualizer is provided in `submission/demo/ind
 
 ---
 
+## References & Academic Citations
+
+The mathematical foundations, Bayesian belief models, and decision-theoretic rules in **BayesPilot** are grounded in the following academic research:
+
+### 1. Conversational Decision Policy & Expected Utility
+- **Ahsan-Ul-Haque, A. S. M., & Wang, H. (2022)**. *Rethinking Conversational Recommendations: Is Decision Tree All You Need?* In *Proceedings of CIKM '22* (pp. 686–695). (Core motivation for lightweight information-gain decision structures, asking strategies, and early stopping rules in conversational recommendation).
+- **Fuhr, N. (2008)**. *A probability ranking principle for interactive information retrieval*. *Information Retrieval*, 11(3), 251–265. (Decision-theoretic basis for ranking interactive actions using their probability of success and associated conversational turn costs).
+- **Chapelle, O., Metlzer, D., Zhang, Y., & Grinspan, P. (2009)**. *Expected reciprocal rank for graded relevance*. In *Proceedings of CIKM '09* (pp. 621–630). (Inspiration for rank-sensitive expected utility, where discovery at higher ranks receives substantially greater reward).
+
+### 2. Multi-Evidence Probabilistic Retrieval & Negative Feedback
+- **Turtle, H., & Croft, W. B. (1991)**. *Evaluation of an inference network-based retrieval model*. *ACM Transactions on Information Systems (TOIS)*, 9(3), 187–222. (Probabilistic foundation for combining heterogeneous retrieval evidence—exact match, normalized attributes, lexical overlap, and SoftCard Jaccard—into a unified relevance belief).
+- **Bi, K., Ai, Q., Zhang, Y., & Croft, W. B. (2019)**. *Conversational Product Search Based on Negative Feedback*. In *Proceedings of CIKM '19* (pp. 359–368). (Theoretical precedent for incorporating implicit negative feedback on unselected products directly into subsequent conversational product search).
+
+### 3. Hyperparameter Optimization & Baseline Discipline
+- **Bergstra, J., Bardenet, R., Bengio, Y., & Kégl, B. (2011)**. *Algorithms for hyper-parameter optimization*. In *Advances in Neural Information Processing Systems (NeurIPS 24)*. (Core formulation of the Tree-structured Parzen Estimator (TPE) algorithm used for joint offline constant tuning).
+- **Akiba, T., Sano, S., Yanase, T., Ohta, T., & Koyama, M. (2019)**. *Optuna: A next-generation hyperparameter optimization framework*. In *Proceedings of KDD '19* (pp. 2623–2631). (Practical framework utilized for executing the offline Bayesian tuning pipeline).
+- **Dacrema, M. F., Cremonesi, P., & Jannach, D. (2019)**. *Are we really making much progress? A worrying analysis of recent neural recommendation approaches*. In *Proceedings of RecSys '19* (pp. 101–109). (Empirical motivation for rigorous evaluation of simple, well-tuned non-neural baselines before introducing unnecessary neural complexity).
+
+---
+
 ## License
 
 Competition submission for TikTok TechJam 2026, Track 4.
+
