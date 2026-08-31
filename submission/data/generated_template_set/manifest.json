@@ -22,7 +22,7 @@
   },
   "splits": {
     "test": {
-      "path": "techjam-conversational-search-main/data/resplit_60_20_20/test.jsonl",
+      "path": "techjam-conversational-search-main/data/generated_template_set/test.jsonl",
       "rows": 2800,
       "scenario_counts": {
         "boundary": 140,
@@ -33,7 +33,7 @@
       "sha256": "f31bbb197ac01e701d6da36eb5fa66ecd4ee7365cf27535b9f14d62ff655212b"
     },
     "train": {
-      "path": "techjam-conversational-search-main/data/resplit_60_20_20/train.jsonl",
+      "path": "techjam-conversational-search-main/data/generated_template_set/train.jsonl",
       "rows": 8400,
       "scenario_counts": {
         "boundary": 420,
@@ -44,7 +44,7 @@
       "sha256": "eceb461ec0f4d903fa2fd9f80cb23632166ed8b59827e1734ad95643b4776f4d"
     },
     "validation": {
-      "path": "techjam-conversational-search-main/data/resplit_60_20_20/validation.jsonl",
+      "path": "techjam-conversational-search-main/data/generated_template_set/validation.jsonl",
       "rows": 2800,
       "scenario_counts": {
         "boundary": 140,

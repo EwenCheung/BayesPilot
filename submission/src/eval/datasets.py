@@ -1,6 +1,6 @@
 """Datasets configuration:
-    Fitting data: combine/train.jsonl or resplit_60_20_20/train.jsonl
-    Testing data: resplit_60_20_20/test.jsonl, freeform_v1/test.jsonl, public_set.jsonl
+    Fitting data: generated_template_set/train.jsonl
+    Testing data: generated_template_set/test.jsonl, freeform_set/test.jsonl, public_set.jsonl
 """
 from __future__ import annotations
 
@@ -9,21 +9,18 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 
-COMBINE_TRAIN = ROOT / "data" / "combine" / "train.jsonl"
-COMBINE_VAL = ROOT / "data" / "combine" / "validation.jsonl"
+GENERATED_TEMPLATE_TRAIN = ROOT / "data" / "generated_template_set" / "train.jsonl"
+GENERATED_TEMPLATE_VAL = ROOT / "data" / "generated_template_set" / "validation.jsonl"
+GENERATED_TEMPLATE_TEST = ROOT / "data" / "generated_template_set" / "test.jsonl"
 
-RESPLIT_TRAIN = ROOT / "data" / "resplit_60_20_20" / "train.jsonl"
-RESPLIT_VAL = ROOT / "data" / "resplit_60_20_20" / "validation.jsonl"
-RESPLIT_TEST = ROOT / "data" / "resplit_60_20_20" / "test.jsonl"
-
-FREEFORM_TEST = ROOT / "data" / "freeform_v1" / "test.jsonl"
-FREEFORM_VAL = ROOT / "data" / "freeform_v1" / "validation.jsonl"
-FREEFORM_TRAIN = ROOT / "data" / "freeform_v1" / "train.jsonl"
+FREEFORM_TEST = ROOT / "data" / "freeform_set" / "test.jsonl"
+FREEFORM_VAL = ROOT / "data" / "freeform_set" / "validation.jsonl"
+FREEFORM_TRAIN = ROOT / "data" / "freeform_set" / "train.jsonl"
 
 PUBLIC = ROOT / "data" / "public_set.jsonl"
 
 # Default training / fitting dataset
-TRAIN = RESPLIT_TRAIN
+TRAIN = GENERATED_TEMPLATE_TRAIN
 
 #: Names that may not appear in fitting code. `tests/test_datasets.py` enforces it.
 TEST_ONLY = ("public_set.jsonl", "test.jsonl")
@@ -33,18 +30,17 @@ def load(path: Path) -> list[dict]:
     return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
 
 
-def fitting(corpus: str = "resplit", limit: int | None = None) -> list[dict]:
-    """The sessions any fit, sweep or calibration may see (from resplit or combine train)."""
-    train_path = COMBINE_TRAIN if corpus == "combine" else RESPLIT_TRAIN
-    sessions = load(train_path)
+def fitting(limit: int | None = None) -> list[dict]:
+    """The generated-template sessions any fit, sweep, or calibration may see."""
+    sessions = load(GENERATED_TEMPLATE_TRAIN)
     return sessions[:limit] if limit else sessions
 
 
 def report(which: str) -> list[dict]:
     """A test set, for reporting only."""
-    assert which in ("public", "resplit_test", "freeform_test"), which
+    assert which in ("public", "generated_template_test", "freeform_test"), which
     if which == "public":
         return load(PUBLIC)
-    if which == "resplit_test":
-        return load(RESPLIT_TEST)
+    if which == "generated_template_test":
+        return load(GENERATED_TEMPLATE_TEST)
     return load(FREEFORM_TEST)

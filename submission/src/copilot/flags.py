@@ -72,7 +72,8 @@ class Flags:
     # This costs nothing on the evaluation. The tier only fires when tiers 1 and 2 both fail to read
     # a message, and the final 800 sessions use the same deterministic customer-message templates as
     # the public set ("No undisclosed natural-language paraphrases are introduced", Track 4 FAQ §1).
-    # Measured: 0 calls and 0 tokens across public_set (200), dev (2,000) and resplit/test (2,800).
+    # Measured: 0 calls and 0 tokens across public_set (200), dev (2,000), and
+    # generated_template_set/test (2,800).
     # On free-form text it fired once per session and measured -0.0007, so it was not earning its
     # place there either.
     #

@@ -5,7 +5,7 @@
   "splits": {
     "test": {
       "official_grammar_matches": 0,
-      "path": "techjam-conversational-search-main/data/freeform_v1/test.jsonl",
+      "path": "techjam-conversational-search-main/data/freeform_set/test.jsonl",
       "rows": 800,
       "scenario_counts": {
         "boundary": 40,
@@ -14,7 +14,7 @@
         "intent_override": 120
       },
       "sha256": "a60dfaccb562a4b65ddd635f23d1619d142dc2616008a449d2c46c5b812996b7",
-      "source_path": "techjam-conversational-search-main/data/resplit_60_20_20/test.jsonl",
+      "source_path": "techjam-conversational-search-main/data/generated_template_set/test.jsonl",
       "source_sha256": "f31bbb197ac01e701d6da36eb5fa66ecd4ee7365cf27535b9f14d62ff655212b",
       "style_counts": {
         "chatty_slang": 98,
@@ -31,7 +31,7 @@
     },
     "train": {
       "official_grammar_matches": 0,
-      "path": "techjam-conversational-search-main/data/freeform_v1/train.jsonl",
+      "path": "techjam-conversational-search-main/data/freeform_set/train.jsonl",
       "rows": 1200,
       "scenario_counts": {
         "boundary": 60,
@@ -40,7 +40,7 @@
         "intent_override": 180
       },
       "sha256": "9124ce7a80473a88e7739fb9999b67d480023662dfc02ed3263357e05e5a9335",
-      "source_path": "techjam-conversational-search-main/data/resplit_60_20_20/train.jsonl",
+      "source_path": "techjam-conversational-search-main/data/generated_template_set/train.jsonl",
       "source_sha256": "eceb461ec0f4d903fa2fd9f80cb23632166ed8b59827e1734ad95643b4776f4d",
       "style_counts": {
         "chatty_slang": 139,
@@ -57,7 +57,7 @@
     },
     "validation": {
       "official_grammar_matches": 0,
-      "path": "techjam-conversational-search-main/data/freeform_v1/validation.jsonl",
+      "path": "techjam-conversational-search-main/data/freeform_set/validation.jsonl",
       "rows": 400,
       "scenario_counts": {
         "boundary": 20,
@@ -66,7 +66,7 @@
         "intent_override": 60
       },
       "sha256": "ca633b9fc091b41c146fbfa4fcbd8aabfd5418ab3cfa01137287ee2af70c3a7b",
-      "source_path": "techjam-conversational-search-main/data/resplit_60_20_20/validation.jsonl",
+      "source_path": "techjam-conversational-search-main/data/generated_template_set/validation.jsonl",
       "source_sha256": "6153aa812695923b46bd10e7143039d3f57309c196c3e4d5700b3178b28076dc",
       "style_counts": {
         "chatty_slang": 49,

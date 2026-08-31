@@ -11,7 +11,7 @@
 
 **BayesPilot** is a deterministic, offline, probabilistic multi-turn shopping agent that locates a hidden target product in a frozen 50,000-item Amazon catalog within 10 turns.
 
-Built purely on **NumPy and the Python standard library**, BayesPilot operates with **zero LLM calls**, **zero neural network weights**, **zero token costs**, and an ultra-low inference latency of **~7–17 ms per session**.
+The evaluated BayesPilot runtime is built purely on **NumPy and the Python standard library**. It operates with **zero LLM calls**, **zero neural network weights**, **zero token costs**, and an ultra-low inference latency of **~7–17 ms per session**. Optuna is used only to reproduce the offline hyperparameter-fitting process.
 
 ```text
 TechnicalScore = 0.50 × Hit@10 + 0.30 × MRR + 0.20 × Efficiency
@@ -27,8 +27,8 @@ Evaluated with the official unmodified evaluation harness:
 | Dataset | Sessions | Hit@10 | MRR | MTTC | **TechnicalScore** | Total Time | Latency / Session | LLM Calls | Cost |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | `public_set.jsonl` | 200 | 1.0000 | 0.9942 | 2.19 | **0.9744** | 3.4s | 16.9 ms | 0 | \$0.00 |
-| `resplit_60_20_20/test` | 2,800 | 0.9911 | 0.9783 | 2.64 | **0.9562** | 21.7s | 7.8 ms | 0 | \$0.00 |
-| `freeform_v1/test` | 800 | 0.9912 | 0.9801 | 2.62 | **0.9572** | 10.1s | 12.7 ms | 0 | \$0.00 |
+| `generated_template_set/test` | 2,800 | 0.9911 | 0.9783 | 2.64 | **0.9562** | 21.7s | 7.8 ms | 0 | \$0.00 |
+| `freeform_set/test` | 800 | 0.9912 | 0.9801 | 2.62 | **0.9572** | 10.1s | 12.7 ms | 0 | \$0.00 |
 
 - **Official Baseline Comparison**: Official starter agent = `0.1067` · Popularity baseline = `0.7133` · **BayesPilot = 0.9744**
 
@@ -38,49 +38,100 @@ Evaluated with the official unmodified evaluation harness:
 
 BayesPilot replaces opaque neural architectures with a mathematically grounded, two-level probabilistic discovery pipeline:
 
-```
-                  Customer Message
-                         │
-                         ▼
-       ┌────────────────────────────────────┐
-       │   1. Deterministic NLU & Ontology   │
-       │   Template Matching → Catalog Term  │
-       │   Verification (Zero LLM overhead)  │
-       └─────────────────┬──────────────────┘
-                         │
-                         ▼
-       ┌────────────────────────────────────┐
-       │   2. Level 1: Category Posterior   │
-       │   P(category | opener) over 1,115   │
-       │   shelves (50K → median 182 items)  │
-       └─────────────────┬──────────────────┘
-                         │
-                         ▼
-       ┌────────────────────────────────────┐
-       │   3. Level 2: Bounded Item Fusion   │
-       │   Log-posterior scoring: card,      │
-       │   specs, tokens & SoftCard Jaccard  │
-       │   with lower-bound L_min = 0.02     │
-       └─────────────────┬──────────────────┘
-                         │
-                         ▼
-       ┌────────────────────────────────────┐
-       │   4. Survival Evidence & Decay     │
-       │   Prior shipped items set to -∞;   │
-       │   Aging decay handles overrides    │
-       └─────────────────┬──────────────────┘
-                         │
-                         ▼
-       ┌────────────────────────────────────┐
-       │   5. Optimal K (Expected Utility)   │
-       │   Dynamic depth derived via U(k):  │
-       │   (Turn 2, Rank 1) > (Turn 1, Rank 2)│
-       └────────────────────────────────────┘
+```mermaid
+---
+config:
+  layout: fixed
+---
+flowchart LR
+    U["Customer message"] --> P["Cascaded parser<br/>(Templates → Ontology)"]
+    P --> S["Session state<br/>(Constraints, decay, overrides)"]
+    S --> C["Level 1<br/>Category posterior"]
+    C --> I["Level 2<br/>Item log-posterior"]
+    I --> D["Expected-utility<br/>depth policy"]
+    D --> O["Ranked ASINs<br/>+ Next question"]
+
+    U:::input
+    P:::input
+    S:::state
+    C:::inference
+    I:::inference
+    D:::inference
+    O:::output
+
+    classDef input fill:#dbeafe,stroke:#2563eb,color:#0f172a
+    classDef state fill:#ffedd5,stroke:#f97316,color:#0f172a
+    classDef inference fill:#ede9fe,stroke:#7c3aed,color:#0f172a
+    classDef output fill:#dcfce7,stroke:#16a34a,color:#0f172a
 ```
 
 ---
 
 ## Detailed Architecture
+
+```mermaid
+flowchart LR
+    subgraph S1["1. Deterministic NLP & State Tracking Tier"]
+        T{"Exact regex<br/>template match?"}
+        U["Customer utterance at turn t"]
+        SS["Session State Tracker<br/>• Slot constraints C_t<br/>• Age decay γ = 0.9<br/>• Override demotion factor = 0.35"]
+        ON["Ontology Normalizer<br/>(Fuzzy attribute-value extraction:<br/>brand, color, size, specs)"]
+    end
+
+    subgraph S2["2. Level 1: Bayesian Category Belief (1,115 Categories)"]
+        C1["Category scoring:<br/>s_c(x) = W_c(x) · coverage_c(x)<br/>+ 3.0 · 1[quoted] · W_c(x)"]
+        C2["Softmax with prior (T = 2.0, catalog share π_c):<br/>P(c|x) = softmax(s_c(x)/2.0 + 0.25 · log π_c)"]
+        C3["Prefix mass pruning (τ = 0.85):<br/>Retain the smallest set where ΣP(c|x) ≥ 0.85<br/>(50,000 items → median 182 candidates)"]
+    end
+
+    subgraph S3["3. Level 2: Bounded Item Likelihood Fusion"]
+        L1["Multi-source evidence accumulator:<br/>• Exact card match (g_exact = 3.2)<br/>• Soft-card Jaccard (J ≥ 0.34, g_soft = 1.5)<br/>• Lexical token overlap"]
+        L2["Bounded log-likelihood floor:<br/>log L_r = log(max(0.02, exp(g_r(s−1))))"]
+        L3["Temporal item log-posterior:<br/>log P_t(i) ∼ Σ 0.9^(t−turn)<br/>[log L_main + log L_soft]"]
+        L4["Hard rejection masking:<br/>Proven-wrong shipped ASINs → log P(i) = −∞"]
+    end
+
+    subgraph S4["4. Decision-Theoretic Recommendation Depth Policy"]
+        K1["Dynamic expected-utility maximizer:<br/>k* = argmax [Σ(p_j/j) + (1 − Σp_j) · V]"]
+        K2["Continuation value:<br/>V = max(0, 0.75 · d^s − 0.0667)<br/>d ∈ {0.8 understood, 0.2 unreadable}"]
+        OUT["Emit top k* ASIN recommendations or ask for evidence<br/>(k* ∈ 0..10, dynamic turn by turn)"]
+    end
+
+    U --> T
+    T -- No --> ON
+    ON --> SS
+    SS --> C1
+    C1 --> C2
+    C2 --> C3
+    C3 --> L1
+    L1 --> L2
+    L2 --> L3
+    L3 --> L4
+    L4 --> K1
+    K1 --> K2
+    K2 --> OUT
+    T -- "Yes (deterministic fast path)" --> SS
+
+    T:::stage1
+    U:::stage1
+    SS:::stage1
+    ON:::stage1
+    C1:::stage2
+    C2:::stage2
+    C3:::stage2
+    L1:::stage3
+    L2:::stage3
+    L3:::stage3
+    L4:::stage3
+    K1:::stage4
+    K2:::stage4
+    OUT:::stage4
+
+    classDef stage1 fill:#dbeafe,stroke:#2563eb,color:#0f172a
+    classDef stage2 fill:#ede9fe,stroke:#7c3aed,color:#0f172a
+    classDef stage3 fill:#fef3c7,stroke:#d97706,color:#0f172a
+    classDef stage4 fill:#dcfce7,stroke:#16a34a,color:#0f172a
+```
 
 ### 1. Level 1 — Category Posterior (Search Space Reduction)
 * **Inspiration**: Narrow down product candidates using category as an early high-precision signal, slashing the search space before performing fine-grained item scoring.
@@ -124,17 +175,16 @@ BayesPilot replaces opaque neural architectures with a mathematically grounded, 
 README.md                               # Project documentation & architecture report
 submission/                             # Standalone submission directory
   agent.py                              # Entry point exporting Agent
-  requirements.txt                      # numpy only
+  requirements.txt                      # NumPy runtime dependency
   evaluation_results.json               # Full evaluation logs & timings
   data/
     catalog.jsonl                       # Frozen 50,000-product catalog
     public_set.jsonl                    # 200 official public evaluation sessions
-    combine/                            # 12.8K combined training sessions
-    freeform_v1/                        # Free-form natural language split
-    resplit_60_20_20/                   # ASIN-disjoint 60/20/20 split
+    freeform_set/                       # Free-form natural-language dataset
+    generated_template_set/             # ASIN-disjoint 60/20/20 template dataset
   demo/
     index.html                          # Interactive multi-turn replay visualizer
-  participant_kit/                      # Official competition kit
+  participation_kit/                    # Official competition kit
     evaluator/local_evaluator.py        # Official local evaluator engine
     starter/agent.py                    # Starter agent baseline
     docs/                               # Specification & API contracts
@@ -205,6 +255,51 @@ python3 scripts/evaluation/evaluate.py \
 # Run full evaluation across all benchmark datasets
 python3 scripts/evaluation/evaluate.py --all --ci --scenarios
 ```
+
+### 3. Reproduce Hyperparameter Tuning
+
+The production agent has no runtime dependency beyond NumPy. Install the pinned Optuna version only
+when reproducing the offline TPE fitting process:
+
+```bash
+python3 -m pip install optuna==4.9.0
+```
+
+#### Quick Smoke Test
+
+Use this small run to verify that dataset loading, evaluation, Optuna, checkpointing, and result
+writing all work. With only 200 sessions and 3 trials, it is a pipeline check—not a statistically
+meaningful tuning result:
+
+```bash
+python3 scripts/training/hyperparameter_tuning.py \
+    --dataset data/generated_template_set/train.jsonl \
+    --catalog data/catalog.jsonl \
+    --n 200 \
+    --levels 0,2,3 \
+    --trials 3 \
+    --seed 0 \
+    --resume runs/tuning_smoke.db \
+    --output runs/refit_smoke.json
+```
+
+#### Full Reproduction Run
+
+```bash
+python3 scripts/training/hyperparameter_tuning.py \
+    --dataset data/generated_template_set/train.jsonl \
+    --catalog data/catalog.jsonl \
+    --n 3000 \
+    --levels 0,2,3 \
+    --trials 60 \
+    --seed 0 \
+    --resume runs/tuning.db \
+    --output runs/refit.json
+```
+
+The search jointly fits eight constants, stores resumable trials in `runs/tuning.db`, applies a
+paired-bootstrap noise gate, and writes the reproducible result to `runs/refit.json`. It is a
+long-running, CPU-only experiment and does not call an LLM or modify the shipped defaults.
 
 ---
 

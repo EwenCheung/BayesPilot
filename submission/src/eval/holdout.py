@@ -25,7 +25,15 @@ from collections import defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-DATASET = ROOT / "techjam-conversational-search-main" / "data" / "public_set.jsonl"
+KIT = next(
+    (path for path in (
+        ROOT / "participation_kit",
+        ROOT / "participant_kit",
+        ROOT / "techjam-conversational-search-main",
+    ) if path.exists()),
+    ROOT,
+)
+DATASET = KIT / "data" / "public_set.jsonl"
 MANIFEST = ROOT / "runs" / "holdout.json"
 TEST_FRACTION = 0.40
 SEED = 20260829

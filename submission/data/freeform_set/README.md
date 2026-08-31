@@ -3,7 +3,7 @@
 This corpus contains `1,200` train, `400` validation, and `800` sealed-test **sessions**. Scenario
 ratios match the released data: 40% buying, 40% browsing, 15% intent override, and 5% boundary.
 Targets remain disjoint because every derived split samples only from its corresponding leakage-safe
-`resplit_60_20_20` source split.
+`generated_template_set` source split.
 
 The 800-session test contains 800 unique target products across 298 coarse catalog categories. Train
 contains 1,200 unique targets across 348 categories; validation contains 400 across 212 categories.
@@ -23,13 +23,13 @@ python scripts/build_freeform_dataset.py
 # Development (set R3_OFFLINE=1 only when deliberately measuring deterministic fallback)
 R3_OFFLINE=1 python scripts/evaluation/evaluate.py \
   --model src/r3/agent.py \
-  --test-data techjam-conversational-search-main/data/freeform_v1/validation.jsonl \
+  --test-data techjam-conversational-search-main/data/freeform_set/validation.jsonl \
   --output runs/freeform_validation.json
 
 # Final use only
 python scripts/evaluation/evaluate.py \
   --model src/r3/agent.py \
-  --test-data techjam-conversational-search-main/data/freeform_v1/test.jsonl \
+  --test-data techjam-conversational-search-main/data/freeform_set/test.jsonl \
   --output runs/freeform_test_final.json
 ```
 

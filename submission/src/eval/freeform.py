@@ -1,4 +1,4 @@
-"""Runner for the free-form corpus in `data/freeform_v1/`.
+"""Runner for the free-form corpus in `data/freeform_set/`.
 
 Each row carries `free_form.initial_message` — a non-template first turn in one of eight language
 styles (slang, shorthand, typos, emoji, self-correction…). The official evaluator knows nothing about
@@ -22,9 +22,8 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-FREEFORM = ROOT / "data" / "freeform_v1"
-RESPLIT = ROOT / "data" / "resplit_60_20_20"
-COMBINE = ROOT / "data" / "combine"
+FREEFORM = ROOT / "data" / "freeform_set"
+GENERATED_TEMPLATE = ROOT / "data" / "generated_template_set"
 
 
 def load(path: str | Path) -> list[dict]:
@@ -32,8 +31,8 @@ def load(path: str | Path) -> list[dict]:
 
 
 def split(corpus: str, name: str) -> list[dict]:
-    """`corpus` is freeform | resplit | combine; `name` is train | validation | test."""
-    base = {"freeform": FREEFORM, "resplit": RESPLIT, "combine": COMBINE}[corpus]
+    """`corpus` is freeform | generated_template; `name` is train | validation | test."""
+    base = {"freeform": FREEFORM, "generated_template": GENERATED_TEMPLATE}[corpus]
     return load(base / f"{name}.jsonl")
 
 

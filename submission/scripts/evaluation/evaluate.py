@@ -63,12 +63,12 @@ from evaluator.local_evaluator import evaluate    # noqa: E402  must follow harn
 from src.eval import freeform                     # noqa: E402
 from src.eval.stress import ParaphraseRewriter    # noqa: E402
 
-# The three testing datasets: resplit test, freeform test, and public set.
+# The three testing datasets: generated-template test, free-form test, and public set.
 # `wrap` swaps in the free-form opener the kit's evaluator never reads.
 TABLE = (
-    ("resplit_60_20_20/test", lambda: freeform.split("resplit", "test"),  False),
-    ("freeform_v1/test",      lambda: freeform.split("freeform", "test"), True),
-    ("public_set.jsonl",      lambda: harness.load_jsonl(ROOT / "data" / "public_set.jsonl"), False),
+    ("generated_template_set/test", lambda: freeform.split("generated_template", "test"), False),
+    ("freeform_set/test",            lambda: freeform.split("freeform", "test"), True),
+    ("public_set.jsonl",             lambda: harness.load_jsonl(ROOT / "data" / "public_set.jsonl"), False),
 )
 
 
@@ -91,11 +91,7 @@ def _git(*args: str) -> str:
 def provenance(catalog: Path, agent_spec: str) -> dict:
     """What FAQ §1 asks a team to retain beside the scores: the commit the run came from, proof the
     evaluator was unmodified, and enough environment detail to reproduce it."""
-    kit = (ROOT / "participant_kit" / "evaluator" / "local_evaluator.py"
-           if (ROOT / "participant_kit").exists()
-           else (ROOT / "techjam-conversational-search-main" / "evaluator" / "local_evaluator.py"
-                 if (ROOT / "techjam-conversational-search-main").exists()
-                 else ROOT / "evaluator" / "local_evaluator.py"))
+    kit = harness.KIT / "evaluator" / "local_evaluator.py"
     return {
         "commit": _git("rev-parse", "HEAD"),
         "branch": _git("rev-parse", "--abbrev-ref", "HEAD"),

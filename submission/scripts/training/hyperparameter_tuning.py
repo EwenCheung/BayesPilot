@@ -1,6 +1,6 @@
 """Fit every tuned constant from scratch, by Bayesian optimisation, on a dataset you choose.
 
-    python3 scripts/training/hyperparameter_tuning.py --dataset data/resplit_60_20_20/train.jsonl --n 3000
+    python3 scripts/training/hyperparameter_tuning.py --dataset data/generated_template_set/train.jsonl --n 3000
 
 There are **8 tuned constants** in this system and no trained weights, so this script *is* the
 training pipeline. It searches the TechnicalScore itself — every objective evaluation is a full run
@@ -8,7 +8,7 @@ of the organizer's evaluator — rather than minimising a surrogate loss and hop
 
 **Why not gradient descent.** TechnicalScore is computed from ranks and turn counts, both discrete.
 Nudging a weight changes nothing at all until it flips a comparison inside a sort, and then the
-score jumps. Measured on `resplit_60_20_20/train.jsonl[:300]`, L0:
+score jumps. Measured on `generated_template_set/train.jsonl[:300]`, L0:
 
     exact_gain  2.9 3.0 3.1 3.2 3.3 3.4 3.5 3.6  ->  obj 0.9400 at every one of them
 
@@ -40,11 +40,11 @@ printing both forms of the result — a `COPILOT_FLAGS=` line for `.env` to try 
 `COPILOT_OFFLINE` and averaged its levels by hand, so its numbers were not comparable with the ones
 here. The BM25 run it existed for:
 
-    python3 scripts/training/hyperparameter_tuning.py --dataset data/resplit_60_20_20/train.jsonl --n 3000 \
+    python3 scripts/training/hyperparameter_tuning.py --dataset data/generated_template_set/train.jsonl --n 3000 \
         --levels 0,2,3 --sweep bm25_gain=0,2,3,4,6,8
 
     # ...and how much of that was BM25 vs the tokenizer repair in understand/tokens.py
-    python3 scripts/training/hyperparameter_tuning.py --dataset data/resplit_60_20_20/train.jsonl --n 3000 \
+    python3 scripts/training/hyperparameter_tuning.py --dataset data/generated_template_set/train.jsonl --n 3000 \
         --levels 0,2,3 --sweep bm25_gain=2,4 --legacy-tokens
 """
 from __future__ import annotations
@@ -297,7 +297,7 @@ def adopt(chosen: dict, inherited: dict, proposed: dict | None = None) -> None:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--dataset", default="data/resplit_60_20_20/train.jsonl", help="fitting set")
+    ap.add_argument("--dataset", default="data/generated_template_set/train.jsonl", help="fitting set")
     ap.add_argument("--catalog", default="data/catalog.jsonl")
     ap.add_argument("--n", type=int, default=3000,
                     help="sessions per evaluation (0 = all). Sets the noise floor as much as "
@@ -320,7 +320,7 @@ def main() -> None:
     forbidden = ("dev.jsonl", "public_set.jsonl", "validation.jsonl", "test.jsonl")
     assert not any(dataset.name == f for f in forbidden), (
         f"{dataset.name} is a REPORTING set. Fitting on it invalidates every held-out number in "
-        f"SUMMARY.md. Use data/resplit_60_20_20/train.jsonl, or a split you created for fitting.")
+        f"SUMMARY.md. Use data/generated_template_set/train.jsonl, or a split you created for fitting.")
 
     catalog = Path(args.catalog)
     assert catalog.exists(), f"no such catalog: {catalog}"

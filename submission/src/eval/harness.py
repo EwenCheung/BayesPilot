@@ -22,7 +22,14 @@ from pathlib import Path
 from typing import Callable
 
 ROOT = Path(__file__).resolve().parents[2]
-KIT = ROOT / "participant_kit" if (ROOT / "participant_kit").exists() else (ROOT / "techjam-conversational-search-main" if (ROOT / "techjam-conversational-search-main").exists() else ROOT)
+KIT = next(
+    (path for path in (
+        ROOT / "participation_kit",
+        ROOT / "participant_kit",
+        ROOT / "techjam-conversational-search-main",
+    ) if path.exists()),
+    ROOT,
+)
 if str(KIT) not in sys.path:
     sys.path.insert(0, str(KIT))
 
@@ -168,7 +175,6 @@ def paired_bootstrap_ci(before: list[dict], after: list[dict],
     return round(float(lo), 4), round(float(hi), 4)
 
 
-KIT = ROOT / "participant_kit" if (ROOT / "participant_kit").exists() else (ROOT / "techjam-conversational-search-main" if (ROOT / "techjam-conversational-search-main").exists() else ROOT)
 MANIFEST = ROOT / "src" / "eval" / "kit_manifest.json"
 GUARDED = ("evaluator/local_evaluator.py", "data/public_set.jsonl", "starter/agent.py",
            "docs/evaluation_config.json", "docs/agent_api_contract.json")

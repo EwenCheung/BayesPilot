@@ -14,7 +14,7 @@
       "total_tokens": 0
     }
   },
-  "resplit_60_20_20/test": {
+  "generated_template_set/test": {
     "sessions": 2800,
     "hit_rate_at_10": 0.991071,
     "mrr": 0.978302,
@@ -29,7 +29,7 @@
       "total_tokens": 0
     }
   },
-  "freeform_v1/test": {
+  "freeform_set/test": {
     "sessions": 800,
     "hit_rate_at_10": 0.99125,
     "mrr": 0.980147,
