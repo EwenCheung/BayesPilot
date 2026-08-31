@@ -2,7 +2,7 @@
 
 ⚠️ It wraps the **agent**, never the evaluator: the kit stays byte-identical, and the agent simply
 never sees the simulator's literal templates. That is the whole question the private set asks
-(IMPORTANT.md §3): what is left when the customer says the same thing in different words?
+: what is left when the customer says the same thing in different words?
 
 Levels
   0  clean          — the simulator's own text

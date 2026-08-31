@@ -6,7 +6,7 @@ We import the evaluator's own `evaluate()` and hand it our agent instance instea
 
 ⚠️ This is legal HERE and illegal in the agent. `evaluator/local_evaluator.py` does
 `from starter.agent import Agent` at module scope, so an agent module importing the evaluator is a
-circular import and a hard crash (IMPORTANT.md §13.1.1). A harness script sits outside that cycle.
+circular import and a hard crash. A harness script sits outside that cycle.
 The scoring code that runs is byte-identical to the official one either way.
 """
 from __future__ import annotations
@@ -41,7 +41,7 @@ def load_env() -> None:
 
     ⚠️ Only runner scripts call this. The organizer runs `Agent(catalog)` with no environment at
     all, so anything reaching the agent this way is a LOCAL experiment — the submission is whatever
-    `src/copilot/flags.py` says (SUMMARY.md D2).
+    `src/copilot/flags.py` says.
     """
     import os
 
@@ -119,7 +119,7 @@ def score(result: dict) -> float:
 def bootstrap_ci(result: dict, resamples: int = 1000, seed: int = 0) -> tuple[float, float]:
     """95% CI on TechnicalScore by resampling sessions.
 
-    200 sessions is small: a 0.02 gap is one or two sessions changing rank (IMPORTANT.md §13.3).
+    200 sessions is small: a 0.02 gap can be one or two sessions changing rank.
     No winner is declared without this.
     """
     sessions = result["sessions"]

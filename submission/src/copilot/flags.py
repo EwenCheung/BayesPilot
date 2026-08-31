@@ -1,13 +1,13 @@
-"""Every term and stage behind one switch, so the honesty table in SUMMARY.md is a run, not an argument.
+"""Every configurable submission term and stage behind one switch.
 
-Values are the ones `scripts/fit_r4.py` chose on `data/train.jsonl` (12,000 sessions, targets disjoint
-from every evaluation set). R3's originals were fitted on a 120-session split of the official 200, a
-set the agent now saturates.
+The reproducible fitting entry point is `scripts/training/hyperparameter_tuning.py`, using
+`data/generated_template_set/train.jsonl`. It writes proposed constants to a result JSON and never
+silently mutates these committed defaults; adopting a proposal requires a deliberate code change.
 
 ⚠️ **The defaults ARE the submission.** `local_evaluator.py` constructs `Agent(catalog_path)`
 positionally with no environment, so whatever is written here is what gets scored. This used to be
-false for `exclude_shipped` — it defaulted off while every published number switched it on, so a
-constructed agent reproduced nothing (SUMMARY.md D2).
+false for `exclude_shipped` — it defaulted off while local runs switched it on, so a freshly
+constructed agent did not reproduce the reported configuration.
 """
 from __future__ import annotations
 
@@ -27,14 +27,14 @@ class Flags:
     # Okapi BM25 over the lexical surface — BUILT, SWEPT, and SHIPPED OFF. The measurement is the
     # contribution, so both halves are recorded here.
     #
-    # On data/train.jsonl[:3000] it looks like the best thing available, mean over L0/L2/L3:
+    # On data/generated_template_set/train.jsonl[:3000] it looked useful, mean over L0/L2/L3:
     #   gain   0.0     2.0     3.0     4.0     6.0     8.0
     #   mean  .8558   .8742   .8747   .8744   .8724   .8696      (+0.0189 at the interior optimum)
     # All of that comes from L2/L3. The L0 row is flat: 0.9513 -> 0.9516.
     #
-    # It does not hold out. On the clean discriminating sets it is monotonically NEGATIVE:
+    # It did not hold out. On the clean discriminating sets it was monotonically NEGATIVE:
     #   gain          0.0      0.5      1.0      2.0
-    #   dev  (2,000)  .9506    .9495    .9494    .9489
+    #   held out      .9506    .9495    .9494    .9489
     #   public (200)  .9744    .9700    .9700    .9697
     #
     # ⚠️ A +0.0003 L0 row on 3,000 sessions did not survive contact with 2,000 held-out ones. The

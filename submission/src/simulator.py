@@ -2,7 +2,7 @@
 
 ⚠️ COPIED, NOT IMPORTED, ON PURPOSE. `evaluator/local_evaluator.py` does `from starter.agent import Agent`
 at module scope, so any agent module that imports the evaluator creates a circular import and crashes at
-startup (IMPORTANT.md §13.1.1). Harness *scripts* may import the evaluator; agent code may not.
+startup. Harness *scripts* may import the evaluator; agent code may not.
 
 These must stay byte-equivalent in behaviour to the kit. `tests/test_simulator_parity.py` (R2-A1) checks
 all 50,000 catalog rows against the real evaluator on every run, so drift is caught immediately.
@@ -92,7 +92,7 @@ def classify_constraint(value: str) -> str:
 
     Measured over the 800 public-set constraints it emits: feature 404, material 302, color 60, style 19,
     size 11, use_case 4 — and never brand, budget or category. This is why asking the semantically
-    "right" attribute is worse than asking "other" (IMPORTANT.md §4).
+    "right" attribute is worse than asking "other" under the published simulator policy.
     """
     lowered = value.lower()
     if "budget" in lowered or re.search(r"(?:\$|<=|under)\s*\d", lowered):

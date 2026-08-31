@@ -1,6 +1,6 @@
 """Spec 3.10 — the run registry, the scenario breakdown, and the bootstrap CI.
 
-A 0.02 gap on 200 sessions is one or two sessions changing rank (IMPORTANT.md §13.3.2), so no
+A 0.02 gap on 200 sessions can be one or two sessions changing rank, so no
 result is reported without a resampled interval.
 """
 from __future__ import annotations

@@ -38,7 +38,7 @@ Evaluated with the official unmodified evaluation harness:
 | `generated_template_set` | 2,800 | 0.9911 | 0.9783 | 2.64 | **0.9562** | 21.7s | 7.8 ms | 0 | \$0.00 |
 | `freeform_set` | 800 | 0.9912 | 0.9801 | 2.62 | **0.9572** | 10.1s | 12.7 ms | 0 | \$0.00 |
 
-- The complete output from running the agent on the public set, including per-session results, is available in [`submission/results.json`](submission/results.json).
+- The complete output from running the agent on the public set, including per-session results, is available in [`submission/runs/results.json`](submission/runs/results.json).
 - **Official Baseline Comparison**: Official starter agent = `0.1067` · Popularity baseline = `0.7133` · **BayesPilot = 0.9744**
 
 ---

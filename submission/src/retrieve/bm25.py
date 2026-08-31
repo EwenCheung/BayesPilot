@@ -21,9 +21,9 @@ at `f = 1` and `|d| = avgdl` the saturation factor is exactly 1, so that documen
 That keeps `strength` in the same [0, 1] units as every other evidence term, so `bm25_gain` means what
 `soft_card_gain` means.
 
-⚠️ `bm25_gain` defaults to **0.0** until `hyperparameter_tuning.py --sweep bm25_gain=...` confirms it on
-`data/train.jsonl` and it holds out on `dev`. A route that has never earned a held-out number does not
-ship on the strength of a plausible mechanism.
+⚠️ `bm25_gain` defaults to **0.0** because sweeps on
+`data/generated_template_set/train.jsonl` did not improve the held-out clean evaluations. A route
+that has not earned a held-out improvement does not ship on the strength of a plausible mechanism.
 """
 from __future__ import annotations
 

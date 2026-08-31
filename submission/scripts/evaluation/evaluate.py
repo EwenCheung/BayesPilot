@@ -4,7 +4,7 @@
     python3 scripts/evaluation/evaluate.py
 
     # evaluation for test data
-    python3 scripts/evaluate.py \
+    python3 scripts/evaluation/evaluate.py \
     --agent agent:Agent \
     --catalog data/catalog.jsonl \
     --dataset data/final_800.jsonl \
@@ -24,10 +24,10 @@
     python3 scripts/evaluation/evaluate.py --llm_call True
 
     # override a fitted constant, or reproduce a recorded negative
-    python3 scripts/evaluation/evaluate.py --dataset data/dev.jsonl --set bm25_gain=2.0
-    python3 scripts/evaluation/evaluate.py --dataset data/dev.jsonl --ablate no_spec_phrase
+    python3 scripts/evaluation/evaluate.py --dataset data/generated_template_set/validation.jsonl --set bm25_gain=2.0
+    python3 scripts/evaluation/evaluate.py --dataset data/generated_template_set/validation.jsonl --ablate no_spec_phrase
 
-    # the four-dataset table in README.md and SUMMARY.md §3.1
+    # the three-dataset table in README.md
     python3 scripts/evaluation/evaluate.py --all --output runs/final_r5.json
 
 ⚠️ **With no flags this constructs `Agent(catalog)` and changes nothing.** That is deliberate: the
@@ -216,8 +216,8 @@ def main() -> None:
     # ⚠️ Defaults to a real path, not "". The FAQ §1 requires retaining results.json with its
     # per-session records, and the command most likely to be run is the bare one — so the bare one
     # must leave an artifact rather than printing to a terminal nobody kept. `--output ""` opts out.
-    ap.add_argument("--output", "--outputs", dest="output", default="runs/results.json",
-                    help="where to write the evaluation JSON (default: runs/results.json; \"\" to skip)")
+    ap.add_argument("--output", "--outputs", dest="output", default="results.json",
+                    help="where to write the evaluation JSON (default: results.json; \"\" to skip)")
     ap.add_argument("--catalog", default="data/catalog.jsonl")
     ap.add_argument("--levels", default="0", help="paraphrase levels, 0-4, e.g. 0,1,2,3,4")
     ap.add_argument("--limit", type=int, default=0, help="first N sessions (0 = all)")

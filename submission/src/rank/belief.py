@@ -5,11 +5,11 @@
 One number comes out — the entropy — and it answers questions that a blend has to answer with separate
 hand-tuned machinery: how deep to ship, whether to convert, and what the reply sentence should be.
 
-⚠️ **There is no popularity prior.** `prior_weight` was fitted to `0.0` on `data/train.jsonl`, which
-made the term arithmetically inert — ablating popularity moved the score by *exactly* 0.000000 — and
+⚠️ **There is no popularity prior.** `prior_weight` was fitted to `0.0` on the generated training
+set, which made the term arithmetically inert — ablating popularity moved the score by *exactly*
+0.000000 — and
 `prior_damp`/`flatness()` were ~50 lines of machinery scaling a zero. Deleting the prior costs nothing
-on clean text and gains ~0.09 under paraphrase. The measurements survive in SUMMARY.md; the code does
-not.
+on clean text and gains ~0.09 under paraphrase, so the submitted implementation omits it.
 """
 from __future__ import annotations
 

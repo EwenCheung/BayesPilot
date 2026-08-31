@@ -17,7 +17,7 @@ changing it would silently move their published numbers. R4 brings its own and l
 
 The vocabularies below are copied from `evaluator/local_evaluator.py` — copied, never imported, because
 the evaluator does `from starter.agent import Agent` at module scope and importing it from agent code
-is a circular import and a hard crash (IMPORTANT.md §13.1.1).
+is a circular import and a hard crash.
 """
 from __future__ import annotations
 
@@ -80,7 +80,7 @@ class AlignedExtractor:
 
     Every call asserts on a parsed non-empty result and counts failures: a model that returns
     `content: None` while burning the full token budget looks exactly like a model that is not
-    helping, and that wrong conclusion has already been reached once here (IMPORTANT.md §13.1.3).
+    helping, which is why transport failures are counted separately from parse failures.
     """
 
     def __init__(self, client, max_values: int = 4) -> None:

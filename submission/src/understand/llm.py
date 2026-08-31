@@ -1,9 +1,9 @@
 """Spec 3.5 — the single LLM client: chat, extraction, listwise rerank, embeddings.
 
 Three rules the whole file exists to enforce:
-  * every call asserts on a parsed non-empty result and counts failures (C7, IMPORTANT.md §13.1.3)
+  * every call asserts on a parsed non-empty result and counts failures
   * every call has an offline fallback the caller can act on — `None`/`[]`, never an exception (C8)
-  * model IDs are pinned, never aliases (C9, IMPORTANT.md §13.1.4)
+  * model IDs are pinned, never aliases
 Responses are cached by content hash, so a repeat run is free and reproducible.
 """
 from __future__ import annotations
@@ -26,7 +26,7 @@ OFFLINE_ENV = "COPILOT_OFFLINE"
 # kit we promise to keep pristine and be invisible to the next run
 CACHE_DIR = Path(__file__).resolve().parents[2] / ".cache" / "llm"
 
-CHAT_MODEL = "qwen3.6:35b"     # 0.86 s/call, +0.191 rerank MRR (IMPORTANT.md §12.3)
+CHAT_MODEL = "qwen3.6:35b"     # optional experimental tier; disabled in the submission defaults
 EMBED_MODEL = "bge-m3"         # 1024-d, ~$0.10 for the catalog
 PRICE_PER_MTOK = 0.0           # free on this endpoint; disclosure requires we say so explicitly
 

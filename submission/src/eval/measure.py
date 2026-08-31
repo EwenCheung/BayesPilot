@@ -4,7 +4,7 @@
     python3 -m src.eval.measure --dataset public --stress 3 --ablate no_spec_phrase
 
 This was `race.py` when five roads were competing for the same slot. Four lost; the runner stays
-because every number in SUMMARY.md comes through it and through the kit's own `evaluate()`.
+because it delegates scoring to the kit's own `evaluate()`.
 """
 from __future__ import annotations
 

@@ -20,23 +20,23 @@ P(x | good trial) / P(x | bad trial) from the trials so far and samples where th
 so it assumes no smoothness at all.
 
 **The noise gate is the part that matters.** 200 sessions is small and a 0.02 gap is one or two
-sessions changing rank (IMPORTANT.md §13.3), so a search that adopts whatever scored highest is a
+sessions changing rank, so a search that adopts whatever scored highest is a
 machine for fitting noise — the earlier staged version "improved" 7 of 8 constants on 40 sessions,
 and every one of those was noise. So the search proposes and a **paired bootstrap disposes**: each
 constant is re-measured alone against the incumbent over the same sessions, and only the ones whose
 95% CI on the paired difference clears zero are adopted.
 
-⚠️ **`--dataset` must be a fitting set.** `dev.jsonl`, `public_set.jsonl` and every `*/test` split are
-read for reporting only; pointing this at one of them silently invalidates every held-out number in
-SUMMARY.md. The script refuses.
+⚠️ **`--dataset` must be a fitting set.** Validation, public, and every `*/test` split are used for
+reporting only; pointing this at one of them invalidates the held-out numbers in the README. The
+script refuses.
 
 ⚠️ **This writes JSON, not code.** The fitted values are literals in `src/copilot/flags.py`; adopting
 a result is a deliberate edit, so a bad fit cannot silently become the submission. The run ends by
 printing both forms of the result — a `COPILOT_FLAGS=` line for `.env` to try it locally, and the
 `flags.py` literals to actually ship it.
 
-**One flag, one range** — `--sweep` replaces the search with a single parameter's curve. This is what
-`scripts/fit_bm25.py` was, and it was a second implementation of `objective()` that did not set
+**One flag, one range** — `--sweep` replaces the search with a single parameter's curve. A former
+standalone BM25 fitter duplicated `objective()` and did not set
 `COPILOT_OFFLINE` and averaged its levels by hand, so its numbers were not comparable with the ones
 here. The BM25 run it existed for:
 
@@ -300,8 +300,7 @@ def main() -> None:
     ap.add_argument("--dataset", default="data/generated_template_set/train.jsonl", help="fitting set")
     ap.add_argument("--catalog", default="data/catalog.jsonl")
     ap.add_argument("--n", type=int, default=3000,
-                    help="sessions per evaluation (0 = all). Sets the noise floor as much as "
-                         "the runtime — see SUMMARY.md section 10.2")
+                    help="sessions per evaluation (0 = all); controls both runtime and noise floor")
     ap.add_argument("--levels", default="0,2,3", help="paraphrase levels in the objective, 0-3")
     ap.add_argument("--trials", type=int, default=60, help="TPE trials (default: 60)")
     ap.add_argument("--seed", type=int, default=0, help="sampler seed — the search is reproducible")
@@ -320,7 +319,7 @@ def main() -> None:
     forbidden = ("dev.jsonl", "public_set.jsonl", "validation.jsonl", "test.jsonl")
     assert not any(dataset.name == f for f in forbidden), (
         f"{dataset.name} is a REPORTING set. Fitting on it invalidates every held-out number in "
-        f"SUMMARY.md. Use data/generated_template_set/train.jsonl, or a split you created for fitting.")
+        f"the README. Use data/generated_template_set/train.jsonl, or a split you created for fitting.")
 
     catalog = Path(args.catalog)
     assert catalog.exists(), f"no such catalog: {catalog}"

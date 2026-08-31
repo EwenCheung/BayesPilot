@@ -8,6 +8,5 @@ __pycache__/
 # Derived artifacts (embeddings, indexes) — regenerable offline.
 artifacts/
 
-# Evaluation run outputs.
+# Evaluation run outputs. Keep the canonical artifact at submission/results.json.
 runs/
-results.json
