@@ -324,11 +324,24 @@ function candidates(t, s){
     ? `<div class="quiet" style="margin-bottom:7px">Says nothing this turn. In an intent-override
         session the scoring discards answers given before the customer changes their mind, so the agent
         keeps its shortlist to itself — here is what it would have said.</div>` : "";
+  // The target sitting in the shortlist but BELOW the cut is the single most instructive moment in
+  // the demo: it is the depth policy declining a cheap early hit for a better one later. Price it.
+  const held = t.ranking.slice(0, show).findIndex((r, i) => r.is_target && i >= t.depth);
+  let tradeoff = "";
+  if (held >= 0) {
+    const k = held + 1, rrNow = 1 / k;
+    const gainEff = 0.2 * ((11 - t.turn) / 10 - (11 - 11) / 10);
+    tradeoff = `<div class="quiet" style="margin-top:7px">The target is sitting at
+      <b>rank ${k}</b> — in the shortlist, but not sent. Showing it now would end the session at
+      <code>1/${k} = ${rrNow.toFixed(2)}</code> reciprocal rank; holding on for rank 1 is worth
+      <code>1.00</code>. Rank is weighted 0.30 and speed 0.20, so a rank-1 hit a few turns later
+      scores higher than a rank-${k} hit now.</div>`;
+  }
   const note = (t.hit && !counts)
     ? `<div class="quiet" style="margin-top:7px">Right product, but it does not score yet — the
        customer has not changed their mind, and this session discards answers given before they do.</div>`
     : "";
-  return `${quiet}<div class="cands"><div class="cap">${cap}</div>${rows}${note}<div class="note" style="margin-top:8px;font-size:12px">Scoring matches on the product <b>code</b>, not the name — 2.9% of the catalog shares a title with a different product, so two rows can read identically and still be different items.</div></div>`;
+  return `${quiet}<div class="cands"><div class="cap">${cap}</div>${rows}${tradeoff}${note}<div class="note" style="margin-top:8px;font-size:12px">Scoring matches on the product <b>code</b>, not the name — 2.9% of the catalog shares a title with a different product, so two rows can read identically and still be different items.</div></div>`;
 }
 
 function tech(t){
