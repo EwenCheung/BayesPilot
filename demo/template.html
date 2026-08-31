@@ -304,44 +304,39 @@ function metrics(t){
 function candidates(t, s){
   if (!t.ranking.length) return "";
   const counts = !s.first_hit_turn || t.turn >= s.first_hit_turn;
-  const show = Math.min(Math.max(3, t.depth), t.ranking.length);
-  const rows = t.ranking.slice(0, show).map((r,i)=>{
-    const sent = i < t.depth;
-    // Only mark the target on a row the agent actually SENT. The rows below the cut are its private
-    // shortlist — the customer never saw them, so the session cannot end on one. Badging a context
-    // row made the override session look like it found the target on turn 1 and carried on anyway.
-    const reveal = sent && r.is_target;
-    return `<div class="cand ${sent?"sent":""} ${reveal?"is-target":""}">
+
+  // Show exactly what the agent SENT — no padding. The depth policy is the thing this page is
+  // explaining, so displaying a longer list than the agent actually committed to would contradict it.
+  const rows = t.ranking.slice(0, t.depth).map((r, i) => {
+    const reveal = r.is_target;
+    return `<div class="cand sent ${reveal?"is-target":""}">
       <span class="rk">${i+1}</span>
       <span class="nm">${esc(r.title)}${reveal?'<span class="badge b-target">TARGET &middot; session ends here</span>':""}
         <br><code class="asin">${esc(r.asin)}</code></span>
       <span class="conf">${(r.p*100).toFixed(1)}%</span></div>`;
   }).join("");
-  const cap = t.depth === 0
-    ? `holding back — ${show} best of ${t.pool_size} so far`
-    : `sends the top ${t.depth} of ${t.pool_size} · the ${show - t.depth} below are the agent&rsquo;s own shortlist, never shown to the customer`;
-  const quiet = t.depth === 0
-    ? `<div class="quiet" style="margin-bottom:7px">Says nothing this turn. In an intent-override
-        session the scoring discards answers given before the customer changes their mind, so the agent
-        keeps its shortlist to itself — here is what it would have said.</div>` : "";
-  // The target sitting in the shortlist but BELOW the cut is the single most instructive moment in
-  // the demo: it is the depth policy declining a cheap early hit for a better one later. Price it.
-  const held = t.ranking.slice(0, show).findIndex((r, i) => r.is_target && i >= t.depth);
-  let tradeoff = "";
-  if (held >= 0) {
-    const k = held + 1, rrNow = 1 / k;
-    const gainEff = 0.2 * ((11 - t.turn) / 10 - (11 - 11) / 10);
-    tradeoff = `<div class="quiet" style="margin-top:7px">The target is sitting at
-      <b>rank ${k}</b> — in the shortlist, but not sent. Showing it now would end the session at
-      <code>1/${k} = ${rrNow.toFixed(2)}</code> reciprocal rank; holding on for rank 1 is worth
-      <code>1.00</code>. Rank is weighted 0.30 and speed 0.20, so a rank-1 hit a few turns later
-      scores higher than a rank-${k} hit now.</div>`;
-  }
+
+  if (!t.depth) return `<div class="quiet">Shows nothing this turn. In an intent-override session the
+    scoring discards answers given before the customer changes their mind, so speaking now would only
+    spend them.</div>`;
+
+  // Where the target actually sits in the agent's ranking, even when it is not shown. This is the
+  // question the demo keeps provoking — "it was at rank 2, why not send it?" — so price the answer.
+  const at = t.ranking.findIndex(r => r.is_target) + 1;
+  const held = at > t.depth ? at : 0;
+  const tradeoff = held ? `<div class="quiet" style="margin-top:7px">Internally the target is ranked
+      <b>${held}</b>, but the agent only commits to ${t.depth === 1 ? "its single best guess" :
+      `its top ${t.depth}`}. Sending down to ${held} would end the session at
+      <code>1/${held} = ${(1/held).toFixed(2)}</code> reciprocal rank; holding out for rank 1 is worth
+      <code>1.00</code>. Rank is weighted 0.30 against speed's 0.20, so a rank-1 hit a few turns later
+      scores higher than a rank-${held} hit now.</div>` : "";
+
   const note = (t.hit && !counts)
     ? `<div class="quiet" style="margin-top:7px">Right product, but it does not score yet — the
        customer has not changed their mind, and this session discards answers given before they do.</div>`
     : "";
-  return `${quiet}<div class="cands"><div class="cap">${cap}</div>${rows}${tradeoff}${note}<div class="note" style="margin-top:8px;font-size:12px">Scoring matches on the product <b>code</b>, not the name — 2.9% of the catalog shares a title with a different product, so two rows can read identically and still be different items.</div></div>`;
+
+  return `<div class="cands"><div class="cap">shows ${t.depth} of ${t.pool_size.toLocaleString()} candidates</div>${rows}${tradeoff}${note}<div class="note" style="margin-top:8px;font-size:12px">Scoring matches on the product <b>code</b>, not the name — 2.9% of the catalog shares a title with a different product, so two rows can read identically and still be different items.</div></div>`;
 }
 
 function tech(t){
