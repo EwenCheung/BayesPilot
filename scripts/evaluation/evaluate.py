@@ -4,7 +4,7 @@
     python3 scripts/evaluation/evaluate.py
 
     # evaluation for test data
-    python3 scripts/evaluate.py \
+    python3 scripts/evaluation/evaluate.py \
     --agent agent:Agent \
     --catalog data/catalog.jsonl \
     --dataset data/final_800.jsonl \
