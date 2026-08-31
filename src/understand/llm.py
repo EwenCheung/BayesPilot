@@ -278,6 +278,20 @@ class LLMClient:
             self.failures += 1
         return pairs
 
+    def totals(self) -> tuple[int, int]:
+        """Cumulative (prompt, completion) tokens.
+
+        ⚠️ This was MISSING, and silently so. `AlignedExtractor.totals()` reads it as
+        `getattr(self.client, "totals", lambda: (0, 0))()` and `src/copilot/agent.py` reads that the
+        same way, so the agent reported `usage: {prompt_tokens: 0, completion_tokens: 0}` on every
+        turn — including turns where the model ran and tokens were genuinely spent. The counters were
+        incremented correctly throughout; nothing read them.
+
+        The Track 4 evaluation FAQ §3 asks teams to disclose token usage, and §7 says LLM-based
+        systems should report it, so zero is a wrong disclosure rather than a cosmetic bug.
+        """
+        return self.prompt_tokens, self.completion_tokens
+
     def rerank(self, query: str, candidates: list[str], labels: list[str] | None = None) -> list[str] | None:
         """The brief's named 'LLM Semantic Ranking' stage. Returns None on any malformed answer."""
         # ⚠️ OFFLINE_ENV is checked HERE, not in an agent, so it holds for every road. Gating it

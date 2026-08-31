@@ -65,7 +65,19 @@ class Flags:
     max_turns: int = 10         # the evaluator's hard limit; ship everything on the last turn
 
     # --- the language tier ----------------------------------------------------------------------
-    llm_extract: bool = True    # escalation only: fires when tier 1 and tier 2 both fail on a message
+    # ⚠️ DETERMINISTIC SUBMISSION (team decision). The language tier is built and works, but it is
+    # switched OFF, so the submitted agent makes **zero network calls** and has no external
+    # dependency, credential, quota or availability risk.
+    #
+    # This costs nothing on the evaluation. The tier only fires when tiers 1 and 2 both fail to read
+    # a message, and the final 800 sessions use the same deterministic customer-message templates as
+    # the public set ("No undisclosed natural-language paraphrases are introduced", Track 4 FAQ §1).
+    # Measured: 0 calls and 0 tokens across public_set (200), dev (2,000) and resplit/test (2,800).
+    # On free-form text it fired once per session and measured -0.0007, so it was not earning its
+    # place there either.
+    #
+    # Set `llm_extract=True` (or `COPILOT_FLAGS=llm_extract`) to re-enable it for experiments.
+    llm_extract: bool = False   # escalation only: fires when tier 1 and tier 2 both fail on a message
     verify: bool = True         # resolve every model-proposed value against real catalog vocabulary
     ambiguity: bool = True      # carry an unresolved span as a probability mixture, not a guess
 
