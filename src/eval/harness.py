@@ -132,6 +132,42 @@ def bootstrap_ci(result: dict, resamples: int = 1000, seed: int = 0) -> tuple[fl
     return round(scores[int(0.025 * resamples)], 4), round(scores[int(0.975 * resamples)], 4)
 
 
+def _session_arrays(result: dict):
+    import numpy as np
+
+    sessions = result["sessions"]
+    hit = np.fromiter((float(s["hit"]) for s in sessions), float, len(sessions))
+    rr = np.fromiter((float(s["reciprocal_rank"]) for s in sessions), float, len(sessions))
+    ttc = np.fromiter(
+        ((s["first_hit_turn"] if s["first_hit_turn"] is not None else 11) for s in sessions),
+        float, len(sessions))
+    return hit, rr, ttc
+
+
+def paired_bootstrap_ci(before: list[dict], after: list[dict],
+                        resamples: int = 1000, seed: int = 0) -> tuple[float, float]:
+    """95% CI on `after - before`, resampling the same sessions in both configurations."""
+    import numpy as np
+
+    assert len(before) == len(after) and before, "paired bootstrap needs matching runs"
+    pairs = [(_session_arrays(b), _session_arrays(a)) for b, a in zip(before, after)]
+    n = len(pairs[0][0][0])
+    assert all(len(x[0]) == n for pair in pairs for x in pair), \
+        "runs must cover the same sessions"
+
+    def technical(hit, rr, ttc, idx):
+        eff = np.clip((11.0 - ttc[idx].mean(axis=1)) / 10.0, 0.0, 1.0)
+        return 0.50 * hit[idx].mean(axis=1) + 0.30 * rr[idx].mean(axis=1) + 0.20 * eff
+
+    idx = np.random.default_rng(seed).integers(0, n, size=(resamples, n))
+    delta = np.zeros(resamples)
+    for (b_hit, b_rr, b_ttc), (a_hit, a_rr, a_ttc) in pairs:
+        delta += technical(a_hit, a_rr, a_ttc, idx) - technical(b_hit, b_rr, b_ttc, idx)
+    delta /= len(pairs)
+    lo, hi = np.percentile(delta, [2.5, 97.5])
+    return round(float(lo), 4), round(float(hi), 4)
+
+
 # The files a score actually depends on. Hashed, not `git status`-checked: a kit that was modified
 # AND committed passes a status check and still invalidates every number ever measured against it.
 KIT = ROOT / "techjam-conversational-search-main"
