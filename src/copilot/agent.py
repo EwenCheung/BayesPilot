@@ -148,7 +148,9 @@ class Agent:
         # Reads the RAW opener, never a model rewrite: the pool is the earliest decision in a session
         # and unrecoverable when wrong, so it depends on nothing that can hallucinate.
         opener = state.history[0] if state.history else user_message
-        candidates = self.categories.pool(opener, tau=flags.tau_mass) or self._fallback
+        candidates = self.categories.pool(
+            opener, tau=flags.tau_mass, temperature=flags.temperature
+        ) or self._fallback
 
         # --- level 2: the posterior over items in it ---------------------------------------------
         belief = Belief(self.index, candidates)

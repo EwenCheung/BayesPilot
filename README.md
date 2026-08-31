@@ -43,7 +43,7 @@ language tier, which never fires on templated input.
 | `python3 scripts/evaluation/evaluate.py --levels 0,1,2,3,4` | the full paraphrase ladder |
 | `python3 scripts/evaluation/evaluate.py --ablate no_spec_phrase --levels 0,2,3` | any row of the ablation table |
 | `python3 scripts/evaluation/evaluate.py --set bm25_gain=2.0` | override any fitted constant |
-| `python3 scripts/training/hyperparameter_tuning.py --dataset data/train.jsonl --n 3000` | re-fit **all 8** constants from scratch |
+| `python3 scripts/training/hyperparameter_tuning.py --dataset data/resplit_60_20_20/train.jsonl --n 3000` | re-fit **all 8** constants from scratch — TPE, noise-gated |
 | `python3 scripts/training/hyperparameter_tuning.py --sweep bm25_gain=0,2,3,4,6,8` | one flag's curve — this was `fit_bm25.py` |
 | `python3 scripts/earlyhit.py` | the EarlyHit curve — what a perfect stopping rule would be worth |
 
@@ -64,7 +64,7 @@ src/
   simulator.py        a mirror of the evaluator's own shopper, for generating sessions
 scripts/
   evaluation/         evaluate — any agent, set, level, flag
-  training/           hyperparameter_tuning — all 8 constants
+  training/           hyperparameter_tuning — all 8 constants, by TPE
   earlyhit · llm_tier
 tests/                85 tests
 techjam-conversational-search-main/   the official kit — never edited, hash-verified before every run

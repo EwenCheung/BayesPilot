@@ -115,21 +115,21 @@ class CategoryBelief:
             out.append(score)
         return out
 
-    def posterior(self, message: str) -> list[float]:
+    def posterior(self, message: str, temperature: float = TEMPERATURE) -> list[float]:
         scores = self._scores(message)
-        logits = [s / TEMPERATURE + 0.25 * p for s, p in zip(scores, self._log_prior)]
+        logits = [s / temperature + 0.25 * p for s, p in zip(scores, self._log_prior)]
         peak = max(logits)
         weights = [math.exp(l - peak) for l in logits]
         mass = sum(weights)
         return [w / mass for w in weights]
 
-    def ranked(self, message: str) -> list[tuple[str, float]]:
-        post = self.posterior(message)
+    def ranked(self, message: str, temperature: float = TEMPERATURE) -> list[tuple[str, float]]:
+        post = self.posterior(message, temperature=temperature)
         return [(self.categories[i], post[i])
                 for i in sorted(range(len(post)), key=lambda i: -post[i])]
 
-    def best(self, message: str) -> str:
-        post = self.posterior(message)
+    def best(self, message: str, temperature: float = TEMPERATURE) -> str:
+        post = self.posterior(message, temperature=temperature)
         return self.categories[max(range(len(post)), key=lambda i: post[i])]
 
     def resolve_phrase(self, phrase: str) -> str | None:
@@ -170,7 +170,8 @@ class CategoryBelief:
             for category, probability in rows
         ] if mass else []
 
-    def pool(self, message: str, tau: float = TAU_MASS, cap: int = POOL_CAP) -> list[str]:
+    def pool(self, message: str, tau: float = TAU_MASS, cap: int = POOL_CAP,
+             temperature: float = TEMPERATURE) -> list[str]:
         """Smallest set of categories covering `tau` of the posterior, as ASINs.
 
         R1's hedge without R1's two constants: a confident belief returns one category, a belief spread
@@ -178,7 +179,7 @@ class CategoryBelief:
         """
         asins: list[str] = []
         covered = 0.0
-        for category, mass in self.ranked(message):
+        for category, mass in self.ranked(message, temperature=temperature):
             asins.extend(self.by_category[category])
             covered += mass
             if covered >= tau or len(asins) >= cap:
