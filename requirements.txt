@@ -1,11 +1,2 @@
-# Tested with Python 3.11.9.
-#
-# The shipped agent needs numpy and the standard library. scikit-learn and torch were requirements
-# until the SVD and BLaIR semantic routes were deleted — four independent negatives on semantic
-# retrieval for this benchmark, so the code is gone rather than gated off.
+# Tested with Python 3.11.9
 numpy==2.3.3
-
-# Development and regression suite. Neither is imported by the shipped agent: Optuna drives
-# scripts/training/hyperparameter_tuning.py, which fits constants offline and writes JSON.
-pytest==8.3.5
-optuna==4.9.0
