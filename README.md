@@ -423,7 +423,7 @@ A standalone interactive session visualizer is provided in [`submission/demo/ind
 
 ### 2. Video Demonstration & Walkthrough
 
-**▶️ Watch the demo: https://youtu.be/md4CqpOZU7o**
+**▶️ Watch the demo: https://youtu.be/3jJaCy7OI4o**
 
 The video presentation covers:
 1. **Live Discovery Walkthrough**: Demonstrating end-to-end sessions across Buying, Browsing, and Intent Override scenarios.
