@@ -3,7 +3,15 @@
 **TikTok TechJam 2026 — Track 4: Conversational E-Commerce Search Challenge**
 
 - **Team Name**: Algo Lover
-- **Team Members**: Alvin Saw, Daeren Kim, Ewen Cheung
+- **Team Members**: Ewen Cheung, Alvin Saw, Daeren Kim
+
+### Team Member Contributions
+
+| Member | Contributions |
+|---|---|
+| **Ewen Cheung** *(Team Lead)* | Led the technical direction and system architecture. Owned the core algorithmic work: the two-level Bayesian formulation (Level 1 category posterior with tau-mass pooling, Level 2 bounded evidence fusion), the expected-utility depth policy $U(k)$, the session state and decay model, and the hyperparameter search design. Responsible for the central ideas behind the approach and the majority of the inference and ranking code. |
+| **Alvin Saw** | Drove exploration, experimentation, and validation. Ran the ablation studies that justified pruning BM25, the popularity prior, dense embeddings, and GBDT rerankers; built and checked the evaluation datasets and stress scenarios; verified benchmark reproducibility and bootstrap confidence intervals; and led documentation and correctness review across the codebase. |
+| **Daeren Kim** | Supported both the algorithmic and validation workstreams and drove productisation of the submission. Contributed to implementation across the pipeline, built the interactive replay visualiser (`submission/demo/index.html`), produced the demo video walkthrough, and assembled the Devpost write-up and submission packaging. |
 
 ---
 
@@ -42,7 +50,7 @@ Evaluated with the official unmodified evaluation harness:
 | `freeform_set` | 800 | 0.9912 | 0.9801 | 2.62 | **0.9572** | 10.1s | 12.7 ms | 0 | \$0.00 |
 
 - The complete output from running the agent on the public set, including per-session results, is available in [`submission/results.json`](submission/results.json).
-- **Official Baseline Comparison**: Official starter agent = `0.1067` · Popularity baseline = `0.7133` · **BayesPilot = 0.9744**
+- **Official Baseline Comparison**: Official starter agent = `0.1067` · **BayesPilot = 0.9744**
 
 ---
 
@@ -190,7 +198,7 @@ flowchart LR
 
 ### 5. Pruned / Rejected Components (Empirical Negative Results)
 * **Dense / Semantic Embeddings (BLaIR, SVD)**: Evaluated extensively and deleted. Catalog intent matching is exact and keyword-grounded; semantic embeddings introduced noise and reduced Hit@10.
-* **Heavy LLM Tier / LLM Router**: Removed. Evaluator messages follow structured patterns; deterministic ontology extraction achieves higher accuracy at $0$ token cost and $100\times$ lower latency.
+* **Heavy LLM Tier / LLM Router**: Removed from the active path. Evaluator messages follow structured patterns; deterministic ontology extraction achieves higher accuracy at $0$ token cost and $100\times$ lower latency. A thin escalation hook remains available behind the `llm_extract` flag so the pipeline *can* be extended, but it is off by default and unused in all reported results.
 * **GBDT / LightGBM Rerankers**: Overhead in runtime and complexity without statistically significant gains over bounded Bayesian fusion.
 
 ---
@@ -198,11 +206,24 @@ flowchart LR
 ## Limitations
 
 - **Distribution dependence**: The deterministic parser is strongest on the published evaluator's structured customer-message patterns. Novel phrasing, misspellings, or implicit constraints outside the catalog ontology can reduce extraction and ranking quality.
-- **No semantic-model fallback in the submitted configuration**: The optional LLM path is disabled, so the agent deliberately trades open-ended language coverage for zero network, credential, quota, and cost risk.
+- **Fully deterministic submitted configuration**: The agent ships with every semantic-model path switched off. An optional escalation hook is retained behind the `llm_extract` flag purely for flexibility and future experimentation — it is disabled by default, is not required by any reported result, and every benchmark in this README was produced with zero external calls. The trade-off is deliberate: open-ended language coverage is exchanged for zero network, credential, quota, and cost risk.
 - **Catalog dependence**: Rankings and category statistics are built from the frozen 50,000-product catalog. A materially changed catalog requires restarting the agent so its in-memory indexes are rebuilt.
 - **Metadata ambiguity**: Products with sparse or near-identical catalog metadata may remain difficult to distinguish; the depth policy can return several candidates or spend an additional turn clarifying.
 - **Evaluation scope**: The reported public and generated-set scores demonstrate performance on the supplied simulator and derived stress sets. They do not guarantee the same performance on unreleased final sessions or unconstrained real-world conversations.
 - **Runtime scope**: Measurements use the official sequential evaluator. Concurrent throughput, peak memory, and behavior on substantially larger catalogs were not benchmarked.
+
+---
+
+## What We Would Improve Given More Time
+
+Each item below maps directly to a limitation listed above.
+
+1. **Broader paraphrase and typo robustness** *(addresses distribution dependence)* — Extend the deterministic ontology with edit-distance matching and a learned-but-offline synonym table, so novel phrasing degrades gracefully instead of falling back to popularity ordering. We would grow the `freeform_set` with adversarial paraphrases and misspellings and tune against that harder split.
+2. **Multi-modal image likelihood fusion** *(addresses metadata ambiguity)* — Products with near-identical text metadata are the main residual failure mode. Precomputed visual feature vectors (texture, pattern, silhouette) could enter Level 2 as an additional bounded evidence channel $\log L_{\text{visual}}$ without adding any runtime model.
+3. **Incremental catalog indexing** *(addresses catalog dependence)* — Replace the full in-memory rebuild with incremental index updates so the agent can absorb catalog changes without a restart.
+4. **Concurrency and scale benchmarking** *(addresses runtime scope)* — Profile peak memory, multi-worker throughput, and behaviour on catalogs an order of magnitude larger, then publish a proper QPS envelope rather than single-session latency alone.
+5. **Dynamic client-side personalisation** — Allow the category prior $\log \pi_c$ to adapt to on-device browsing history, keeping personalisation entirely local with no privacy leakage.
+6. **WebAssembly / edge deployment** — Compile the deterministic engine to WebAssembly and C++ for sub-millisecond execution directly inside mobile apps and browser tabs, which the zero-dependency design already makes feasible.
 
 ---
 
@@ -252,13 +273,29 @@ submission/                             # Standalone submission directory
       intent.py                         # Intent pipeline & catalog resolution
       parse.py                          # Deterministic ontology parsing cascade
       tokens.py                         # Numeric-preserving tokenizer
+      llm.py                            # Optional escalation hook (off by default; see `llm_extract`)
     eval/
       harness.py                        # Non-invasive evaluator harness
       stress.py                         # Paraphrase stress engine
       ablations.py                      # Ablation test suite
       compare.py                        # TechnicalScore bootstrap CI calculator
       datasets.py                       # Dataset loader utilities
+      measure.py                        # Metric computation (Hit@10, MRR, MTTC)
+      freeform.py                       # Free-form dataset evaluation
+      holdout.py                        # Held-out split evaluation
+      instrument.py                     # Latency & call-count instrumentation
 ```
+
+---
+
+## Development Tools, APIs, Libraries & Datasets
+
+| Category | Used |
+|---|---|
+| **Development tools** | VS Code · Git & GitHub · Python 3.11.9 virtual environments (`venv`) · macOS / Linux terminal · Mermaid (architecture diagrams) · Optuna dashboard for inspecting tuning trials |
+| **APIs used** | **None.** BayesPilot makes zero external network calls — no LLM API, no search API, no vector database, no cloud endpoint, no API keys. The agent runs fully offline. |
+| **Libraries & frameworks** | **Runtime:** NumPy 2.3.3 and the Python standard library — that is the complete runtime dependency set (`submission/requirements.txt`). **Offline tuning only:** Optuna 4.9.0 (TPE hyperparameter search), not imported at inference time. No PyTorch, TensorFlow, Hugging Face Transformers, scikit-learn, or LangChain. |
+| **Datasets & assets** | **Provided:** the frozen 50,000-product Amazon catalog (`data/catalog.jsonl`) and the 200-session official `public_set`, both from the TechJam Track 4 participation kit. **Self-generated:** a 2,800-session ASIN-disjoint `generated_template_set` (60/20/20 split) and an 800-session non-template `freeform_set`, both produced by our own simulator (`src/simulator.py`) for generalisation testing. **No** manually labelled data, pretrained weights, embeddings, or third-party assets are used. |
 
 ---
 
@@ -385,7 +422,10 @@ A standalone interactive session visualizer is provided in [`submission/demo/ind
   - **Decision Policy Inspection**: Visualize continuation value $V_{\text{continue}}$ and dynamic recommendation depth ($k^*$) calculations at each conversational step.
 
 ### 2. Video Demonstration & Walkthrough
-The submission includes a comprehensive video presentation covering:
+
+**▶️ Watch the demo: https://youtu.be/md4CqpOZU7o**
+
+The video presentation covers:
 1. **Live Discovery Walkthrough**: Demonstrating end-to-end sessions across Buying, Browsing, and Intent Override scenarios.
 2. **Architecture Breakdown**: Explaining the two-level coarse-to-fine Bayesian pipeline and deterministic NLP tier.
 3. **Mathematical Foundations**: Step-by-step exposition of Tau-Mass pruning, bounded log-likelihood evidence fusion ($L_{\min}=0.02$), and expected-utility depth optimization ($U(k)$).
